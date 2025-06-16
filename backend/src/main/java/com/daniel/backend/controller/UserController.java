@@ -1,35 +1,45 @@
 package com.daniel.backend.controller;
 
-import com.daniel.backend.model.User;
+import com.daniel.backend.dto.LoginRequest;
+import com.daniel.backend.dto.RegisterRequest;
+import com.daniel.backend.dto.VerifyRequest;
+import com.daniel.backend.repository.UserRepo;
 import com.daniel.backend.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
-@RequestMapping("/users")
 @RestController
+@RequestMapping("/auth")
 public class UserController {
-    private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserRepo repo;
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(
+                userService.register(
+                request.getUsername(), request.getEmail(), request.getPassword()));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<User> authenticateUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        User currentUser = (User) authentication.getPrincipal();
-        return ResponseEntity.ok(currentUser);
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestBody VerifyRequest request) {
+        String token = userService.verify(request);
+        System.out.println("Testing verifyRequest: " + request.testingTheDto()); // Debugging line to check the DTO content
+        return ResponseEntity.ok("Verification successful. Token: " + token);
     }
 
-    @GetMapping("/")
-    public ResponseEntity<List<User>> allUsers() {
-        List<User> users = userService.allUsers();
-        return ResponseEntity.ok(userService.allUsers());
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(userService.login(request));
     }
+
 }

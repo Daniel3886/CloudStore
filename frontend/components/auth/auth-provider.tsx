@@ -1,18 +1,21 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import type { User } from "@/lib/auth"
-import { getToken, clearTokens, isTokenExpired } from "@/lib/auth"
+
+interface User {
+  email: string
+  username?: string
+  verified: boolean
+}
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (token: string, user: User) => void
+  login: (token: string, email: string) => void
   logout: () => void
-  refreshUser: () => Promise<void>
+  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,32 +27,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = getToken()
+      const token = localStorage.getItem("authToken")
+      const email = localStorage.getItem("userEmail")
 
-      if (token && !isTokenExpired(token)) {
-        try {
-          // API Call: GET /api/auth/me
-          // Expected headers: Authorization: Bearer {token}
-          // Expected response: { user: User }
-
-          const response = await fetch("/users/me", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            setUser(data.user)
-          } else {
-            clearTokens()
-          }
-        } catch (error) {
-          clearTokens()
-        }
-      } else if (token) {
-        // Token expired
-        clearTokens()
+      if (token && email) {
+        setUser({
+          email,
+          verified: true, // If they have a token, they're verified
+        })
       }
 
       setIsLoading(false)
@@ -58,37 +43,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth()
   }, [])
 
-  const login = (token: string, userData: User) => {
-    setUser(userData)
+  const login = (token: string, email: string) => {
+    localStorage.setItem("authToken", token)
+    localStorage.setItem("userEmail", email)
+    setUser({
+      email,
+      verified: true,
+    })
   }
 
   const logout = () => {
-    clearTokens()
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("userEmail")
+    sessionStorage.removeItem("pendingVerificationEmail")
     setUser(null)
     router.push("/login")
   }
 
-  const refreshUser = async () => {
-    const token = getToken()
-    if (!token) return
+  const isAuthenticated = !!user
 
-    try {
-      const response = await fetch("/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setUser(data.user)
-      }
-    } catch (error) {
-      console.error("Failed to refresh user:", error)
-    }
-  }
-
-  return <AuthContext.Provider value={{ user, isLoading, login, logout, refreshUser }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isLoading, login, logout, isAuthenticated }}>{children}</AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

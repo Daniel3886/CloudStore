@@ -1,7 +1,8 @@
-import { LoginForm } from "@/components/auth/login-form"
+// Make sure the file exists at the correct path, or update the import path if necessary
+import { VerifyForm } from "@/components/auth/verify-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function LoginPage() {
+export default function VerifyPage() {
   return (
     <Card>
       <CardHeader className="space-y-1">
@@ -10,11 +11,11 @@ export default function LoginPage() {
             CS
           </div>
         </div>
-        <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
-        <CardDescription className="text-center">Sign in to your CloudStore account</CardDescription>
+        <CardTitle className="text-2xl text-center">Verify your email</CardTitle>
+        <CardDescription className="text-center">Enter the verification code sent to your email</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <VerifyForm />
       </CardContent>
     </Card>
   )

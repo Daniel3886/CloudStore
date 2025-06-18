@@ -14,13 +14,22 @@ public class    Users {
             strategy = GenerationType.AUTO
     )
     private int id;
-    @Column(unique = true)
+
     private String username;
+
+    @Column
     private String password;
+
     @Column(unique = true)
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @Column(nullable = false)
     private boolean verified = false;
+
     private String verificationCode;
 
     public Users() {}
@@ -31,15 +40,4 @@ public class    Users {
         this.password = password;
         this.email = email;
     }
-
-    // For debugging purposes
-    @Override
-    public String toString() {
-        return "Users{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                '}';
-    }
-
 }

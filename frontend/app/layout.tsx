@@ -10,7 +10,6 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "CloudStore - Secure File Storage",
   description: "A secure, scalable file storage service",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

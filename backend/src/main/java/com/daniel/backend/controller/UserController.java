@@ -4,7 +4,7 @@ import com.daniel.backend.dto.LoginRequest;
 import com.daniel.backend.dto.RegisterRequest;
 import com.daniel.backend.dto.VerifyRequest;
 import com.daniel.backend.repository.UserRepo;
-import com.daniel.backend.service.UserService;
+import com.daniel.backend.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @Autowired
-    private UserService userService;
+    private AuthenticationService userService;
 
     @Autowired
     private UserRepo repo;

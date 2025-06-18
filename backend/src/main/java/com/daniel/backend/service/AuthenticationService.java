@@ -2,6 +2,7 @@ package com.daniel.backend.service;
 
 import com.daniel.backend.dto.LoginRequest;
 import com.daniel.backend.dto.VerifyRequest;
+import com.daniel.backend.entity.Role;
 import com.daniel.backend.entity.Users;
 import com.daniel.backend.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 
+
 @Service
-public class UserService {
+public class AuthenticationService {
 
     @Autowired
     private UserRepo repo;
@@ -42,10 +44,10 @@ public class UserService {
         newUser.setPassword(encodedPassword);
         newUser.setVerificationCode(code);
         newUser.setVerified(false);
+        newUser.setRole(Role.LOCAL);
 
         repo.save(newUser);
 
-        // Return the code (or send by email)
         emailService.sendVerificationEmail(email, code);
         return "User registered successfully. Verification code: " + code;
     }
@@ -65,12 +67,12 @@ public class UserService {
             throw new RuntimeException("User is already verified.");
         }
 
-        if (!user.getVerificationCode().equals(code)) {
+        if (!code.equals(user.getVerificationCode())) {
             throw new RuntimeException("Invalid verification code.");
         }
 
         user.setVerified(true);
-        user.setVerificationCode(null); // Optionally invalidate the code
+        user.setVerificationCode(null);
         repo.save(user);
 
         return jwtService.generateToken(user.getUsername());
@@ -91,7 +93,11 @@ public class UserService {
             throw new RuntimeException("Please verify your account before logging in.");
         }
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (user.getRole() != Role.LOCAL) {
+            throw new RuntimeException("This account uses " + user.getRole().name() + " login. Please use that platform.");
+        }
+
+        if (user.getPassword() == null || !passwordEncoder.matches(password, user.getPassword())) {
             throw new RuntimeException("Invalid password.");
         }
 

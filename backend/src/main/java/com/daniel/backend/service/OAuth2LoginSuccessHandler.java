@@ -1,5 +1,6 @@
 package com.daniel.backend.service;
 
+import com.daniel.backend.entity.Role;
 import com.daniel.backend.entity.Users;
 import com.daniel.backend.repository.UserRepo;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,16 +43,19 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             Users newUser = new Users();
             newUser.setEmail(email);
             newUser.setUsername(username);
+            newUser.setRole(
+                    switch (registrationId) {
+                        case "google" -> Role.GOOGLE;
+                        case "github" -> Role.GITHUB;
+                        default -> Role.LOCAL;
+                    }
+            );
             newUser.setVerified(true);
+            newUser.setPassword(""); // OAuth2 users typically don't have a password
             userRepo.save(newUser);
         }
 
         String jwtToken = jwtService.generateToken(email);
-
-
-        response.setContentType("application/json");
-        response.getWriter().write("{\"token\": \"" + jwtToken + "\"}");
-        response.getWriter().flush();
     }
 
 }

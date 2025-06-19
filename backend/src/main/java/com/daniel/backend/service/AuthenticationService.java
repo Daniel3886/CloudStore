@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 
 
 @Service
@@ -44,7 +45,8 @@ public class AuthenticationService {
         newUser.setPassword(encodedPassword);
         newUser.setVerificationCode(code);
         newUser.setVerified(false);
-        newUser.setRole(Role.LOCAL);
+        // newUser.setRole(Role.VIEWER);
+
 
         repo.save(newUser);
 
@@ -91,10 +93,6 @@ public class AuthenticationService {
 
         if (!user.isVerified()) {
             throw new RuntimeException("Please verify your account before logging in.");
-        }
-
-        if (user.getRole() != Role.LOCAL) {
-            throw new RuntimeException("This account uses " + user.getRole().name() + " login. Please use that platform.");
         }
 
         if (user.getPassword() == null || !passwordEncoder.matches(password, user.getPassword())) {

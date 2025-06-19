@@ -1,14 +1,13 @@
 package com.daniel.backend.model;
 
-import com.daniel.backend.entity.Users;
+    import com.daniel.backend.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
+    import java.util.*;
+    import java.util.stream.Collectors;
 
 public class UserModel implements UserDetails, OAuth2User {
 
@@ -31,8 +30,9 @@ public class UserModel implements UserDetails, OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("USER"));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
+
 
     @Override
     public String getPassword() {

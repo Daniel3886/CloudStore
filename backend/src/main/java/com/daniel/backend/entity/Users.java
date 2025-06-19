@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Set;
 
@@ -35,8 +36,12 @@ public class Users {
 
     private String verificationCode;
 
-    @Column(name = "created_at")
-    private java.time.LocalDateTime verificationCodeCreatedAt;
+//    @Column(name = "sent_at")
+    private LocalDateTime lastVerificationEmailSentAt;
+
+    @Column(name = "expires_at")
+    private LocalDateTime verificationCodeExpiresAt;
+
 
     public Users() {}
 

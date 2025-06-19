@@ -2,14 +2,15 @@ package com.daniel.backend.service;
 
 import com.daniel.backend.dto.LoginRequest;
 import com.daniel.backend.dto.VerifyRequest;
-import com.daniel.backend.entity.Role;
 import com.daniel.backend.entity.Users;
 import com.daniel.backend.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 
 @Service
@@ -28,10 +29,37 @@ public class AuthenticationService {
     private EmailService emailService;
 
     public String register(String username, String email, String rawPassword) {
-        if (repo.findByEmail(email).isPresent()) {
-            throw new RuntimeException("Email already in use");
+        Optional<Users> existingUserOpt = repo.findByEmail(email);
+
+        if (existingUserOpt.isPresent()) {
+            Users user = existingUserOpt.get();
+
+            if (user.isVerified()) {
+                throw new RuntimeException("Email already in use.");
+            }
+
+            // Check cooldown (2 minutes)
+            if (user.getLastVerificationEmailSentAt() != null) {
+                LocalDateTime nextAllowed = user.getLastVerificationEmailSentAt().plusMinutes(2);
+                if (LocalDateTime.now().isBefore(nextAllowed)) {
+                    long secondsLeft = Duration.between(LocalDateTime.now(), nextAllowed).getSeconds();
+                    throw new RuntimeException("Please wait " + secondsLeft + " seconds before requesting a new code.");
+                }
+            }
+
+
+            // Resend verification code
+            String code = String.format("%06d", (int)(Math.random() * 1_000_000));
+            user.setVerificationCode(code);
+            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+            user.setLastVerificationEmailSentAt(LocalDateTime.now());
+            repo.save(user);
+
+            emailService.sendVerificationEmail(email, code);
+            return "Verification code re-sent to your email.";
         }
 
+        // New user registration
         if (repo.findByUsername(username).isPresent()) {
             throw new RuntimeException("Username already in use");
         }
@@ -45,14 +73,16 @@ public class AuthenticationService {
         newUser.setPassword(encodedPassword);
         newUser.setVerificationCode(code);
         newUser.setVerified(false);
-        // newUser.setRole(Role.VIEWER);
-
+        newUser.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+        newUser.setLastVerificationEmailSentAt(LocalDateTime.now());
 
         repo.save(newUser);
-
         emailService.sendVerificationEmail(email, code);
-        return "User registered successfully. Verification code: " + code;
+
+        return "User registered successfully. Verification code sent to email.";
     }
+
+
 
     public String verify(VerifyRequest request) {
         String email = request.getEmail();
@@ -65,6 +95,11 @@ public class AuthenticationService {
         Users user = repo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User with this email not found."));
 
+        if (user.getVerificationCodeExpiresAt() == null || LocalDateTime.now().isAfter(user.getVerificationCodeExpiresAt())) {
+            throw new RuntimeException("Verification code has expired.");
+        }
+
+
         if (user.isVerified()) {
             throw new RuntimeException("User is already verified.");
         }
@@ -75,6 +110,7 @@ public class AuthenticationService {
 
         user.setVerified(true);
         user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
         repo.save(user);
 
         return jwtService.generateToken(user.getUsername());

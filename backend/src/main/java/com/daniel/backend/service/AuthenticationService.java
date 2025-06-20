@@ -31,29 +31,29 @@ public class AuthenticationService {
         String encodedPassword = passwordEncoder.encode(rawPassword);
         String code = generateVerificationCode();
 
-        try {
-            validateUsernameAvailability(username);
-        } catch (RuntimeException e) {
+        if (repo.findByUsername(username).isPresent() && !(repo.findByUsername(username).isEmpty())) {
             throw new RuntimeException("Username already in use");
         }
 
-        Optional<Users> existingUserOpt = repo.findByEmail(email);
-        Users user = existingUserOpt.orElseGet(Users::new);
+        Optional<Users> existingUser = repo.findByEmail(email);
+        Users user = existingUser.orElseGet(Users::new);
 
-        try {
-            if (existingUserOpt.isPresent()) {
-                if (user.isVerified()) throw new RuntimeException("Email already in use.");
-                validateEmailRateLimit(user);
-            }
-        } catch (RuntimeException e) {
-            throw e;
+        if (existingUser.isPresent()) {
+            if (user.isVerified()) throw new RuntimeException("Email already in use.");
+            validateEmailRateLimit(user);
         }
 
-        populateUserForRegistration(user, username, email, encodedPassword, code);
+        if (!existingUser.isPresent()) {
+            populateUserForRegistration(user, username, email, encodedPassword, code);
+        } else {
+            user.setVerificationCode(code);
+            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));
+            user.setLastVerificationEmailSentAt(LocalDateTime.now());
+        }
         repo.save(user);
         emailService.sendVerificationEmail(email, code);
 
-        return existingUserOpt.isPresent()
+        return existingUser.isPresent()
                 ? "Verification code re-sent to your email."
                 : "User registered successfully. Verification code sent to email.";
     }
@@ -102,17 +102,10 @@ public class AuthenticationService {
 
         return jwtService.generateToken(user.getUsername());
     }
-
-    private void validateUsernameAvailability(String username) {
-        if (repo.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Username already in use");
-        }
-    }
-
     private void validateEmailRateLimit(Users user) {
         LocalDateTime lastSent = user.getLastVerificationEmailSentAt();
         if (lastSent != null) {
-            LocalDateTime nextAllowed = lastSent.plusMinutes(1); // change this to 10 minutes later
+            LocalDateTime nextAllowed = lastSent.plusSeconds(50);
             if (LocalDateTime.now().isBefore(nextAllowed)) {
                 long secondsLeft = Duration.between(LocalDateTime.now(), nextAllowed).getSeconds();
                 throw new RuntimeException("Please wait " + secondsLeft + " seconds before requesting a new code.");
@@ -138,7 +131,7 @@ public class AuthenticationService {
         user.setPassword(encodedPassword);
         user.setVerified(false);
         user.setVerificationCode(code);
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));
         user.setLastVerificationEmailSentAt(LocalDateTime.now());
     }
 

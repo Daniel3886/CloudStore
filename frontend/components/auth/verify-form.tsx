@@ -13,6 +13,7 @@ export function VerifyForm() {
   const [formData, setFormData] = useState({
     email: "",
     verificationCode: "",
+    password: "", // Optional, if you want to include password for resend
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isResending, setIsResending] = useState(false)
@@ -112,17 +113,19 @@ export function VerifyForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/resend-verification", {
+      const response = await fetch("http://localhost:8080/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ email: formData.email }),
+        body: JSON.stringify({ email: formData.email, password: formData.password }),
         mode: "cors",
         credentials: "include",
       })
 
+      console.log("Resend response status:", response.status)
+      setDebugInfo((prev) => `${prev}\nResend response status: ${response.status}`)
       const responseText = await response.text()
 
       if (response.ok) {

@@ -6,11 +6,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Loader2, Github } from "lucide-react"
-import { GoogleIcon } from "@/components/auth/icons/google-icon"
+import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react"
 
 export function LoginForm() {
   const [formData, setFormData] = useState({
@@ -59,13 +56,9 @@ export function LoginForm() {
       setDebugInfo((prev) => `${prev}\nResponse: ${responseText}`)
 
       if (response.ok) {
-        // Extract token from response (assuming it's in format "Verification successful. Token: {token}")
-        // User registered successfully. Verification code: 758131
-        
         const tokenMatch = responseText.match(/Token:\s*(.+)/)
-        const token = tokenMatch ? tokenMatch[1].trim() : responseText
+        const token = tokenMatch ? tokenMatch[1].trim() : responseText.trim()
 
-        // Store token
         localStorage.setItem("authToken", token)
         localStorage.setItem("userEmail", formData.email)
 
@@ -74,7 +67,6 @@ export function LoginForm() {
           description: "Welcome back to CloudStore.",
         })
 
-        // Redirect to main dashboard
         router.push("/files")
       } else {
         throw new Error(responseText || "Login failed")
@@ -91,90 +83,69 @@ export function LoginForm() {
     }
   }
 
-  const handleOAuthLogin = (provider: "google" | "github") => {
-    // Redirect to OAuth endpoint
-    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`
-  }
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <p className="text-sm text-muted-foreground text-center">
+        Enter your email and password to access your CloudStore account.
+      </p>
+
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            id="email"
             name="email"
             type="email"
-            placeholder="name@example.com"
+            placeholder="Email address"
             value={formData.email}
             onChange={handleInputChange}
+            className="pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
             required
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleInputChange}
+            className="pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
+            required
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Sign in
+          Log in
         </Button>
+
+        <div className="flex items-center justify-between pt-2">
+          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+            Forgot password?
+          </Link>
+          <Link href="/register" className="text-sm text-primary hover:underline">
+            Sign up
+          </Link>
+        </div>
       </form>
 
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <Button variant="outline" onClick={() => handleOAuthLogin("google")} disabled={isLoading}>
-          <GoogleIcon className="mr-2 h-4 w-4" />
-          Google
-        </Button>
-        <Button variant="outline" onClick={() => handleOAuthLogin("github")} disabled={isLoading}>
-          <Github className="mr-2 h-4 w-4" />
-          GitHub
-        </Button>
-      </div>
-
       {debugInfo && (
-        <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-800 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-40">
+        <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-40">
           <p className="font-semibold mb-1">Debug Information:</p>
           {debugInfo}
         </div>
       )}
-
-      <div className="text-center text-sm">
-        Don't have an account?{" "}
-        <Link href="/register" className="text-primary hover:underline">
-          Sign up
-        </Link>
-      </div>
     </div>
   )
 }

@@ -7,20 +7,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
     import java.util.*;
-    import java.util.stream.Collectors;
 
 public class UserModel implements UserDetails, OAuth2User {
 
     private final Users user;
+    //TODO: Consider using a more specific type for attributes if needed
     private Map<String, Object> attributes;
 
     public UserModel(Users user) {
         this.user = user;
-    }
-
-    public UserModel(Users user, Map<String, Object> attributes) {
-        this.user = user;
-        this.attributes = attributes;
     }
 
     @Override
@@ -60,7 +55,7 @@ public class UserModel implements UserDetails, OAuth2User {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return user.isVerified();
     }
 
     @Override

@@ -1,5 +1,9 @@
 "use client"
 
+
+// TODO: When you create a forgot password endpoint choose between reset-password or forgot-password
+//Here it ask for a new password and also a confirm password 
+
 import type React from "react"
 
 import { useState, useEffect } from "react"

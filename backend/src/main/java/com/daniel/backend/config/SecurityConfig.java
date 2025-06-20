@@ -1,8 +1,6 @@
 package com.daniel.backend.config;
 
 import com.daniel.backend.filter.JwtFilter;
-import com.daniel.backend.service.CustomOAuth2UserService;
-import com.daniel.backend.service.OAuth2LoginSuccessHandler;
 import com.daniel.backend.service.UserDetailsServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,12 +35,6 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
-    @Autowired
-    private CustomOAuth2UserService customOAuth2UserService;
-
-    @Autowired
-    private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
@@ -66,13 +58,6 @@ public class SecurityConfig {
                             res.getWriter().write("{\"error\": \"Unauthorized\"}");
                         })
                 )
-                .oauth2Login(oauth -> oauth
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                        )
-                        .successHandler(oAuth2LoginSuccessHandler)
-                )
-
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
@@ -102,13 +87,8 @@ public class SecurityConfig {
         return source;
     }
 
-
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
-
-
 }

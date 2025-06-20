@@ -3,10 +3,7 @@ package com.daniel.backend.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Set;
 
 @Getter
 @Setter
@@ -29,7 +26,6 @@ public class Users {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role = Role.VIEWER;
-
 
     @Column(nullable = false)
     private boolean verified = false;

@@ -11,7 +11,7 @@ export default function ResetPasswordPage() {
           </div>
         </div>
         <CardTitle className="text-2xl text-center">Set new password</CardTitle>
-        <CardDescription className="text-center">Enter your new password below</CardDescription>
+        <CardDescription className="text-center">Choose a strong password for your account</CardDescription>
       </CardHeader>
       <CardContent>
         <ResetPasswordForm />

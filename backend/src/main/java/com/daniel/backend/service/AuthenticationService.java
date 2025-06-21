@@ -130,6 +130,10 @@ public class AuthenticationService {
         Users user = repo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User with this email not found."));
 
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("New password must be different from the current password.");
+        }
+
         String encodedPassword = passwordEncoder.encode(request.getNewPassword());
 
         user.setPassword(encodedPassword);

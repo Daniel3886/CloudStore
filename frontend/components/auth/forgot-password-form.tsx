@@ -1,11 +1,8 @@
 "use client"
 
-
-// TODO: When you create a forgot password endpoint choose between reset-password or forgot-password
-//Here it ask for an email to send a reset link
-
 import type React from "react"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,6 +15,7 @@ export function ForgotPasswordForm() {
   const [emailSent, setEmailSent] = useState(false)
   const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
+  const router = useRouter()
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,8 +26,6 @@ export function ForgotPasswordForm() {
     try {
       setDebugInfo("Sending forgot password request...")
 
-      //POST request to send reset email
-      // Resend email verification code
       const response = await fetch("http://localhost:8080/auth/forgot-password", {
         method: "POST",
         headers: {
@@ -49,15 +45,23 @@ export function ForgotPasswordForm() {
       if (response.ok) {
         setEmailSent(true)
         setDebugInfo((prev) => `${prev}\nReset email sent successfully!`)
+
+        sessionStorage.setItem("passwordResetEmail", email)
+        sessionStorage.setItem("resetFlowActive", "true")
+
         toast({
-          title: "Reset link sent!",
-          description: "Check your email for password reset instructions.",
+          title: "Verification code sent!",
+          description: "Check your email for the 6-digit verification code.",
         })
+
+        setTimeout(() => {
+          router.push("/verify-password")
+        }, 2000) 
       } else {
-        const errorMsg = responseText || "Failed to send reset email"
+        const errorMsg = responseText || "Failed to send verification code"
         setDebugInfo((prev) => `${prev}\nFailed: ${errorMsg}`)
         toast({
-          title: "Failed to send reset link",
+          title: "Failed to send verification code",
           description: errorMsg,
           variant: "destructive",
         })
@@ -85,23 +89,19 @@ export function ForgotPasswordForm() {
 
         <div className="text-center space-y-2">
           <h3 className="text-lg font-semibold">Check your email</h3>
-          <p className="text-sm text-muted-foreground">We've sent password reset instructions to</p>
+          <p className="text-sm text-muted-foreground">We've sent a 6-digit verification code to</p>
           <p className="text-sm font-medium break-all">{email}</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            You'll be redirected to enter the verification code shortly...
+          </p>
         </div>
 
-        <p className="text-xs text-muted-foreground text-center">
-          Didn't receive the email? Check your spam folder or try again.
-        </p>
-
         <div className="space-y-3">
+          <Button onClick={() => router.push("/verify")} className="w-full h-11">
+            Continue to verification
+          </Button>
           <Button variant="outline" onClick={() => setEmailSent(false)} className="w-full h-11">
             Try another email
-          </Button>
-          <Button variant="ghost" asChild className="w-full h-11">
-            <Link href="/login">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to login
-            </Link>
           </Button>
         </div>
 
@@ -124,7 +124,7 @@ export function ForgotPasswordForm() {
           </div>
         </div>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we'll send you a 6-digit verification code to reset your password.
         </p>
       </div>
 
@@ -143,7 +143,7 @@ export function ForgotPasswordForm() {
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Send reset link
+          Send verification code
         </Button>
       </form>
 

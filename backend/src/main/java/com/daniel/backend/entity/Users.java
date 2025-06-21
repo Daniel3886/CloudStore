@@ -31,13 +31,13 @@ public class Users {
     private boolean verified = false;
 
     private String verificationCode;
-
-//    @Column(name = "sent_at")
     private LocalDateTime lastVerificationEmailSentAt;
-
-    @Column(name = "expires_at")
     private LocalDateTime verificationCodeExpiresAt;
 
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+    @Column(name = "password_reset_expires_at")
+    private LocalDateTime passwordResetExpiresAt;
 
     public Users() {}
 

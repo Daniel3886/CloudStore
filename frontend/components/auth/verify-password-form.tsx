@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2, Mail, Shield, ArrowLeft } from "lucide-react"
 
-export function VerifyForm() {
+export function VerifyPasswordForm() {
   const [formData, setFormData] = useState({
     email: "",
     verificationCode: "",
@@ -23,9 +23,9 @@ export function VerifyForm() {
   const { toast } = useToast()
 
   useEffect(() => {
-    const pendingEmail = sessionStorage.getItem("pendingVerificationEmail")
-    if (pendingEmail) {
-      setFormData((prev) => ({ ...prev, email: pendingEmail }))
+    const passwordResetEmail = sessionStorage.getItem("passwordResetEmail")
+    if (passwordResetEmail) {
+      setFormData((prev) => ({ ...prev, email: passwordResetEmail }))
     }
 
     if (countdown > 0) {
@@ -47,14 +47,15 @@ export function VerifyForm() {
     setDebugInfo(null)
 
     try {
-      setDebugInfo("Sending verification request...")
+      setDebugInfo("Sending password reset verification request...")
 
       const requestBody = {
         email: formData.email,
         verificationCode: formData.verificationCode,
       }
 
-      const endpoint = "http://localhost:8080/auth/verify"
+      const endpoint = "http://localhost:8080/auth/verify-password"
+
       setDebugInfo((prev) => `${prev}\nSending request to: ${endpoint}\nPayload: ${JSON.stringify(requestBody)}`)
 
       const response = await fetch(endpoint, {
@@ -74,21 +75,21 @@ export function VerifyForm() {
       setDebugInfo((prev) => `${prev}\nResponse body: ${responseText}`)
 
       if (response.ok) {
-        const tokenMatch = responseText.match(/Token:\s*(.+)/)
-        const token = tokenMatch ? tokenMatch[1].trim() : responseText.trim()
+        const resetToken = responseText.trim()
 
-        localStorage.setItem("authToken", token)
-        localStorage.setItem("userEmail", formData.email)
+        sessionStorage.removeItem("resetFlowActive")
+        sessionStorage.removeItem("passwordResetEmail")
 
-        sessionStorage.removeItem("pendingVerificationEmail")
+        sessionStorage.setItem("verifiedResetEmail", formData.email)
+        sessionStorage.setItem("resetToken", resetToken)
 
-        setDebugInfo((prev) => `${prev}\nRegistration verification successful!`)
+        setDebugInfo((prev) => `${prev}\nVerification successful! Redirecting to reset password...`)
         toast({
-          title: "Email verified!",
-          description: "Your account has been successfully verified.",
+          title: "Code verified!",
+          description: "You can now set your new password.",
         })
 
-        router.push("/files")
+        router.push("/reset-password")
       } else {
         const errorMsg = responseText || `Verification failed: ${response.status}`
         setDebugInfo((prev) => `${prev}\nVerification failed: ${errorMsg}`)
@@ -110,7 +111,7 @@ export function VerifyForm() {
     setIsResending(true)
 
     try {
-      const endpoint = "http://localhost:8080/auth/register"
+      const endpoint = "http://localhost:8080/auth/forgot-password"
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -122,9 +123,7 @@ export function VerifyForm() {
         mode: "cors",
         credentials: "include",
       })
-      
-      console.log("Resend response status:", response.status)
-      setDebugInfo((prev) => `${prev}\nResend response status: ${response.status}`)
+
       const responseText = await response.text()
 
       if (response.ok) {
@@ -160,8 +159,10 @@ export function VerifyForm() {
           </div>
         </div>
         <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">We sent a verification code to your email address.</p>
-          <p className="text-xs text-muted-foreground">Registration Verification</p>
+          <p className="text-sm text-muted-foreground">
+            Enter the 6-digit verification code sent to your email to reset your password.
+          </p>
+          <p className="text-xs text-muted-foreground">Password Reset Verification</p>
         </div>
       </div>
 
@@ -194,7 +195,7 @@ export function VerifyForm() {
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Verify Email
+          Verify Code
         </Button>
       </form>
 
@@ -220,9 +221,9 @@ export function VerifyForm() {
 
       <div className="text-center">
         <Button variant="ghost" asChild className="h-auto p-0">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-primary">
+          <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
             <ArrowLeft className="mr-1 h-3 w-3" />
-            Back to login
+            Back to forgot password
           </Link>
         </Button>
       </div>

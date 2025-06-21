@@ -1,8 +1,6 @@
 package com.daniel.backend.controller;
 
-import com.daniel.backend.dto.LoginRequest;
-import com.daniel.backend.dto.RegisterRequest;
-import com.daniel.backend.dto.VerifyRequest;
+import com.daniel.backend.dto.*;
 import com.daniel.backend.repository.UserRepo;
 import com.daniel.backend.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +29,7 @@ public class UserController {
     }
 
     @PostMapping("/verify")
-    public ResponseEntity<String> verifyUser(@RequestBody VerifyRequest request) {
+    public ResponseEntity<String> verify(@RequestBody VerifyRequest request) {
         String token = userService.verify(request);
         System.out.println("Testing verifyRequest: " + request.testingTheDto()); // Debugging line to check the DTO content
         return ResponseEntity.ok("Verification successful. Token: " + token);
@@ -41,4 +39,20 @@ public class UserController {
     public ResponseEntity<String> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(userService.login(request));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(userService.requestPasswordReset(request));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(userService.resetPassword(request));
+    }
+
+    @PostMapping("/verify-password")
+    public ResponseEntity<String> verifyPasswordReset(@RequestBody VerifyRequest request) {
+        return ResponseEntity.ok(userService.verifyPasswordResetCode(request));
+    }
+
 }

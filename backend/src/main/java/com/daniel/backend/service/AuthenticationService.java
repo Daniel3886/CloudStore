@@ -1,6 +1,8 @@
 package com.daniel.backend.service;
 
+import com.daniel.backend.dto.ForgotPasswordRequest;
 import com.daniel.backend.dto.LoginRequest;
+import com.daniel.backend.dto.ResetPasswordRequest;
 import com.daniel.backend.dto.VerifyRequest;
 import com.daniel.backend.entity.Users;
 import com.daniel.backend.repository.UserRepo;
@@ -102,6 +104,73 @@ public class AuthenticationService {
 
         return jwtService.generateToken(user.getUsername());
     }
+
+    public String requestPasswordReset(ForgotPasswordRequest request) {
+        if (request.getEmail() == null) {
+            throw new RuntimeException("Email is required for password reset.");
+        }
+
+        Users user = repo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User with this email not found."));
+
+        String code = generateVerificationCode();
+
+        System.out.println(code);
+        user.setVerificationCode(code);
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
+        user.setLastVerificationEmailSentAt(LocalDateTime.now());
+
+        repo.save(user);
+
+        emailService.sendPasswordResetEmail(user.getEmail(), code);
+        return "Password reset email sent successfully.";
+    }
+
+    public String resetPassword(ResetPasswordRequest request) {
+        Users user = repo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User with this email not found."));
+
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+
+        user.setPassword(encodedPassword);
+        user.setPasswordResetToken(null); 
+        user.setPasswordResetExpiresAt(null); 
+
+        repo.save(user);
+
+        return "Password reset successfully.";
+    }
+
+
+    public String verifyPasswordResetCode(VerifyRequest request) {
+        validateVerifyRequest(request);
+
+        Users user = repo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User with this email not found."));
+
+        if (user.getVerificationCodeExpiresAt() == null ||
+                LocalDateTime.now().isAfter(user.getVerificationCodeExpiresAt())) {
+            throw new RuntimeException("Verification code has expired.");
+        }
+
+        if (!request.getVerificationCode().equals(user.getVerificationCode())) {
+            throw new RuntimeException("Invalid verification code.");
+        }
+
+        String resetToken = generateVerificationCode(); 
+
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetExpiresAt(LocalDateTime.now().plusMinutes(10));
+
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiresAt(null);
+        repo.save(user);
+
+        return resetToken;
+    }
+
+
+
     private void validateEmailRateLimit(Users user) {
         LocalDateTime lastSent = user.getLastVerificationEmailSentAt();
         if (lastSent != null) {

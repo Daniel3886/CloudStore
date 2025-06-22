@@ -29,8 +29,8 @@ public class AuthenticationService {
     @Autowired
     private EmailService emailService;
 
-    public String register(String username, String email, String rawPassword) {
-        String encodedPassword = passwordEncoder.encode(rawPassword);
+    public String register(String username, String email, String password) {
+        String encodedPassword = passwordEncoder.encode(password);
         String code = generateVerificationCode();
 
         if (repo.findByUsername(username).isPresent() && !(repo.findByUsername(username).isEmpty())) {
@@ -130,11 +130,11 @@ public class AuthenticationService {
         Users user = repo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User with this email not found."));
 
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+        if (passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("New password must be different from the current password.");
         }
 
-        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
 
         user.setPassword(encodedPassword);
         user.setPasswordResetToken(null); 

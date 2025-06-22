@@ -53,7 +53,7 @@ export function ResetPasswordForm() {
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Password mismatch",
-        description: "Passwords do not match.",
+        description: "Passwords do not match. Please make sure both passwords are identical.",
         variant: "destructive",
       })
       return false
@@ -68,7 +68,49 @@ export function ResetPasswordForm() {
       return false
     }
 
+    if (formData.password.length > 128) {
+      toast({
+        title: "Password too long",
+        description: "Password must be no more than 128 characters long.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!/\d/.test(formData.password)) {
+      toast({
+        title: "Weak password",
+        description: "Password must contain at least one number.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!/[a-zA-Z]/.test(formData.password)) {
+      toast({
+        title: "Weak password",
+        description: "Password must contain at least one letter.",
+        variant: "destructive",
+      })
+      return false
+    }
+
     return true
+  }
+
+  const parseBackendError = (responseText: string, defaultMessage: string) => {
+    try {
+      const errorData = JSON.parse(responseText)
+      if (errorData.message) {
+        return errorData.message
+      }
+      if (errorData.error) {
+        return errorData.error
+      }
+      return defaultMessage
+    } catch {
+      return responseText || defaultMessage
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -114,17 +156,17 @@ export function ResetPasswordForm() {
 
         toast({
           title: "Password reset successful!",
-          description: "Your password has been updated. You can now sign in.",
+          description: "Your password has been updated. You can now sign in with your new password.",
         })
 
         setTimeout(() => {
           router.push("/login")
         }, 3000)
       } else {
-        const errorMsg = responseText || "Failed to reset password"
+        const errorMsg = parseBackendError(responseText, "Failed to reset password")
         setDebugInfo((prev) => `${prev}\nFailed: ${errorMsg}`)
         toast({
-          title: "Reset failed",
+          title: "Password reset failed",
           description: errorMsg,
           variant: "destructive",
         })
@@ -132,8 +174,8 @@ export function ResetPasswordForm() {
     } catch (error: any) {
       setDebugInfo((prev) => `${prev}\nError: ${error.message}`)
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Network error",
+        description: "Unable to connect to the server. Please check your internet connection and try again.",
         variant: "destructive",
       })
     } finally {
@@ -262,6 +304,16 @@ export function ResetPasswordForm() {
           >
             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
+        </div>
+
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>Password requirements:</p>
+          <ul className="list-disc list-inside space-y-0.5 ml-2">
+            <li>At least 8 characters long</li>
+            <li>Contains at least one letter</li>
+            <li>Contains at least one number</li>
+            <li>Both passwords must match</li>
+          </ul>
         </div>
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>

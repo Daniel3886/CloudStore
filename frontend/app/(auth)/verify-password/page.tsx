@@ -1,7 +1,7 @@
-import { VerifyForm } from "@/components/auth/verify-form"
+import { VerifyPasswordForm } from "@/components/auth/verify-password-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
-export default function VerifyPage() {
+export default function VerifyPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
@@ -19,10 +19,10 @@ export default function VerifyPage() {
 
         <Card className="border-muted-foreground/20 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-4">
-            <h2 className="text-xl font-semibold text-center">Verify your email</h2>
+            <h2 className="text-xl font-semibold text-center">Verify reset code</h2>
           </CardHeader>
           <CardContent>
-            <VerifyForm />
+            <VerifyPasswordForm />
           </CardContent>
         </Card>
       </div>

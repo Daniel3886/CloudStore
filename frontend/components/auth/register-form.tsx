@@ -30,15 +30,77 @@ export function RegisterForm() {
   }
 
   const validateForm = () => {
+    if (formData.username.length > 20) {
+      toast({
+        title: "Invalid username",
+        description: "Username must be no more than 20 characters long.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      })
+      return false
+    }
+
     if (formData.password.length < 8) {
       toast({
-        title: "Weak password",
+        title: "Password too short",
         description: "Password must be at least 8 characters long.",
         variant: "destructive",
       })
       return false
     }
+
+    if (formData.password.length > 128) {
+      toast({
+        title: "Password too long",
+        description: "Password must be no more than 128 characters long.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!/\d/.test(formData.password)) {
+      toast({
+        title: "Weak password",
+        description: "Password must contain at least one number.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    if (!/[a-zA-Z]/.test(formData.password)) {
+      toast({
+        title: "Weak password",
+        description: "Password must contain at least one letter.",
+        variant: "destructive",
+      })
+      return false
+    }
+
     return true
+  }
+
+  const parseBackendError = (responseText: string, defaultMessage: string) => {
+    try {
+      const errorData = JSON.parse(responseText)
+      if (errorData.message) {
+        return errorData.message
+      }
+      if (errorData.error) {
+        return errorData.error
+      }
+      return defaultMessage
+    } catch {
+      return responseText || defaultMessage
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,18 +148,21 @@ export function RegisterForm() {
         })
 
         sessionStorage.setItem("pendingVerificationEmail", formData.email)
-
         router.push("/verify")
       } else {
-        const errorMsg = responseText || `Server error: ${response.status}`
+        const errorMsg = parseBackendError(responseText, "Registration failed")
         setDebugInfo((prev) => `${prev}\nRegistration failed: ${errorMsg}`)
-        throw new Error(errorMsg)
+        toast({
+          title: "Registration failed",
+          description: errorMsg,
+          variant: "destructive",
+        })
       }
     } catch (error: any) {
       setDebugInfo((prev) => `${prev}\nCaught error: ${error.message}`)
       toast({
-        title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
+        title: "Network error",
+        description: "Unable to connect to the server. Please check your internet connection and try again.",
         variant: "destructive",
       })
     } finally {
@@ -160,6 +225,14 @@ export function RegisterForm() {
           </Button>
         </div>
 
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p>Password requirements:</p>
+          <ul className="list-disc list-inside space-y-0.5 ml-2">
+            <li>At least 8 characters long</li>
+            <li>Contains at least one letter</li>
+            <li>Contains at least one number</li>
+          </ul>
+        </div>
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

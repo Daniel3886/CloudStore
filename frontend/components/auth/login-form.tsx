@@ -28,6 +28,21 @@ export function LoginForm() {
     })
   }
 
+  const parseBackendError = (responseText: string, defaultMessage: string) => {
+    try {
+      const errorData = JSON.parse(responseText)
+      if (errorData.message) {
+        return errorData.message
+      }
+      if (errorData.error) {
+        return errorData.error
+      }
+      return defaultMessage
+    } catch {
+      return responseText || defaultMessage
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -69,13 +84,20 @@ export function LoginForm() {
 
         router.push("/files")
       } else {
-        throw new Error(responseText || "Login failed")
+        const errorMsg = parseBackendError(responseText, "Login failed")
+        setDebugInfo((prev) => `${prev}\nLogin failed: ${errorMsg}`)
+
+        toast({
+          title: "Login failed",
+          description: errorMsg,
+          variant: "destructive",
+        })
       }
     } catch (error: any) {
       setDebugInfo((prev) => `${prev}\nError: ${error.message}`)
       toast({
         title: "Login failed",
-        description: error.message || "Please check your credentials and try again.",
+        description: "Unable to connect to the server. Please check your internet connection and try again.",
         variant: "destructive",
       })
     } finally {

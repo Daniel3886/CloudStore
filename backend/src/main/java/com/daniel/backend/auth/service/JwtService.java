@@ -19,7 +19,21 @@ public class JwtService {
     @Value("${JWT_SECRET_KEY}")
     private String secretKey;
 
-    public String generateToken(String username) {
+    @Value("${security.jwt.access-token-expiration}")
+    private long accessTokenExpiration;
+
+    @Value("${security.jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
+
+    public String generateAccessToken(String email) {
+        return generateToken(email, accessTokenExpiration);
+    }
+
+    public String generateRefreshToken(String email) {
+        return generateToken(email, refreshTokenExpiration);
+    }
+
+    private String generateToken(String username, long expirationTime) {
         Map<String, Object> claims = new HashMap<>();
 
         return Jwts.builder()
@@ -27,7 +41,7 @@ public class JwtService {
                 .add(claims)
                 .subject(username)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 24 * 60 * 1000))
+                .expiration(new Date(expirationTime))
                 .and()
                 .signWith(getKey())
                 .compact();

@@ -33,9 +33,18 @@ public class AuthenticationService {
         String encodedPassword = passwordEncoder.encode(password);
         String code = generateVerificationCode();
 
-        if (repo.findByUsername(username).isPresent() && !(repo.findByUsername(username).isEmpty())) {
-            throw new RuntimeException("Username already in use");
+        Optional<Users> existingUserByEmail = repo.findByEmail(email);
+        Optional<Users> existingUserByUsername = repo.findByUsername(username);
+
+        if (existingUserByUsername.isPresent()) {
+            Users userWithThatUsername = existingUserByUsername.get();
+
+            if (existingUserByEmail.isEmpty() || !userWithThatUsername.getEmail().equals(existingUserByEmail.get().getEmail())) {
+                throw new RuntimeException("Username already in use");
+            }
         }
+
+
 
         Optional<Users> existingUser = repo.findByEmail(email);
         Users user = existingUser.orElseGet(Users::new);
@@ -84,7 +93,7 @@ public class AuthenticationService {
         user.setVerificationCodeExpiresAt(null);
         repo.save(user);
 
-        return jwtService.generateToken(user.getEmail());
+        return jwtService.generateAccessToken(user.getEmail());
     }
 
     public String login(LoginRequest request) {
@@ -102,7 +111,7 @@ public class AuthenticationService {
             throw new RuntimeException("Invalid password.");
         }
 
-        return jwtService.generateToken(user.getUsername());
+        return jwtService.generateRefreshToken(user.getEmail());
     }
 
     public String requestPasswordReset(ForgotPasswordRequest request) {

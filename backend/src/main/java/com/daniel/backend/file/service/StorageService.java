@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+
 @Service
 public class StorageService {
     @Value("${AWS_BUCKET_NAME}")
@@ -40,6 +41,11 @@ public class StorageService {
     }
 
     public byte[] downloadFile(String fileName) {
+
+        if(!doesFileExist(fileName)) {
+            throw new RuntimeException("File not found: " + fileName);
+        }
+
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
@@ -50,6 +56,10 @@ public class StorageService {
     }
 
     public String deleteFile(String fileName) {
+        if(!doesFileExist(fileName)) {
+            throw new RuntimeException("File not found: " + fileName);
+        }
+
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
@@ -57,6 +67,19 @@ public class StorageService {
 
         s3Client.deleteObject(deleteObjectRequest);
         return "File deleted successfully: " + fileName;
+    }
+
+    private boolean doesFileExist(String fileName) {
+        try {
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+            s3Client.getObject(getObjectRequest);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private File convertMultiPartFileToFile(MultipartFile file) {

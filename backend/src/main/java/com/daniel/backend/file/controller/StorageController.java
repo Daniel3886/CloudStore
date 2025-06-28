@@ -3,6 +3,7 @@ package com.daniel.backend.file.controller;
 import com.daniel.backend.file.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +28,8 @@ public class StorageController {
 
         return ResponseEntity
                 .ok()
-                .header("Content-Disposition", "application/octet-stream",
-                        "Content-disposition", "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
                 .body(resource);
     }
 

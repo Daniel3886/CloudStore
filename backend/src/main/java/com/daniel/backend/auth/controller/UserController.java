@@ -31,7 +31,6 @@ public class UserController {
     @PostMapping("/verify")
     public ResponseEntity<String> verify(@RequestBody VerifyRequest request) {
         String token = userService.verify(request);
-        System.out.println("Testing verifyRequest: " + request.testingTheDto()); // Debugging line to check the DTO content
         return ResponseEntity.ok("Verification successful. Token: " + token);
     }
 

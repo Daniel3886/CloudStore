@@ -9,9 +9,10 @@ import { NewFolderModal } from "./new-folder-modal"
 
 interface FileHeaderProps {
   title?: string
+  onRefresh?: () => void
 }
 
-export function FileHeader({ title = "My Files" }: FileHeaderProps) {
+export function FileHeader({ title = "My Files", onRefresh }: FileHeaderProps) {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
@@ -41,7 +42,7 @@ export function FileHeader({ title = "My Files" }: FileHeaderProps) {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="Search files and folders..." className="pl-9" />
       </div>
-      <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} />
+      <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} onUploadComplete={onRefresh} />
       <NewFolderModal open={newFolderOpen} onOpenChange={setNewFolderOpen} />
     </div>
   )

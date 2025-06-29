@@ -1,9 +1,6 @@
 package com.daniel.backend.auth.service;
 
-import com.daniel.backend.auth.dto.ForgotPasswordRequest;
-import com.daniel.backend.auth.dto.LoginRequest;
-import com.daniel.backend.auth.dto.ResetPasswordRequest;
-import com.daniel.backend.auth.dto.VerifyRequest;
+import com.daniel.backend.auth.dto.*;
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.auth.repository.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +40,6 @@ public class AuthenticationService {
                 throw new RuntimeException("Username already in use");
             }
         }
-
-
 
         Optional<Users> existingUser = repo.findByEmail(email);
         Users user = existingUser.orElseGet(Users::new);
@@ -96,23 +91,24 @@ public class AuthenticationService {
         return jwtService.generateAccessToken(user.getEmail());
     }
 
-    public String login(LoginRequest request) {
-        try {
-            validateLoginRequest(request);
-        } catch (RuntimeException e) {
-            throw new RuntimeException("Invalid login request: " + e.getMessage());
-        }
+    public TokenResponse login(LoginRequest request) {
+        validateLoginRequest(request);
 
         Users user = repo.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Email not found."));
 
         if (!user.isVerified()) throw new RuntimeException("Please verify your account before logging in.");
+
         if (user.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid password.");
         }
 
-        return jwtService.generateRefreshToken(user.getEmail());
+        String accessToken = jwtService.generateAccessToken(user.getEmail());
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+
+        return new TokenResponse(accessToken, refreshToken);
     }
+
 
     public String requestPasswordReset(ForgotPasswordRequest request) {
         if (request.getEmail() == null) {
@@ -182,8 +178,6 @@ public class AuthenticationService {
         return resetToken;
     }
 
-
-
     private void validateEmailRateLimit(Users user) {
         LocalDateTime lastSent = user.getLastVerificationEmailSentAt();
         if (lastSent != null) {
@@ -219,5 +213,31 @@ public class AuthenticationService {
 
     private String generateVerificationCode() {
         return String.format("%06d", (int) (Math.random() * 1_000_000));
+    }
+
+    public String refreshAccessToken(String refreshToken) {
+        String email;
+        try {
+            email = jwtService.extractEmail(refreshToken);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid refresh token.");
+        }
+
+        Users user = repo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!jwtService.isTokenValid(refreshToken, user)) {
+            throw new RuntimeException("Refresh token is invalid or expired.");
+        }
+
+        return jwtService.generateAccessToken(email);
+    }
+
+    public String extractEmailFromRefreshToken(String refreshToken) {
+        return jwtService.extractEmail(refreshToken);
+    }
+
+    public String generateRefreshToken(String email) {
+        return jwtService.generateRefreshToken(email);
     }
 }

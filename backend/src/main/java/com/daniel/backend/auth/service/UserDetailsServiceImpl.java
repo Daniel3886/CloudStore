@@ -17,8 +17,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private UserRepo repo;
 
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<Users> user = repo.findByUsername(username);
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        Optional<Users> user = repo.findByEmail(email);
         if (user.isEmpty() || !user.get().isVerified()) {
             throw new UsernameNotFoundException("User not found or not verified");
         }

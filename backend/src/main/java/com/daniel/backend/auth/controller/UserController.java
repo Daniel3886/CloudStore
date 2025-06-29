@@ -18,9 +18,6 @@ public class UserController {
     @Autowired
     private AuthenticationService userService;
 
-    @Autowired
-    private UserRepo repo;
-
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(
@@ -35,8 +32,9 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.ok(userService.login(request));
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
+        TokenResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/forgot-password")
@@ -52,6 +50,14 @@ public class UserController {
     @PostMapping("/verify-password")
     public ResponseEntity<String> verifyPasswordReset(@RequestBody VerifyRequest request) {
         return ResponseEntity.ok(userService.verifyPasswordResetCode(request));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
+        String newAccessToken = userService.refreshAccessToken(request.getRefreshToken());
+        String email = userService.extractEmailFromRefreshToken(request.getRefreshToken());
+        String newRefreshToken = userService.generateRefreshToken(email); // optional
+        return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
     }
 
 }

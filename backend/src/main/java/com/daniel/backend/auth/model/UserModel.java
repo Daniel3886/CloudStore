@@ -2,30 +2,21 @@ package com.daniel.backend.auth.model;
 
 import com.daniel.backend.auth.entity.Users;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
-    import java.util.*;
+import java.util.*;
 
-public class UserModel implements UserDetails, OAuth2User {
+public class UserModel implements UserDetails {
 
     private final Users user;
-    //TODO: Consider using a more specific type for attributes if needed
-    private Map<String, Object> attributes;
 
     public UserModel(Users user) {
         this.user = user;
     }
 
     @Override
-    public Map<String, Object> getAttributes() {
-        return attributes;
-    }
-
-    @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("user"));
+        return null;
     }
 
     @Override
@@ -35,7 +26,7 @@ public class UserModel implements UserDetails, OAuth2User {
 
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return user.getEmail();
     }
 
     @Override
@@ -56,10 +47,5 @@ public class UserModel implements UserDetails, OAuth2User {
     @Override
     public boolean isEnabled() {
         return user.isVerified();
-    }
-
-    @Override
-    public String getName() {
-        return user.getUsername();
     }
 }

@@ -53,15 +53,8 @@ public class JwtService {
         return Keys.hmacShaKeyFor(key);
     }
 
-//    public String extractEmail(String token) {
-//        return Jwts.parser().verifyWith(getKey()).build()
-//                .parseSignedClaims(token)
-//                .getPayload()
-//                .getSubject();
-//    }
-
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject); // subject = "sub" = email
+        return extractClaim(token, Claims::getSubject);
     }
 
     public boolean isTokenValid(String token, Users user) {

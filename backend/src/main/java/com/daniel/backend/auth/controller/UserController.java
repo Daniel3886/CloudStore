@@ -1,7 +1,6 @@
 package com.daniel.backend.auth.controller;
 
 import com.daniel.backend.auth.dto.*;
-import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.auth.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -56,7 +55,7 @@ public class UserController {
     public ResponseEntity<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
         String newAccessToken = userService.refreshAccessToken(request.getRefreshToken());
         String email = userService.extractEmailFromRefreshToken(request.getRefreshToken());
-        String newRefreshToken = userService.generateRefreshToken(email); // optional
+        String newRefreshToken = userService.generateRefreshToken(email);
         return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
     }
 

@@ -1,13 +1,16 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { useAuth } from "./auth-provider"
+import { showSuccess, showError } from "@/components/ui/notification"
 
 export function LoginForm() {
   const [formData, setFormData] = useState({
@@ -16,158 +19,119 @@ export function LoginForm() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
-
   const router = useRouter()
-  const { toast } = useToast()
+  const { login } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
-  }
-
-  const parseBackendError = (responseText: string, defaultMessage: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      if (errorData.message) {
-        return errorData.message
-      }
-      if (errorData.error) {
-        return errorData.error
-      }
-      return defaultMessage
-    } catch {
-      return responseText || defaultMessage
-    }
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setDebugInfo(null)
 
     try {
-      setDebugInfo("Sending login request...")
-
       const response = await fetch("http://localhost:8080/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
         },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
         }),
-        mode: "cors",
         credentials: "include",
       })
 
-      setDebugInfo((prev) => `${prev}\nResponse status: ${response.status}`)
-
-      const responseText = await response.text()
-      setDebugInfo((prev) => `${prev}\nResponse: ${responseText}`)
-
       if (response.ok) {
-        const tokenMatch = responseText.match(/Token:\s*(.+)/)
-        const token = tokenMatch ? tokenMatch[1].trim() : responseText.trim()
+        const data = await response.json()
 
-        localStorage.setItem("authToken", token)
-        localStorage.setItem("userEmail", formData.email)
+        // Use the new login method with both tokens
+        login(data.accessToken, data.refreshToken, formData.email)
 
-        toast({
-          title: "Login successful!",
-          description: "Welcome back to CloudStore.",
-        })
-
+        showSuccess("Login successful", "Welcome back!")
         router.push("/files")
       } else {
-        const errorMsg = parseBackendError(responseText, "Login failed")
-        setDebugInfo((prev) => `${prev}\nLogin failed: ${errorMsg}`)
-
-        toast({
-          title: "Login failed",
-          description: errorMsg,
-          variant: "destructive",
-        })
+        const errorText = await response.text()
+        showError("Login failed", errorText || "Invalid credentials")
       }
     } catch (error: any) {
-      setDebugInfo((prev) => `${prev}\nError: ${error.message}`)
-      toast({
-        title: "Login failed",
-        description: "Unable to connect to the server. Please check your internet connection and try again.",
-        variant: "destructive",
-      })
+      showError("Login failed", error.message || "Network error occurred")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted-foreground text-center">
-        Enter your email and password to access your CloudStore account.
-      </p>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="Enter your email"
+          value={formData.email}
+          onChange={handleInputChange}
+          required
+          disabled={isLoading}
+        />
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            name="email"
-            type="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
-        </div>
-
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+            id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="Password"
+            placeholder="Enter your password"
             value={formData.password}
             onChange={handleInputChange}
-            className="pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
             required
+            disabled={isLoading}
+            className="pr-10"
           />
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
+            disabled={isLoading}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
+      </div>
 
-        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Log in
-        </Button>
+      <div className="flex items-center justify-between">
+        <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+          Forgot password?
+        </Link>
+      </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
-            Forgot password?
-          </Link>
-          <Link href="/register" className="text-sm text-primary hover:underline">
-            Sign up
-          </Link>
-        </div>
-      </form>
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Signing in...
+          </>
+        ) : (
+          "Sign in"
+        )}
+      </Button>
 
-      {debugInfo && (
-        <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-40">
-          <p className="font-semibold mb-1">Debug Information:</p>
-          {debugInfo}
-        </div>
-      )}
-    </div>
+      <div className="text-center text-sm">
+        Don't have an account?{" "}
+        <Link href="/register" className="text-primary hover:underline">
+          Sign up
+        </Link>
+      </div>
+    </form>
   )
 }

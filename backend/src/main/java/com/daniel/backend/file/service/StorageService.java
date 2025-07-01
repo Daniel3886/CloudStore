@@ -1,5 +1,6 @@
 package com.daniel.backend.file.service;
 
+import com.daniel.backend.file.dto.S3ObjectDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -7,14 +8,13 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -92,6 +92,22 @@ public class StorageService {
             throw new RuntimeException("Could not convert multipart file to file: " + e.getMessage());
         }
         return convertedFile;
+    }
+
+    public List<S3ObjectDto> listObjects() { // the error complains about the S3object not being serializable
+        // Builds a request to list objects in the given bucket
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .build();
+
+        List<S3Object> s3Objects  = s3Client.listObjectsV2(request).contents();
+
+        List<S3ObjectDto> dtos = new ArrayList<>();
+        for (S3Object obj : s3Objects) {
+            dtos.add(new S3ObjectDto(obj.key(), obj.size(), obj.lastModified()));
+        }
+
+        return dtos;
     }
 
 }

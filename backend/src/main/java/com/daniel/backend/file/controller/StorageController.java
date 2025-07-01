@@ -1,5 +1,6 @@
 package com.daniel.backend.file.controller;
 
+import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.service.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
@@ -8,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.S3Object;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/file")
@@ -36,6 +40,11 @@ public class StorageController {
     @DeleteMapping("/delete/{fileName}")
     public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
         return new ResponseEntity<>(service.deleteFile(fileName), HttpStatus.OK);
+    }
+
+    @GetMapping("/list")
+    public List<S3ObjectDto> listObjects() {
+        return service.listObjects();
     }
 
 }

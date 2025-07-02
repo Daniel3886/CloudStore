@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   FileIcon,
   FileTextIcon,
@@ -12,6 +12,7 @@ import {
   FileVideoIcon,
   Download,
   Trash2,
+  RefreshCw,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -37,81 +38,14 @@ import { ShareModal } from "./share-modal"
 import { FileDetailsModal } from "./file-details-modal"
 import { showSuccess, showError } from "@/components/ui/notification"
 
-// Mock data for demonstration
-const mockFiles = [
-  {
-    id: "1",
-    name: "Project Documentation",
-    type: "folder",
-    items: 12,
-    size: null,
-    modified: "2023-05-10T14:48:00",
-    owner: "John Doe",
-  },
-  {
-    id: "2",
-    name: "Design Assets",
-    type: "folder",
-    items: 8,
-    size: null,
-    modified: "2023-05-12T09:30:00",
-    owner: "John Doe",
-  },
-  {
-    id: "3",
-    name: "quarterly_report.pdf",
-    type: "pdf",
-    items: null,
-    size: 4500000, // 4.5 MB
-    modified: "2023-05-15T16:22:00",
-    owner: "John Doe",
-  },
-  {
-    id: "4",
-    name: "presentation.pptx",
-    type: "document",
-    items: null,
-    size: 2800000, // 2.8 MB
-    modified: "2023-05-14T11:15:00",
-    owner: "Jane Smith",
-  },
-  {
-    id: "5",
-    name: "logo.png",
-    type: "image",
-    items: null,
-    size: 1200000, // 1.2 MB
-    modified: "2023-05-13T10:45:00",
-    owner: "John Doe",
-  },
-  {
-    id: "6",
-    name: "data_backup.zip",
-    type: "archive",
-    items: null,
-    size: 156000000, // 156 MB
-    modified: "2023-05-11T08:20:00",
-    owner: "John Doe",
-  },
-  {
-    id: "7",
-    name: "product_demo.mp4",
-    type: "video",
-    items: null,
-    size: 85000000, // 85 MB
-    modified: "2023-05-09T15:30:00",
-    owner: "Jane Smith",
-  },
-  {
-    id: "8",
-    name: "podcast_interview.mp3",
-    type: "audio",
-    items: null,
-    size: 24000000, // 24 MB
-    modified: "2023-05-08T13:10:00",
-    owner: "John Doe",
-  },
-]
+interface FileItem {
+  id: string
+  name: string
+  type: string
+  size: number | null
+  modified: string
+  owner?: string
+}
 
 interface FileBrowserProps {
   type?: "all" | "shared" | "recent" | "trash"
@@ -119,16 +53,99 @@ interface FileBrowserProps {
 }
 
 export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
+  const [files, setFiles] = useState<FileItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [shareOpen, setShareOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<any>(null)
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
 
-  // Filter files based on type
-  const filteredFiles = mockFiles.filter((file) => {
+  const fetchFiles = async () => {
+    setLoading(true)
+
+    try {
+      const headers: Record<string, string> = {}
+      const accessToken = localStorage.getItem("accessToken")
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`
+      }
+
+      const response = await fetch("http://localhost:8080/file/list", {
+        method: "GET",
+        headers,
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        
+        const data = await response.json()
+        console.log("Fetched files:", data)
+        const transformedFiles = data.map((file: any, index: number) => {
+
+        const originalKey = file.key || ""
+        const fileName = originalKey.split("-").slice(1).join("-") // removes timestamp prefix
+        const fileType = getFileTypeFromName(fileName)
+
+          return {
+            id: `file-${index}`,
+            name: fileName,
+            type: fileType,
+            size: file.size || null,
+            modified: file.lastModified || new Date().toISOString(),
+            owner: "Unknown",
+          }
+        })
+
+        console.log("Transformed files:", transformedFiles)
+        setFiles(transformedFiles)
+      } else if (response.status === 401) {
+        const refreshSuccess = await refreshAccessToken()
+        if (refreshSuccess) {
+          await fetchFiles()
+          return
+        }
+        throw new Error("Authentication failed. Please log in again.")
+      } else {
+        throw new Error(`Failed to fetch files: ${response.status}`)
+      }
+    } catch (error: any) {
+      console.error("Error fetching files:", error)
+      showError("Failed to load files", error.message || "Could not load files from server")
+      setFiles([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchFiles()
+  }, [type])
+
+  const getFileTypeFromName = (fileName: string): string => {
+    const extension = fileName.split(".").pop()?.toLowerCase()
+
+    if (!extension) return "file"
+
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"]
+    const documentExtensions = ["pdf", "doc", "docx", "txt", "rtf", "odt"]
+    const videoExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv"]
+    const audioExtensions = ["mp3", "wav", "flac", "aac", "ogg", "wma"]
+    const archiveExtensions = ["zip", "rar", "7z", "tar", "gz", "bz2"]
+
+    if (imageExtensions.includes(extension)) return "image"
+    if (documentExtensions.includes(extension)) return "document"
+    if (extension === "pdf") return "pdf"
+    if (videoExtensions.includes(extension)) return "video"
+    if (audioExtensions.includes(extension)) return "audio"
+    if (archiveExtensions.includes(extension)) return "archive"
+
+    return "file"
+  }
+
+  const filteredFiles = files.filter((file) => {
     if (type === "all") return true
-    if (type === "shared") return file.owner !== "John Doe"
+    if (type === "shared") return file.owner !== "Current User" // Adjust based on your user system (Not implemented yet)
     if (type === "recent") {
       const oneWeekAgo = new Date()
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
@@ -202,7 +219,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         }
         return true
       } else {
-        // Refresh token is invalid, clear tokens
         localStorage.removeItem("accessToken")
         localStorage.removeItem("refreshToken")
         localStorage.removeItem("userEmail")
@@ -223,10 +239,8 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     setFileLoading(file.id, true)
 
     try {
-      // Create headers object
       const headers: Record<string, string> = {}
 
-      // Get access token and add to headers if it exists
       const accessToken = localStorage.getItem("accessToken")
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
@@ -239,10 +253,8 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       })
 
       if (response.ok) {
-        // Get the blob data
         const blob = await response.blob()
 
-        // Create download link
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement("a")
         link.href = url
@@ -250,16 +262,13 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         document.body.appendChild(link)
         link.click()
 
-        // Cleanup
         window.URL.revokeObjectURL(url)
         document.body.removeChild(link)
 
         showSuccess("Download started", `${file.name} is being downloaded.`)
       } else if (response.status === 401) {
-        // Try to refresh token and retry
         const refreshSuccess = await refreshAccessToken()
         if (refreshSuccess) {
-          // Retry with new token
           const newAccessToken = localStorage.getItem("accessToken")
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
@@ -308,10 +317,8 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     setFileLoading(file.id, true)
 
     try {
-      // Create headers object
       const headers: Record<string, string> = {}
 
-      // Get access token and add to headers if it exists
       const accessToken = localStorage.getItem("accessToken")
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
@@ -327,15 +334,13 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         const result = await response.text()
         showSuccess("File deleted", `${file.name} has been deleted successfully.`)
 
-        // Refresh the file list
+        await fetchFiles()
         if (onRefresh) {
           onRefresh()
         }
       } else if (response.status === 401) {
-        // Try to refresh token and retry
         const refreshSuccess = await refreshAccessToken()
         if (refreshSuccess) {
-          // Retry with new token
           const newAccessToken = localStorage.getItem("accessToken")
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
@@ -349,6 +354,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
           if (retryResponse.ok) {
             showSuccess("File deleted", `${file.name} has been deleted successfully.`)
+            await fetchFiles()
             if (onRefresh) {
               onRefresh()
             }
@@ -387,9 +393,46 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       case "delete":
         setDeleteDialogOpen(true)
         break
+      case "refresh":
+        fetchFiles()
+        break
       default:
         showError("Action not implemented", `${action} functionality is not implemented yet.`)
     }
+  }
+
+  const handleRefresh = async () => {
+    await fetchFiles()
+    if (onRefresh) {
+      onRefresh()
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4 animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading files...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (filteredFiles.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <FileIcon className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">No files found</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          {type === "all" ? "Upload some files to get started" : `No ${type} files found`}
+        </p>
+        <Button variant="outline" onClick={handleRefresh}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+    )
   }
 
   return (
@@ -443,7 +486,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
                     {file.name}
                   </h3>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {file.type === "folder" ? <p>{file.items} items</p> : <p>{formatSize(file.size)}</p>}
+                    {file.type === "folder" ? <p>Folder</p> : <p>{formatSize(file.size)}</p>}
                     <p>Modified {formatDate(file.modified)}</p>
                   </div>
                 </div>

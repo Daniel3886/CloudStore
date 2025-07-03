@@ -89,7 +89,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
           return {
             id: `file-${index}`,
-            name: fileName,
+            name: fileName, originalKey,
             type: fileType,
             size: file.size || null,
             modified: file.lastModified || new Date().toISOString(),
@@ -230,9 +230,9 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     }
   }
 
-  const downloadFile = async (file: any) => {
-    if (file.type === "folder") {
-      showError("Cannot download folder", "Folder downloads are not supported yet.")
+    const downloadFile = async (file: any) => {
+      if (!file.originalKey) {
+      showError("Missing key", "Cannot download file without original key.")
       return
     }
 
@@ -246,7 +246,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         headers["Authorization"] = `Bearer ${accessToken}`
       }
 
-      const response = await fetch(`http://localhost:8080/file/download/${encodeURIComponent(file.name)}`, {
+      const response = await fetch(`http://localhost:8080/file/download/${encodeURIComponent(file.originalKey)}`, {
         method: "GET",
         headers,
         credentials: "include",
@@ -309,28 +309,33 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   }
 
   const deleteFile = async (file: any) => {
-    if (file.type === "folder") {
-      showError("Cannot delete folder", "Folder deletion is not supported yet.")
+      if (!file.originalKey) {
+      showError("Missing key", "Cannot delete file without original key.")
       return
-    }
+      }
 
     setFileLoading(file.id, true)
 
     try {
       const headers: Record<string, string> = {}
+      const originalKey = file.key || ""
 
       const accessToken = localStorage.getItem("accessToken")
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
       }
 
-      const response = await fetch(`http://localhost:8080/file/delete/${encodeURIComponent(file.name)}`, {
+      const response = await fetch(`http://localhost:8080/file/delete/${encodeURIComponent(file.originalKey)}`, {
+        // const response = await fetch(`http://localhost:8080/file/delete/${originalKey}`, {
         method: "DELETE",
         headers,
         credentials: "include",
       })
 
+      console.log("Delete response:", response)
+
       if (response.ok) {
+
         const result = await response.text()
         showSuccess("File deleted", `${file.name} has been deleted successfully.`)
 
@@ -351,6 +356,8 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
             headers,
             credentials: "include",
           })
+
+          console.log("Retry delete response:", retryResponse)  
 
           if (retryResponse.ok) {
             showSuccess("File deleted", `${file.name} has been deleted successfully.`)

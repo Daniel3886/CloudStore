@@ -1,6 +1,9 @@
 package com.daniel.backend.file.service;
 
 import com.daniel.backend.file.dto.S3ObjectDto;
+
+import com.daniel.backend.file.entity.Files;
+import com.daniel.backend.file.repo.FileRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,11 +28,14 @@ public class StorageService {
     @Autowired
     private S3Client s3Client;
 
+    @Autowired
+    private FileRepo fileMetadataRepository;
+
     public String uploadFile(MultipartFile file) {
         File fileObj = convertMultiPartFileToFile(file);
         String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
 
-        PutObjectRequest putObjectRequest  = PutObjectRequest.builder()
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
                 .build();
@@ -37,8 +43,20 @@ public class StorageService {
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(fileObj));
         fileObj.delete();
 
+
+        Files metadata = Files.builder()
+                .s3Key(fileName)
+                .displayName(file.getOriginalFilename())
+                .ownerId(1L) // TODO: Replace with authenticated user ID
+                .isFolder(false)
+                .build();
+
+        fileMetadataRepository.save(metadata);
+
         return "File uploaded successfully: " + fileName;
     }
+
+
 
     public byte[] downloadFile(String fileName) {
 
@@ -94,8 +112,7 @@ public class StorageService {
         return convertedFile;
     }
 
-    public List<S3ObjectDto> listObjects() { // the error complains about the S3object not being serializable
-        // Builds a request to list objects in the given bucket
+    public List<S3ObjectDto> listObjects() {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
@@ -108,6 +125,20 @@ public class StorageService {
         }
 
         return dtos;
+    }
+
+    public void renameFile(String s3Key, String newDisplayName) {
+        Files metadata = fileMetadataRepository.findByS3Key(s3Key)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        metadata.setDisplayName(newDisplayName);
+        fileMetadataRepository.save(metadata);
+    }
+
+    public String getDisplayName(String s3Key) {
+        Files metadata = fileMetadataRepository.findByS3Key(s3Key)
+                .orElseThrow(() -> new RuntimeException("File not found in metadata"));
+        return metadata.getDisplayName();
     }
 
 }

@@ -25,16 +25,16 @@ public class StorageController {
         return new ResponseEntity<>(service.uploadFile(file), HttpStatus.OK);
     }
 
-    @GetMapping("/download/{fileName}")
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String fileName) {
-        byte[] data = service.downloadFile(fileName);
-        ByteArrayResource resource = new ByteArrayResource(data);
+    @GetMapping("/download/{s3Key}")
+    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String s3Key) {
+        byte[] data = service.downloadFile(s3Key);  // s3Key = timestamp-prefixed key
+        String displayName = service.getDisplayName(s3Key); // from DB
 
         return ResponseEntity
                 .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + displayName + "\"")
                 .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
-                .body(resource);
+                .body(new ByteArrayResource(data));
     }
 
     @DeleteMapping("/delete/{fileName}")
@@ -47,4 +47,12 @@ public class StorageController {
         return service.listObjects();
     }
 
+    @PatchMapping("/rename")
+    public ResponseEntity<String> renameFile(
+            @RequestParam String s3Key,
+            @RequestParam String newDisplayName
+    ) {
+        service.renameFile(s3Key, newDisplayName);
+        return ResponseEntity.ok("Renamed successfully");
+    }
 }

@@ -7,8 +7,8 @@ import lombok.*;
 @Table(name = "files")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 public class Files {
 

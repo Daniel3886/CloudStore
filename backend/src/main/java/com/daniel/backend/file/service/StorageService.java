@@ -18,6 +18,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -54,8 +56,6 @@ public class StorageService {
 
         return "File uploaded successfully: " + fileName;
     }
-
-
 
     public byte[] downloadFile(String fileName) {
 
@@ -117,19 +117,34 @@ public class StorageService {
     }
 
     public List<S3ObjectDto> listObjects() {
+        List<Files> dbFiles = fileRepo.findAll();
+
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
+        List<S3Object> s3Objects = s3Client.listObjectsV2(request).contents();
 
-        List<S3Object> s3Objects  = s3Client.listObjectsV2(request).contents();
+        Map<String, S3Object> s3ObjectMap = s3Objects.stream()
+                .collect(Collectors.toMap(S3Object::key, obj -> obj));
 
         List<S3ObjectDto> dtos = new ArrayList<>();
-        for (S3Object obj : s3Objects) {
-            dtos.add(new S3ObjectDto(obj.key(), obj.size(), obj.lastModified()));
+
+        for (Files file : dbFiles) {
+            S3Object S3Object = s3ObjectMap.get(file.getS3Key());
+
+            if (S3Object != null) {
+                dtos.add(new S3ObjectDto(
+                        file.getS3Key(),
+                        S3Object.size(),
+                        S3Object.lastModified(),
+                        file.getDisplayName()
+                ));
+            }
         }
 
         return dtos;
     }
+
 
     public void renameFile(String s3Key, String newDisplayName) {
         Files metadata = fileRepo.findByS3Key(s3Key)

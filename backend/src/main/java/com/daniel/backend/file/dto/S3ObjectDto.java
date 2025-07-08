@@ -9,7 +9,9 @@ import java.time.Instant;
 @AllArgsConstructor
 public class S3ObjectDto {
     private String key;
-    private long size;
+    private Long size;
     private Instant lastModified;
+    private String displayName;
+
 }
 

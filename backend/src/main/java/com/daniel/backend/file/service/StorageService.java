@@ -29,7 +29,7 @@ public class StorageService {
     private S3Client s3Client;
 
     @Autowired
-    private FileRepo fileMetadataRepository;
+    private FileRepo fileRepo;
 
     public String uploadFile(MultipartFile file) {
         File fileObj = convertMultiPartFileToFile(file);
@@ -41,7 +41,6 @@ public class StorageService {
                 .build();
 
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(fileObj));
-        fileObj.delete();
 
 
         Files metadata = Files.builder()
@@ -51,7 +50,7 @@ public class StorageService {
                 .isFolder(false)
                 .build();
 
-        fileMetadataRepository.save(metadata);
+        fileRepo.save(metadata);
 
         return "File uploaded successfully: " + fileName;
     }
@@ -83,7 +82,12 @@ public class StorageService {
                 .key(fileName)
                 .build();
 
+        Files metadata = fileRepo.findByS3Key(fileName)
+                .orElseThrow(() -> new RuntimeException("File metadata not found: " + fileName));
+
+        fileRepo.delete(metadata);
         s3Client.deleteObject(deleteObjectRequest);
+
         return "File deleted successfully: " + fileName;
     }
 
@@ -128,15 +132,15 @@ public class StorageService {
     }
 
     public void renameFile(String s3Key, String newDisplayName) {
-        Files metadata = fileMetadataRepository.findByS3Key(s3Key)
+        Files metadata = fileRepo.findByS3Key(s3Key)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
         metadata.setDisplayName(newDisplayName);
-        fileMetadataRepository.save(metadata);
+        fileRepo.save(metadata);
     }
 
     public String getDisplayName(String s3Key) {
-        Files metadata = fileMetadataRepository.findByS3Key(s3Key)
+        Files metadata = fileRepo.findByS3Key(s3Key)
                 .orElseThrow(() -> new RuntimeException("File not found in metadata"));
         return metadata.getDisplayName();
     }

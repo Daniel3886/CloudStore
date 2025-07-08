@@ -43,7 +43,7 @@ public class StorageService {
                 .build();
 
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(fileObj));
-
+        fileObj.delete();
 
         Files metadata = Files.builder()
                 .s3Key(fileName)

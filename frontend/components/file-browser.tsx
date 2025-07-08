@@ -622,7 +622,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Rename Dialog */}
       <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

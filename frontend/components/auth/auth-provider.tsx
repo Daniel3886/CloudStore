@@ -33,27 +33,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const refreshToken = localStorage.getItem("refreshToken")
         const email = localStorage.getItem("userEmail")
 
-        console.log("Auth initialization:", {
-          hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
-          hasEmail: !!email,
-        })
-
         if (accessToken && email) {
           setUser({
             email,
-            verified: true, // If they have tokens, they're verified
+            verified: true, 
           })
-          console.log("User authenticated:", email)
         } else if (refreshToken && email) {
-          // Try to refresh the access token
           const refreshSuccess = await refreshAccessTokenInternal()
           if (refreshSuccess) {
             setUser({
               email,
               verified: true,
             })
-            console.log("User authenticated via refresh:", email)
           } else {
             console.log("Token refresh failed, user not authenticated")
           }
@@ -107,12 +98,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = (accessToken: string, refreshToken: string, email: string) => {
-    console.log("Login called with:", {
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      email,
-    })
-
     localStorage.setItem("accessToken", accessToken)
     localStorage.setItem("refreshToken", refreshToken)
     localStorage.setItem("userEmail", email)
@@ -122,11 +107,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       verified: true,
     })
 
-    console.log("User logged in:", email)
   }
 
   const logout = () => {
-    console.log("Logout called")
 
     localStorage.removeItem("accessToken")
     localStorage.removeItem("refreshToken")

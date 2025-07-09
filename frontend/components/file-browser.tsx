@@ -94,8 +94,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       })
       if (response.ok) {
         const data = await response.json()
-        console.log("Fetched files:", data)
-        const transformedFiles = data.map((file: any, index: number) => {
+        const transformedFiles = data.map((file: any, index: number, size: number) => {
           const displayName = file.displayName || file.display_name || "Unknown File"
           const s3Key = file.key || ""
 
@@ -106,12 +105,11 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
             s3Key: s3Key,
             displayName: displayName,
             type: fileType,
-            size: file.size || null,
+            size: file.size || null, // already has the actual size of the file 
             modified: file.lastModified || new Date().toISOString(),
             owner: "Unknown",
           }
         })
-        console.log("Transformed files:", transformedFiles)
         setFiles(transformedFiles)
       } else if (response.status === 401) {
         const refreshSuccess = await refreshAccessToken()
@@ -324,7 +322,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         headers,
         credentials: "include",
       })
-      console.log("Delete response:", response)
       if (response.ok) {
         const result = await response.text()
         showSuccess("File deleted", `${file.displayName} has been deleted successfully.`)
@@ -344,7 +341,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
             headers,
             credentials: "include",
           })
-          console.log("Retry delete response:", retryResponse)
           if (retryResponse.ok) {
             showSuccess("File deleted", `${file.displayName} has been deleted successfully.`)
             await fetchFiles()
@@ -572,7 +568,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
                         <Edit className="mr-2 h-4 w-4" />
                         Rename
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleFileAction("move", file)}>Move</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleFileAction("details", file)}>Details</DropdownMenuItem>
                       <DropdownMenuSeparator />

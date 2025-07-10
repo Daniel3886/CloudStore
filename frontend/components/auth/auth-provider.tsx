@@ -13,9 +13,10 @@ interface User {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (token: string, email: string) => void
+  login: (accessToken: string, refreshToken: string, email: string) => void
   logout: () => void
   isAuthenticated: boolean
+  refreshAccessToken: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -27,43 +28,117 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem("authToken")
-      const email = localStorage.getItem("userEmail")
+      try {
+        const accessToken = localStorage.getItem("accessToken")
+        const refreshToken = localStorage.getItem("refreshToken")
+        const email = localStorage.getItem("userEmail")
 
-      if (token && email) {
-        setUser({
-          email,
-          verified: true, // If they have a token, they're verified
-        })
+        if (accessToken && email) {
+          setUser({
+            email,
+            verified: true, 
+          })
+        } else if (refreshToken && email) {
+          const refreshSuccess = await refreshAccessTokenInternal()
+          if (refreshSuccess) {
+            setUser({
+              email,
+              verified: true,
+            })
+          } else {
+            console.log("Token refresh failed, user not authenticated")
+          }
+        } else {
+          console.log("No valid authentication found")
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error)
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
     }
 
     initAuth()
   }, [])
 
-  const login = (token: string, email: string) => {
-    localStorage.setItem("authToken", token)
+  const refreshAccessTokenInternal = async (): Promise<boolean> => {
+    try {
+      const refreshToken = localStorage.getItem("refreshToken")
+      if (!refreshToken) {
+        return false
+      }
+
+      const response = await fetch("http://localhost:8080/auth/refresh-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }),
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem("accessToken", data.accessToken)
+        if (data.refreshToken) {
+          localStorage.setItem("refreshToken", data.refreshToken)
+        }
+        return true
+      } else {
+        // Refresh token is invalid, clear all tokens
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
+        localStorage.removeItem("userEmail")
+        return false
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error)
+      return false
+    }
+  }
+
+  const login = (accessToken: string, refreshToken: string, email: string) => {
+    localStorage.setItem("accessToken", accessToken)
+    localStorage.setItem("refreshToken", refreshToken)
     localStorage.setItem("userEmail", email)
+
     setUser({
       email,
       verified: true,
     })
+
   }
 
   const logout = () => {
-    localStorage.removeItem("authToken")
+
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("refreshToken")
     localStorage.removeItem("userEmail")
     sessionStorage.removeItem("pendingVerificationEmail")
+
     setUser(null)
     router.push("/login")
+  }
+
+  const refreshAccessToken = async (): Promise<boolean> => {
+    return refreshAccessTokenInternal()
   }
 
   const isAuthenticated = !!user
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, isAuthenticated }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        login,
+        logout,
+        isAuthenticated,
+        refreshAccessToken,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   )
 }
 

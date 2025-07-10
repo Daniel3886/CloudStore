@@ -35,12 +35,30 @@ export function FileDetailsModal({ open, onOpenChange, file }: FileDetailsModalP
   if (!file) return null
 
   const formatSize = (bytes: number | null) => {
-    if (bytes === null) return "N/A"
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+    if (bytes === null || bytes === undefined) return "N/A"
+    if (bytes === 0) return "0 B"
+
+    const units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    const k = 1024
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    const unitIndex = Math.min(i, units.length - 1)
+    const size = bytes / Math.pow(k, unitIndex)
+
+    let formattedSize: string
+    if (size >= 100) {
+      formattedSize = size.toFixed(0)
+    } else if (size >= 10) {
+      formattedSize = size.toFixed(1)
+    } else {
+      formattedSize = size.toFixed(2)
+    }
+
+    formattedSize = Number.parseFloat(formattedSize).toString()
+
+    return `${formattedSize} ${units[unitIndex]}`
   }
+
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -101,13 +119,13 @@ export function FileDetailsModal({ open, onOpenChange, file }: FileDetailsModalP
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Modified:</span>
-              <span className="text-sm text-muted-foreground">{formatDate(file.modified)}</span>
+              <span className="text-sm text-muted-foreground">{formatDate(file.modified)}</span>  
             </div>
 
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Owner:</span>
-              <span className="text-sm text-muted-foreground">{file.owner}</span>
+              <span className="text-sm text-muted-foreground">{file.owner}</span>  {/* TODO: add a owner role */}
             </div>
 
             {file.type !== "folder" && (

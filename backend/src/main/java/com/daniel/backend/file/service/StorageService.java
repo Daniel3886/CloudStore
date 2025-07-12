@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,6 @@ public class StorageService {
                 .s3Key(fileName)
                 .displayName(file.getOriginalFilename())
                 .ownerId(1L) // TODO: Replace with authenticated user ID
-                .isFolder(false)
                 .build();
 
         fileRepo.save(metadata);
@@ -105,7 +105,9 @@ public class StorageService {
     }
 
     private File convertMultiPartFileToFile(MultipartFile file) {
-        File convertedFile = new File(file.getOriginalFilename());
+        String safeFilename = System.currentTimeMillis() + "-" + Paths.get(file.getOriginalFilename()).getFileName();
+        File convertedFile = new File(System.getProperty("java.io.tmpdir"), safeFilename);
+
 
         try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(file.getBytes());

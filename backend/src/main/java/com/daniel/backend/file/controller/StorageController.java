@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.util.List;
 
@@ -25,26 +24,46 @@ public class StorageController {
         return new ResponseEntity<>(service.uploadFile(file), HttpStatus.OK);
     }
 
-    @GetMapping("/download/{s3Key}")
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String s3Key) {
-        byte[] data = service.downloadFile(s3Key);  // s3Key = timestamp-prefixed key
-        String displayName = service.getDisplayName(s3Key); // from DB
+    @GetMapping("/download")
+    public ResponseEntity<ByteArrayResource> downloadFile(@RequestParam String s3Key) {
+        try {
+            byte[] data = service.downloadFile(s3Key);
+            String displayName = service.getDisplayName(s3Key);
 
-        return ResponseEntity
-                .ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + displayName + "\"")
-                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
-                .body(new ByteArrayResource(data));
+            String downloadFileName = displayName;
+            if (displayName.contains("/")) {
+                downloadFileName = displayName.substring(displayName.lastIndexOf("/") + 1);
+            }
+
+            return ResponseEntity
+                    .ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadFileName + "\"")
+                    .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                    .body(new ByteArrayResource(data));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
     }
 
-    @DeleteMapping("/delete/{fileName}")
-    public ResponseEntity<String> deleteFile(@PathVariable String fileName) {
-        return new ResponseEntity<>(service.deleteFile(fileName), HttpStatus.OK);
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> deleteFile(@RequestParam String fileName) {
+        try {
+            return new ResponseEntity<>(service.deleteFile(fileName), HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Delete failed: " + e.getMessage());
+        }
     }
 
     @GetMapping("/list")
-    public List<S3ObjectDto> listObjects() {
-        return service.listObjects();
+    public ResponseEntity<List<S3ObjectDto>> listObjects() {
+        try {
+            List<S3ObjectDto> files = service.listObjects();
+            return ResponseEntity.ok(files);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
     }
 
     @PatchMapping("/rename")
@@ -52,7 +71,37 @@ public class StorageController {
             @RequestParam String s3Key,
             @RequestParam String newDisplayName
     ) {
-        service.renameFile(s3Key, newDisplayName);
-        return ResponseEntity.ok("Renamed successfully");
+        try {
+            service.renameFile(s3Key, newDisplayName);
+            return ResponseEntity.ok("Renamed successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Rename failed: " + e.getMessage());
+        }
+    }
+
+    @PatchMapping("/rename-folder")
+    public ResponseEntity<String> renameFolder(
+            @RequestParam String oldFolderPath,
+            @RequestParam String newFolderPath
+    ) {
+        try {
+            service.renameFolder(oldFolderPath, newFolderPath);
+            return ResponseEntity.ok("Folder renamed successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Folder rename failed: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/delete-folder")
+    public ResponseEntity<String> deleteFolder(@RequestParam String folderPath) {
+        try {
+            service.deleteFolder(folderPath);
+            return ResponseEntity.ok("Folder deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Folder delete failed: " + e.getMessage());
+        }
     }
 }

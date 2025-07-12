@@ -5,7 +5,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
-        {/* Logo and Title */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center">
             <div className="size-16 rounded-xl bg-primary text-primary-foreground grid place-items-center text-2xl font-bold">
@@ -18,7 +17,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Login Card */}
         <Card className="border-muted-foreground/20 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-4">
             <h2 className="text-xl font-semibold text-center">Welcome back</h2>

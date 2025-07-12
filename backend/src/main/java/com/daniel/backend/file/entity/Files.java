@@ -19,5 +19,4 @@ public class Files {
     private String s3Key;
     private String displayName;
     private Long ownerId;        // TODO: useful for file ownership (file sharing, etc.)
-    private boolean isFolder;    // future: folder support?
 }

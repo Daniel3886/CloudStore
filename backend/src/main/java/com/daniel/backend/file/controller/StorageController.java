@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.util.List;
 
@@ -25,10 +24,10 @@ public class StorageController {
         return new ResponseEntity<>(service.uploadFile(file), HttpStatus.OK);
     }
 
-    @GetMapping("/download/{s3Key}")
-    public ResponseEntity<ByteArrayResource> downloadFile(@PathVariable String s3Key) {
-        byte[] data = service.downloadFile(s3Key);  // s3Key = timestamp-prefixed key
-        String displayName = service.getDisplayName(s3Key); // from DB
+    @GetMapping("/download")
+    public ResponseEntity<ByteArrayResource> downloadFile(@RequestParam String s3Key) {
+        byte[] data = service.downloadFile(s3Key);
+        String displayName = service.getDisplayName(s3Key);
 
         return ResponseEntity
                 .ok()

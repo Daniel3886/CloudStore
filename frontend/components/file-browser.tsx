@@ -16,8 +16,6 @@ import {
   Trash2,
   RefreshCw,
   Edit,
-  FolderPlus,
-  Upload,
   ArrowLeft,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -52,7 +50,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ShareModal } from "./share-modal"
 import { FileDetailsModal } from "./file-details-modal"
-import { UploadModal } from "./upload-modal"
+import { FileHeader } from "./file-header"
 import { showSuccess, showError } from "@/components/ui/notification"
 
 interface FileItem {
@@ -80,15 +78,11 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
-  const [createFolderDialogOpen, setCreateFolderDialogOpen] = useState(false)
-  const [uploadModalOpen, setUploadModalOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<any>(null)
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
   const [newFileName, setNewFileName] = useState("")
-  const [newFolderName, setNewFolderName] = useState("")
   const [renameLoading, setRenameLoading] = useState(false)
   const [currentPath, setCurrentPath] = useState("")
-
   const [virtualFolders, setVirtualFolders] = useState<string[]>([])
 
   useEffect(() => {
@@ -101,6 +95,18 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   const saveVirtualFolders = (folders: string[]) => {
     setVirtualFolders(folders)
     localStorage.setItem("virtualFolders", JSON.stringify(folders))
+  }
+
+  const getActualFileName = (displayName: string): string => {
+    if (!displayName) return "Unknown File"
+
+    const pathParts = displayName.split("/")
+    const fileName = pathParts[pathParts.length - 1]
+
+    const timestampPattern = /^\d{13}-(.+)$/
+    const match = fileName.match(timestampPattern)
+
+    return match ? match[1] : fileName
   }
 
   const fetchFiles = async () => {
@@ -123,17 +129,19 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         const transformedFiles = data.map((file: any, index: number) => {
           const displayName = file.displayName || file.display_name || "Unknown File"
           const s3Key = file.key || ""
-          const fileType = getFileTypeFromName(displayName)
+
+          const actualFileName = getActualFileName(displayName)
+          const fileType = getFileTypeFromName(actualFileName)
 
           const pathParts = displayName.split("/")
-          const fileName = pathParts.pop() || displayName
+          pathParts.pop() 
           const filePath = pathParts.join("/")
 
           return {
             id: `file-${index}`,
-            name: fileName,
+            name: actualFileName, 
             s3Key: s3Key,
-            displayName: displayName,
+            displayName: displayName, 
             type: fileType,
             size: file.size || null,
             modified: file.lastModified || new Date().toISOString(),
@@ -212,9 +220,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
       typeMatch = new Date(file.modified) > oneWeekAgo
     }
-
     const pathMatch = file.path === currentPath
-
     return typeMatch && pathMatch
   })
 
@@ -292,67 +298,38 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     }
   }
 
-  const createFolder = () => {
-    if (!newFolderName.trim()) {
-      showError("Invalid name", "Folder name cannot be empty.")
-      return
-    }
-
-    const folderPath = currentPath ? `${currentPath}/${newFolderName.trim()}` : newFolderName.trim()
-
-    if (virtualFolders.includes(folderPath)) {
-      showError("Folder exists", "A folder with this name already exists.")
-      return
-    }
-
-    const updatedFolders = [...virtualFolders, folderPath]
-    saveVirtualFolders(updatedFolders)
-    setCreateFolderDialogOpen(false)
-    setNewFolderName("")
-    showSuccess("Folder created", `Folder "${newFolderName}" created successfully.`)
-  }
-
   const downloadFolder = async (folder: FileItem) => {
     try {
       setFileLoading(folder.id, true)
-
       const folderPath = currentPath ? `${currentPath}/${folder.name}` : folder.name
       console.log("Downloading folder:", folderPath)
-
       const filesInFolder = files.filter((file) => {
-        if (file.isFolder) return false 
+        if (file.isFolder) return false
         return file.displayName.startsWith(folderPath + "/")
       })
-
       console.log("Files in folder:", filesInFolder)
-
       if (filesInFolder.length === 0) {
         showError("Empty folder", "This folder contains no files to download.")
         return
       }
-
       const JSZip = (await import("jszip")).default
       const zip = new JSZip()
-
       for (const file of filesInFolder) {
         try {
           console.log("Downloading file:", file.s3Key, file.displayName)
-
           const headers: Record<string, string> = {}
           const accessToken = localStorage.getItem("accessToken")
           if (accessToken) {
             headers["Authorization"] = `Bearer ${accessToken}`
           }
-
           const response = await fetch(`http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key!)}`, {
             method: "GET",
             headers,
             credentials: "include",
           })
-
           if (response.ok) {
             const blob = await response.blob()
-            const relativePath = file.displayName.replace(folderPath + "/", "")
+            const relativePath = file.name
             console.log("Adding to zip:", relativePath)
             zip.file(relativePath, blob)
           } else {
@@ -362,7 +339,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           console.error(`Failed to download file ${file.name}:`, error)
         }
       }
-
       console.log("Generating zip...")
       const zipBlob = await zip.generateAsync({ type: "blob" })
       const url = window.URL.createObjectURL(zipBlob)
@@ -373,7 +349,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       link.click()
       window.URL.revokeObjectURL(url)
       document.body.removeChild(link)
-
       showSuccess("Download started", `Folder "${folder.name}" is being downloaded as a zip file.`)
     } catch (error: any) {
       console.error("Download folder error:", error)
@@ -395,7 +370,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
       }
-      const response = await fetch(`http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key!)}`, {
+      const response = await fetch(`http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key)}`, {
         method: "GET",
         headers,
         credentials: "include",
@@ -405,12 +380,12 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement("a")
         link.href = url
-        link.download = file.displayName
+        link.download = file.name
         document.body.appendChild(link)
         link.click()
         window.URL.revokeObjectURL(url)
         document.body.removeChild(link)
-        showSuccess("Download started", `${file.displayName} is being downloaded.`)
+        showSuccess("Download started", `${file.name} is being downloaded.`)
       } else if (response.status === 401) {
         const refreshSuccess = await refreshAccessToken()
         if (refreshSuccess) {
@@ -418,22 +393,25 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
           }
-          const retryResponse = await fetch(`http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key)}`, {
-            method: "GET",
-            headers,
-            credentials: "include",
-          })
+          const retryResponse = await fetch(
+            `http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key)}`,
+            {
+              method: "GET",
+              headers,
+              credentials: "include",
+            },
+          )
           if (retryResponse.ok) {
             const blob = await retryResponse.blob()
             const url = window.URL.createObjectURL(blob)
             const link = document.createElement("a")
             link.href = url
-            link.download = file.displayName
+            link.download = file.name
             document.body.appendChild(link)
             link.click()
             window.URL.revokeObjectURL(url)
             document.body.removeChild(link)
-            showSuccess("Download started", `${file.displayName} is being downloaded.`)
+            showSuccess("Download started", `${file.name} is being downloaded.`)
           } else {
             throw new Error("Download failed after token refresh")
           }
@@ -453,16 +431,68 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
   const deleteFile = async (file: any) => {
     if (file.isFolder) {
-      const folderPath = currentPath ? `${currentPath}/${file.name}` : file.name
-      const updatedFolders = virtualFolders.filter((folder) => !folder.startsWith(folderPath))
-      saveVirtualFolders(updatedFolders)
-
-      showSuccess("Folder deleted", `Folder "${file.name}" has been deleted.`)
-      setDeleteDialogOpen(false)
-      setSelectedFile(null)
+      setFileLoading(file.id, true)
+      try {
+        const folderPath = currentPath ? `${currentPath}/${file.name}` : file.name
+        console.log("Deleting folder and all its contents:", folderPath)
+        const headers: Record<string, string> = {}
+        const accessToken = localStorage.getItem("accessToken")
+        if (accessToken) {
+          headers["Authorization"] = `Bearer ${accessToken}`
+        }
+        const response = await fetch(
+          `http://localhost:8080/file/delete-folder?folderPath=${encodeURIComponent(folderPath)}`,
+          {
+            method: "DELETE",
+            headers,
+            credentials: "include",
+          },
+        )
+        if (response.ok) {
+          const updatedFolders = virtualFolders.filter((folder) => !folder.startsWith(folderPath))
+          saveVirtualFolders(updatedFolders)
+          await fetchFiles()
+          showSuccess("Folder deleted", `Folder "${file.name}" and all its contents have been deleted.`)
+        } else if (response.status === 401) {
+          const refreshSuccess = await refreshAccessToken()
+          if (refreshSuccess) {
+            const newAccessToken = localStorage.getItem("accessToken")
+            if (newAccessToken) {
+              headers["Authorization"] = `Bearer ${newAccessToken}`
+            }
+            const retryResponse = await fetch(
+              `http://localhost:8080/file/delete-folder?folderPath=${encodeURIComponent(folderPath)}`,
+              {
+                method: "DELETE",
+                headers,
+                credentials: "include",
+              },
+            )
+            if (retryResponse.ok) {
+              const updatedFolders = virtualFolders.filter((folder) => !folder.startsWith(folderPath))
+              saveVirtualFolders(updatedFolders)
+              await fetchFiles()
+              showSuccess("Folder deleted", `Folder "${file.name}" and all its contents have been deleted.`)
+            } else {
+              throw new Error("Delete failed after token refresh")
+            }
+          } else {
+            throw new Error("Authentication failed. Please log in again.")
+          }
+        } else {
+          const errorText = await response.text()
+          throw new Error(errorText || `Delete failed: ${response.status}`)
+        }
+      } catch (error: any) {
+        console.error("Error deleting folder:", error)
+        showError("Delete failed", error.message || "Failed to delete folder.")
+      } finally {
+        setFileLoading(file.id, false)
+        setDeleteDialogOpen(false)
+        setSelectedFile(null)
+      }
       return
     }
-
     if (!file.s3Key) {
       showError("Missing key", "Cannot delete file without S3 key.")
       return
@@ -474,13 +504,14 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
       }
-      const response = await fetch(`http://localhost:8080/file/delete/${encodeURIComponent(file.s3Key)}`, {
+      console.log("Deleting file with S3 key:", file.s3Key)
+      const response = await fetch(`http://localhost:8080/file/delete?fileName=${encodeURIComponent(file.s3Key)}`, {
         method: "DELETE",
         headers,
         credentials: "include",
       })
       if (response.ok) {
-        showSuccess("File deleted", `${file.displayName} has been deleted successfully.`)
+        showSuccess("File deleted", `${file.name} has been deleted successfully.`)
         await fetchFiles()
         if (onRefresh) {
           onRefresh()
@@ -492,13 +523,16 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
           }
-          const retryResponse = await fetch(`http://localhost:8080/file/delete/${encodeURIComponent(file.s3Key)}`, {
-            method: "DELETE",
-            headers,
-            credentials: "include",
-          })
+          const retryResponse = await fetch(
+            `http://localhost:8080/file/delete?fileName=${encodeURIComponent(file.s3Key)}`,
+            {
+              method: "DELETE",
+              headers,
+              credentials: "include",
+            },
+          )
           if (retryResponse.ok) {
-            showSuccess("File deleted", `${file.displayName} has been deleted successfully.`)
+            showSuccess("File deleted", `${file.name} has been deleted successfully.`)
             await fetchFiles()
             if (onRefresh) {
               onRefresh()
@@ -514,6 +548,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         throw new Error(errorText || `Delete failed: ${response.status}`)
       }
     } catch (error: any) {
+      console.error("Error deleting file:", error)
       showError("Delete failed", error.message || "Failed to delete file.")
     } finally {
       setFileLoading(file.id, false)
@@ -524,44 +559,100 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
   const renameFile = async (file: any, newName: string) => {
     if (file.isFolder) {
-      const oldFolderPath = currentPath ? `${currentPath}/${file.name}` : file.name
-      const newFolderPath = currentPath ? `${currentPath}/${newName.trim()}` : newName.trim()
-
-      const updatedFolders = virtualFolders.map((folder) => {
-        if (folder === oldFolderPath) {
-          return newFolderPath
+      setRenameLoading(true)
+      try {
+        const oldFolderPath = currentPath ? `${currentPath}/${file.name}` : file.name
+        const newFolderPath = currentPath ? `${currentPath}/${newName.trim()}` : newName.trim()
+        console.log("Renaming folder from:", oldFolderPath, "to:", newFolderPath)
+        const headers: Record<string, string> = {}
+        const accessToken = localStorage.getItem("accessToken")
+        if (accessToken) {
+          headers["Authorization"] = `Bearer ${accessToken}`
         }
-        if (folder.startsWith(oldFolderPath + "/")) {
-          return folder.replace(oldFolderPath, newFolderPath)
+        const response = await fetch(
+          `http://localhost:8080/file/rename-folder?oldFolderPath=${encodeURIComponent(oldFolderPath)}&newFolderPath=${encodeURIComponent(newFolderPath)}`,
+          {
+            method: "PATCH",
+            headers,
+            credentials: "include",
+          },
+        )
+        if (response.ok) {
+          const updatedFolders = virtualFolders.map((folder) => {
+            if (folder === oldFolderPath) {
+              return newFolderPath
+            }
+            if (folder.startsWith(oldFolderPath + "/")) {
+              return folder.replace(oldFolderPath, newFolderPath)
+            }
+            return folder
+          })
+          saveVirtualFolders(updatedFolders)
+          await fetchFiles()
+          showSuccess("Folder renamed", `Folder renamed to "${newName}" successfully.`)
+        } else if (response.status === 401) {
+          const refreshSuccess = await refreshAccessToken()
+          if (refreshSuccess) {
+            const newAccessToken = localStorage.getItem("accessToken")
+            if (newAccessToken) {
+              headers["Authorization"] = `Bearer ${newAccessToken}`
+            }
+            const retryResponse = await fetch(
+              `http://localhost:8080/file/rename-folder?oldFolderPath=${encodeURIComponent(oldFolderPath)}&newFolderPath=${encodeURIComponent(newFolderPath)}`,
+              {
+                method: "PATCH",
+                headers,
+                credentials: "include",
+              },
+            )
+            if (retryResponse.ok) {
+              const updatedFolders = virtualFolders.map((folder) => {
+                if (folder === oldFolderPath) {
+                  return newFolderPath
+                }
+                if (folder.startsWith(oldFolderPath + "/")) {
+                  return folder.replace(oldFolderPath, newFolderPath)
+                }
+                return folder
+              })
+              saveVirtualFolders(updatedFolders)
+              await fetchFiles()
+              showSuccess("Folder renamed", `Folder renamed to "${newName}" successfully.`)
+            } else {
+              throw new Error("Rename failed after token refresh")
+            }
+          } else {
+            throw new Error("Authentication failed. Please log in again.")
+          }
+        } else {
+          const errorText = await response.text()
+          throw new Error(errorText || `Rename failed: ${response.status}`)
         }
-        return folder
-      })
-
-      saveVirtualFolders(updatedFolders)
-      showSuccess("Folder renamed", `Folder renamed to "${newName}" successfully.`)
-      setRenameDialogOpen(false)
-      setSelectedFile(null)
-      setNewFileName("")
+      } catch (error: any) {
+        console.error("Error renaming folder:", error)
+        showError("Rename failed", error.message || "Failed to rename folder.")
+      } finally {
+        setRenameLoading(false)
+        setRenameDialogOpen(false)
+        setSelectedFile(null)
+        setNewFileName("")
+      }
       return
     }
-
     if (!file.s3Key) {
       showError("Missing key", "Cannot rename file without S3 key.")
       return
     }
-
     if (!newName.trim()) {
       showError("Invalid name", "File name cannot be empty.")
       return
     }
-
-    if (newName === file.displayName) {
+    if (newName === file.name) {
       setRenameDialogOpen(false)
       setSelectedFile(null)
       setNewFileName("")
       return
     }
-
     setRenameLoading(true)
     try {
       const headers: Record<string, string> = {}
@@ -569,19 +660,15 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       if (accessToken) {
         headers["Authorization"] = `Bearer ${accessToken}`
       }
-
       const newDisplayName = currentPath ? `${currentPath}/${newName.trim()}` : newName.trim()
-
       const url = new URL("http://localhost:8080/file/rename")
       url.searchParams.append("s3Key", file.s3Key)
       url.searchParams.append("newDisplayName", newDisplayName)
-
       const response = await fetch(url.toString(), {
         method: "PATCH",
         headers,
         credentials: "include",
       })
-
       if (response.ok) {
         showSuccess("File renamed", `File renamed to "${newName}" successfully.`)
         await fetchFiles()
@@ -598,11 +685,9 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
           }
-
           const retryUrl = new URL("http://localhost:8080/file/rename")
           retryUrl.searchParams.append("s3Key", file.s3Key)
           retryUrl.searchParams.append("newDisplayName", newDisplayName)
-
           const retryResponse = await fetch(retryUrl.toString(), {
             method: "PATCH",
             headers,
@@ -654,7 +739,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         setDeleteDialogOpen(true)
         break
       case "rename":
-        setNewFileName(file.displayName)
+        setNewFileName(file.name) 
         setRenameDialogOpen(true)
         break
       case "refresh":
@@ -679,11 +764,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     } else if (selectedFile && !newFileName.trim()) {
       showError("Invalid name", "Name cannot be empty.")
     }
-  }
-
-  const handleCreateFolderSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    createFolder()
   }
 
   const handleFileClick = (file: FileItem) => {
@@ -727,15 +807,20 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
   return (
     <>
-      {/* Header with breadcrumbs and actions */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          {currentPath && (
-            <Button variant="ghost" size="sm" onClick={handleBackClick}>
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-          )}
+      <FileHeader
+        title={currentPath ? `${currentPath}` : "My Files"}
+        onRefresh={handleRefresh}
+        currentPath={currentPath}
+        virtualFolders={virtualFolders}
+        saveVirtualFolders={saveVirtualFolders}
+      />
+
+      {currentPath && (
+        <div className="flex items-center gap-2 mb-4">
+          <Button variant="ghost" size="sm" onClick={handleBackClick}>
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             {getBreadcrumbs().map((crumb, index) => (
               <span key={index}>
@@ -745,21 +830,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => setCreateFolderDialogOpen(true)}>
-            <FolderPlus className="h-4 w-4 mr-1" />
-            New Folder
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setUploadModalOpen(true)}>
-            <Upload className="h-4 w-4 mr-1" />
-            Upload
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Refresh
-          </Button>
-        </div>
-      </div>
+      )}
 
       {filteredFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -768,16 +839,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           <p className="text-sm text-muted-foreground mb-4">
             {type === "all" ? "Upload some files or create a folder to get started" : `No ${type} files found`}
           </p>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCreateFolderDialogOpen(true)}>
-              <FolderPlus className="h-4 w-4 mr-2" />
-              Create Folder
-            </Button>
-            <Button variant="outline" onClick={() => setUploadModalOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Files
-            </Button>
-          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -865,7 +926,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
                     </DropdownMenu>
                   </div>
                   <div className="mt-4 pointer-events-none">
-                    <h3 className="font-medium truncate" title={file.displayName}>
+                    <h3 className="font-medium truncate" title={file.name}>
                       {file.name}
                     </h3>
                     <div className="mt-1 text-xs text-muted-foreground">
@@ -880,14 +941,13 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         </div>
       )}
 
-      {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selectedFile?.isFolder ? "folder" : "file"}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedFile?.displayName}"? This action cannot be undone.
-              {selectedFile?.isFolder && " All files in this folder will need to be moved or deleted separately."}
+              Are you sure you want to delete "{selectedFile?.name}"? This action cannot be undone.
+              {selectedFile?.isFolder && " All files in this folder will also be permanently deleted from storage."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -902,14 +962,14 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Rename Dialog */}
       <Dialog open={renameDialogOpen} onOpenChange={setRenameDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Rename {selectedFile?.isFolder ? "folder" : "file"}</DialogTitle>
             <DialogDescription>
-              Enter a new name for "{selectedFile?.displayName}".
+              Enter a new name for "{selectedFile?.name}".
               {!selectedFile?.isFolder && " The file extension will be preserved."}
+              {selectedFile?.isFolder && " All files in this folder will be updated accordingly."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleRenameSubmit}>
@@ -924,7 +984,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
                       if (selectedFile?.isFolder) {
                         setNewFileName(e.target.value)
                       } else {
-                        const extension = getFileExtension(selectedFile?.displayName || "")
+                        const extension = getFileExtension(selectedFile?.name || "")
                         if (e.target.value.trim()) {
                           setNewFileName(e.target.value + extension)
                         } else {
@@ -936,9 +996,9 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
                     disabled={renameLoading}
                     className="flex-1"
                   />
-                  {!selectedFile?.isFolder && getFileExtension(selectedFile?.displayName || "") && (
+                  {!selectedFile?.isFolder && getFileExtension(selectedFile?.name || "") && (
                     <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded">
-                      {getFileExtension(selectedFile?.displayName || "")}
+                      {getFileExtension(selectedFile?.name || "")}
                     </span>
                   )}
                 </div>
@@ -971,56 +1031,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Create Folder Dialog */}
-      <Dialog open={createFolderDialogOpen} onOpenChange={setCreateFolderDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
-            <DialogDescription>Enter a name for the new folder.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateFolderSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="foldername">Folder name</Label>
-                <Input
-                  id="foldername"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="Enter folder name"
-                  className="flex-1"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setCreateFolderDialogOpen(false)
-                  setNewFolderName("")
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={!newFolderName.trim()}>
-                Create Folder
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Upload Modal */}
-      <UploadModal
-        open={uploadModalOpen}
-        onOpenChange={setUploadModalOpen}
-        onUploadComplete={() => {
-          fetchFiles()
-          if (onRefresh) onRefresh()
-        }}
-        currentPath={currentPath}
-      />
 
       {selectedFile && (
         <>

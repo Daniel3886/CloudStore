@@ -135,13 +135,34 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
 
       const formData = new FormData()
 
-      let fileToUpload = fileStatus.file
+      let s3Key: string
+      let displayName: string
+
       if (currentPath) {
-        const newFileName = `${currentPath}/${fileStatus.file.name}`
-        fileToUpload = new File([fileStatus.file], newFileName, { type: fileStatus.file.type })
+        const timestamp = Date.now()
+        const originalFileName = fileStatus.file.name
+        s3Key = `${currentPath}/${timestamp}-${originalFileName}`
+
+        displayName = `${currentPath}/${originalFileName}`
+
+        console.log("Uploading to folder:")
+        console.log("- Current path:", currentPath)
+        console.log("- S3 key:", s3Key)
+        console.log("- Display name:", displayName)
+      } else {
+        const timestamp = Date.now()
+        s3Key = `${timestamp}-${fileStatus.file.name}`
+        displayName = fileStatus.file.name
+
+        console.log("Uploading to root:")
+        console.log("- S3 key:", s3Key)
+        console.log("- Display name:", displayName)
       }
 
+      const fileToUpload = new File([fileStatus.file], s3Key, { type: fileStatus.file.type })
       formData.append("file", fileToUpload)
+
+      formData.append("displayName", displayName)
 
       const headers: Record<string, string> = {}
       const accessToken = localStorage.getItem("accessToken")
@@ -301,7 +322,8 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
         <DialogHeader>
           <DialogTitle>Upload files</DialogTitle>
           <DialogDescription>
-            Upload files to {currentPath ? `"${currentPath}"` : "your storage"}. You can upload multiple files at once.
+            Upload files to {currentPath ? `"${currentPath}"` : "your storage"}. Files will be organized using stable
+            folder prefixes.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -393,6 +415,7 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
                         <p className="text-xs text-muted-foreground">
                           {(fileStatus.file.size / 1024 / 1024).toFixed(2)} MB
                         </p>
+                        {currentPath && <p className="text-xs text-blue-600">→ {currentPath}/</p>}
                         {fileStatus.status === "uploading" && (
                           <div className="flex-1 max-w-20">
                             <Progress value={fileStatus.progress} className="h-1" />

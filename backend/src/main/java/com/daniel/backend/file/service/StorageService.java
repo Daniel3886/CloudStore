@@ -1,5 +1,7 @@
 package com.daniel.backend.file.service;
 
+import com.daniel.backend.auth.entity.Users;
+import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
@@ -33,7 +35,10 @@ public class StorageService {
     @Autowired
     private FileRepo fileRepo;
 
-    public String uploadFile(MultipartFile file) {
+    @Autowired
+    private UserRepo userRepo;
+
+    public String uploadFile(MultipartFile file, String ownerEmail) { // TODO: Fix the error occuring because the controller layer is onlly initializing the file nt the email of the owner
         File fileObj = convertMultiPartFileToFile(file);
 
         String originalFileName = file.getOriginalFilename();
@@ -57,14 +62,20 @@ public class StorageService {
                 .bucket(bucketName)
                 .key(s3Key)
                 .build();
+
         s3Client.putObject(putObjectRequest, RequestBody.fromFile(fileObj));
         fileObj.delete();
+
+        Users owner = userRepo.findByEmail(ownerEmail)
+                .orElseThrow(() -> new RuntimeException("Owner not found"));
 
         Files metadata = Files.builder()
                 .s3Key(s3Key)
                 .displayName(originalFileName)
-                .ownerId(1L) // TODO: Replace with authenticated user ID
+                .ownerEmail(owner)
+                .uploadedAt(java.time.LocalDateTime.now())
                 .build();
+
         fileRepo.save(metadata);
 
         return "File uploaded successfully: " + s3Key;
@@ -74,10 +85,12 @@ public class StorageService {
         if(!doesFileExist(fileName)) {
             throw new RuntimeException("File not found: " + fileName);
         }
+
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileName)
                 .build();
+
         ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
         return objectBytes.asByteArray();
     }
@@ -93,6 +106,9 @@ public class StorageService {
 
         Files metadata = fileRepo.findByS3Key(fileName)
                 .orElseThrow(() -> new RuntimeException("File metadata not found: " + fileName));
+
+
+
         fileRepo.delete(metadata);
         s3Client.deleteObject(deleteObjectRequest);
 

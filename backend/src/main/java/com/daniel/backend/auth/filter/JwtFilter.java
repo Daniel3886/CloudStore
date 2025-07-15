@@ -2,6 +2,7 @@ package com.daniel.backend.auth.filter;
 
 import com.daniel.backend.auth.service.JwtService;
 import com.daniel.backend.auth.service.UserDetailsServiceImpl;
+import com.daniel.backend.file.entity.Files;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
             email = jwtService.extractEmail(token);
+
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {

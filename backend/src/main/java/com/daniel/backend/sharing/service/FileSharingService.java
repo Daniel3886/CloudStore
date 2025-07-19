@@ -1,4 +1,3 @@
-// FileSharingService.java
 package com.daniel.backend.sharing.service;
 
 import com.daniel.backend.auth.entity.Users;
@@ -29,8 +28,12 @@ public class FileSharingService {
         Files file = fileRepo.findById(dto.getFileId())
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
-        if (!file.getOwnerEmail().equals(currentUserEmail)) {
-            throw new AccessDeniedException("You are not the owner of this file");
+        if (!file.getOwner().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException("You are the owner of this file");
+        }
+
+        if (dto.getTargetUserEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException("You cannot share the file with yourself\"");
         }
 
         Users targetUser = userRepo.findByEmail(dto.getTargetUserEmail())

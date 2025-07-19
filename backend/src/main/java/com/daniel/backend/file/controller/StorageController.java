@@ -2,6 +2,7 @@ package com.daniel.backend.file.controller;
 
 import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.service.StorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -20,8 +21,9 @@ public class StorageController {
     private StorageService service;
 
     @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file) {
-        return new ResponseEntity<>(service.uploadFile(file), HttpStatus.OK);
+    public ResponseEntity<String> uploadFile(@RequestParam MultipartFile file, HttpServletRequest request) {
+        String currentUserEmail = request.getUserPrincipal().getName();
+        return new ResponseEntity<>(service.uploadFile(file, currentUserEmail), HttpStatus.OK);
     }
 
     @GetMapping("/download")

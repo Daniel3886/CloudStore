@@ -5,12 +5,14 @@ import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
 import com.daniel.backend.sharing.dto.ShareFileRequestDto;
+import com.daniel.backend.sharing.dto.SharedFileDto;
 import com.daniel.backend.sharing.entity.FilePermission;
 import com.daniel.backend.sharing.repository.FilePermissionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
+import java.util.List;
 
 @Service
 public class FileSharingService {
@@ -46,5 +48,19 @@ public class FileSharingService {
                 .build();
 
         filePermissionRepo.save(permission);
+    }
+
+    public List<SharedFileDto> getFilesSharedWithUser(String currentUserEmail) {
+        List<FilePermission> permissions = filePermissionRepo.findBySharedWithEmail(currentUserEmail);
+
+        return permissions.stream().map(permission -> {
+            Files file = permission.getFile();
+            return new SharedFileDto(
+                    file.getId(),
+                    file.getDisplayName(),
+                    file.getOwner().getEmail(),
+                    file.getS3Key()
+            );
+        }).toList();
     }
 }

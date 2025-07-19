@@ -26,11 +26,7 @@ public class Files {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_email", referencedColumnName = "email")
-    private Users ownerEmail;
+    private Users owner;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "owner_id")
-//    private Users ownerId;        // TODO: useful for file ownership (file sharing, etc.)
-
-    private LocalDateTime uploadedAt; // TODO: implement this in the service layer
+    private LocalDateTime uploadedAt;
 }

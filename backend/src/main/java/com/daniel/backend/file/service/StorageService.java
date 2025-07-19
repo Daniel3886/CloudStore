@@ -38,7 +38,7 @@ public class StorageService {
     @Autowired
     private UserRepo userRepo;
 
-    public String uploadFile(MultipartFile file, String ownerEmail) { // TODO: Fix the error occuring because the controller layer is onlly initializing the file nt the email of the owner
+    public String uploadFile(MultipartFile file, String ownerEmail) {
         File fileObj = convertMultiPartFileToFile(file);
 
         String originalFileName = file.getOriginalFilename();
@@ -72,7 +72,7 @@ public class StorageService {
         Files metadata = Files.builder()
                 .s3Key(s3Key)
                 .displayName(originalFileName)
-                .ownerEmail(owner)
+                .owner(owner)
                 .uploadedAt(java.time.LocalDateTime.now())
                 .build();
 

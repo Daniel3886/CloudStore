@@ -41,4 +41,32 @@ public class FileSharingController {
         }
     }
 
+    @GetMapping("/{fileId}/users")
+    public ResponseEntity<?> getUsersFileIsSharedWith(@PathVariable Long fileId, HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            System.out.println("Current logged-in user owner (/{fileId}/users): " + currentUserEmail);
+            List<String> sharedUsers = fileSharingService.getUsersFileIsSharedWith(fileId, currentUserEmail);
+            return ResponseEntity.ok(sharedUsers);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Could not fetch shared users: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{fileId}/user/{email}")
+    public ResponseEntity<?> revokeFileAccess(
+            @PathVariable Long fileId,
+            @PathVariable String email,
+            HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            System.out.println("Current logged-in user owner (/{fileId}/user/{email}): " + currentUserEmail);
+            fileSharingService.revokeAccess(fileId, email, currentUserEmail);
+            return ResponseEntity.ok("Access revoked for user: " + email);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to revoke access: " + e.getMessage());
+        }
+    }
+
+
 }

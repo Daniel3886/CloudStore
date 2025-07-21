@@ -63,4 +63,38 @@ public class FileSharingService {
             );
         }).toList();
     }
+
+    public List<String> getUsersFileIsSharedWith(Long fileId, String ownerEmail) throws AccessDeniedException {
+        Files file = fileRepo.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (!file.getOwner().equals(ownerEmail)) {
+            throw new AccessDeniedException("You do not own this file");
+        }
+
+        return filePermissionRepo.findByFileId(fileId)
+                .stream()
+                .map(fp -> fp.getSharedWith().getEmail())
+                .toList();
+    }
+
+    public void revokeAccess(Long fileId, String targetEmail, String ownerEmail) throws AccessDeniedException {
+        Files file = fileRepo.findById(fileId)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (!file.getOwner().equals(ownerEmail)) {
+            throw new AccessDeniedException("Only the owner can revoke access");
+        }
+
+        Users targetUser = userRepo.findByEmail(targetEmail)
+                .orElseThrow(() -> new RuntimeException("Target user not found"));
+
+        FilePermission permission = filePermissionRepo
+                .findByFileIdAndSharedWith(fileId, targetUser)
+                .orElseThrow(() -> new RuntimeException("User does not have access"));
+
+        filePermissionRepo.delete(permission);
+    }
+
+
 }

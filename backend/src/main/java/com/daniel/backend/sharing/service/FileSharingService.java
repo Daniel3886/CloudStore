@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FileSharingService {
@@ -68,9 +69,11 @@ public class FileSharingService {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
-        if (!file.getOwner().equals(ownerEmail)) {
+        if (file.getOwner() == null || file.getOwner().getEmail() == null ||
+                !file.getOwner().getEmail().equalsIgnoreCase(ownerEmail.trim())) {
             throw new AccessDeniedException("You do not own this file");
         }
+
 
         return filePermissionRepo.findByFileId(fileId)
                 .stream()
@@ -82,18 +85,19 @@ public class FileSharingService {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
-        if (!file.getOwner().equals(ownerEmail)) {
+        if (file.getOwner() == null || file.getOwner().getEmail() == null ||
+                !file.getOwner().getEmail().equalsIgnoreCase(ownerEmail.trim())) {
             throw new AccessDeniedException("Only the owner can revoke access");
         }
 
-        Users targetUser = userRepo.findByEmail(targetEmail)
-                .orElseThrow(() -> new RuntimeException("Target user not found"));
+        List<FilePermission> permissions = filePermissionRepo
+                .findAllByFileIdAndSharedWithEmail(fileId, targetEmail);
 
-        FilePermission permission = filePermissionRepo
-                .findByFileIdAndSharedWith(fileId, targetUser)
-                .orElseThrow(() -> new RuntimeException("User does not have access"));
+        if (permissions.isEmpty()) {
+            throw new RuntimeException("User does not have access to this file");
+        }
 
-        filePermissionRepo.delete(permission);
+        filePermissionRepo.deleteAll(permissions);
     }
 
 

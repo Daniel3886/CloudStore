@@ -1,19 +1,20 @@
 package com.daniel.backend.auth.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
 @Entity
 @Table(name = "users")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Users {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+    private Long id;
 
     private String username;
 
@@ -34,13 +35,4 @@ public class Users {
     private String passwordResetToken;
     @Column(name = "password_reset_expires_at")
     private LocalDateTime passwordResetExpiresAt;
-
-    public Users() {}
-
-    public Users(int id, String username, String password, String email) {
-        this.id = id;
-        this.username = username;
-        this.password = password;
-        this.email = email;
-    }
 }

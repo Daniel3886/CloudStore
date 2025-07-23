@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface FileRepo extends JpaRepository<Files, Long> {
     Optional<Files> findByS3Key(String s3Key);
+    Optional<Files> findById(Long id);
+
 }

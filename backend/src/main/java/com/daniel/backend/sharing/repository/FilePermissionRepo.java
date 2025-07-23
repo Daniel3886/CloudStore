@@ -14,6 +14,6 @@ public interface FilePermissionRepo extends JpaRepository<FilePermission, Long> 
 
     List<FilePermission> findByFileId(Long fileId);
 
-    Optional<FilePermission> findByFileIdAndSharedWith(Long fileId, Users sharedWith);
+    List<FilePermission> findAllByFileIdAndSharedWithEmail(Long fileId, String email);
 
 }

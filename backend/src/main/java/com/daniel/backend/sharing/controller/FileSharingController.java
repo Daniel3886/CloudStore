@@ -46,6 +46,7 @@ public class FileSharingController {
         try {
             String currentUserEmail = request.getUserPrincipal().getName();
             System.out.println("Current logged-in user owner (/{fileId}/users): " + currentUserEmail);
+            System.out.println("file id: " + fileId + "");
             List<String> sharedUsers = fileSharingService.getUsersFileIsSharedWith(fileId, currentUserEmail);
             return ResponseEntity.ok(sharedUsers);
         } catch (Exception e) {

@@ -15,6 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "file_permission", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"file_id", "shared_with_user_id"})
+})
 public class FilePermission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

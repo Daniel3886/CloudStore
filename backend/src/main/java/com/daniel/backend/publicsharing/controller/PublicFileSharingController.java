@@ -19,10 +19,10 @@ public class PublicFileSharingController {
 
     private final PublicFileSharingService publicSharingService;
 
+
     @PostMapping("/{fileId}")
     public ResponseEntity<?> generatePublicLink(@PathVariable Long fileId, HttpServletRequest request) throws AccessDeniedException {
         String currentUserEmail = request.getUserPrincipal().getName();
-        System.out.println("Current User Email generating a public link: " + currentUserEmail);
         String url = publicSharingService.generatePublicLink(fileId, currentUserEmail);
         return ResponseEntity.ok(url);
     }
@@ -41,4 +41,19 @@ public class PublicFileSharingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
+
+    @DeleteMapping("/access/{token}")
+    public ResponseEntity<?> revokePublicLink(@PathVariable String token, HttpServletRequest request) throws AccessDeniedException {
+        String ownerEmail = request.getUserPrincipal().getName();
+        publicSharingService.revokeToken(token, ownerEmail);
+        return ResponseEntity.ok("Public access link revoked.");
+    }
+
+
+    @GetMapping("/list")
+    public ResponseEntity<?> getAllActiveLinks(HttpServletRequest request) {
+        String ownerEmail = request.getUserPrincipal().getName();
+        return ResponseEntity.ok(publicSharingService.getActiveLinksByOwner(ownerEmail));
+    }
+
 }

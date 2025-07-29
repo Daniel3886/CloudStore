@@ -8,12 +8,14 @@ import com.daniel.backend.sharing.dto.ShareFileRequestDto;
 import com.daniel.backend.sharing.dto.SharedFileDto;
 import com.daniel.backend.sharing.entity.FilePermission;
 import com.daniel.backend.sharing.repository.FilePermissionRepo;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class FileSharingService {
@@ -27,41 +29,44 @@ public class FileSharingService {
     @Autowired
     private FilePermissionRepo filePermissionRepo;
 
-    public void shareFile(ShareFileRequestDto dto, String currentUserEmail) throws AccessDeniedException {
+    public void shareFile(ShareFileRequestDto dto, String senderEmail) throws AccessDeniedException {
         Files file = fileRepo.findById(dto.getFileId())
-                .orElseThrow(() -> new RuntimeException("File not found"));
+                .orElseThrow(() -> new AccessDeniedException("File not found"));
 
-        if (!file.getOwner().getEmail().equals(currentUserEmail)) {
-            throw new AccessDeniedException("You are the owner of this file");
+        Users sender = userRepo.findByEmail(senderEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        Users recipient = userRepo.findByEmail(dto.getTargetUserEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("Recipient not found"));
+
+        if (sender.getEmail().equals(recipient.getEmail())) {
+            throw new IllegalArgumentException("You cannot share a file with yourself.");
         }
 
-        if (dto.getTargetUserEmail().equals(currentUserEmail)) {
-            throw new AccessDeniedException("You cannot share the file with yourself\"");
-        }
-
-        Users targetUser = userRepo.findByEmail(dto.getTargetUserEmail())
-                .orElseThrow(() -> new RuntimeException("Target user not found"));
-
-        FilePermission permission = FilePermission.builder()
-                .file(file)
-                .sharedWith(targetUser)
-                .permissionType(dto.getPermissionType())
-                .build();
+        FilePermission permission = new FilePermission();
+        permission.setFile(file);
+        permission.setSharedWith(recipient);
+        permission.setPermissionType(dto.getPermissionType());
+        permission.setMessage(dto.getMessage());
+        permission.setSharedAt(LocalDateTime.now());
 
         filePermissionRepo.save(permission);
     }
+
 
     public List<SharedFileDto> getFilesSharedWithUser(String currentUserEmail) {
         List<FilePermission> permissions = filePermissionRepo.findBySharedWithEmail(currentUserEmail);
 
         return permissions.stream().map(permission -> {
             Files file = permission.getFile();
-            return new SharedFileDto(
-                    file.getId(),
-                    file.getDisplayName(),
-                    file.getOwner().getEmail(),
-                    file.getS3Key()
-            );
+            return SharedFileDto.builder()
+                    .fileId(file.getId())
+                    .displayName(file.getDisplayName())
+                    .sharedBy(file.getOwner().getEmail())
+                    .s3Key(file.getS3Key())
+                    .message(permission.getMessage())
+                    .sharedAt(permission.getSharedAt())
+                    .build();
         }).toList();
     }
 
@@ -73,7 +78,6 @@ public class FileSharingService {
                 !file.getOwner().getEmail().equalsIgnoreCase(ownerEmail.trim())) {
             throw new AccessDeniedException("You do not own this file");
         }
-
 
         return filePermissionRepo.findByFileId(fileId)
                 .stream()
@@ -100,5 +104,47 @@ public class FileSharingService {
         filePermissionRepo.deleteAll(permissions);
     }
 
+
+    public void updateMessage(Long fileId, Long targetUserId, String currentUserEmail, String newMessage) throws AccessDeniedException {
+        Files file = fileRepo.findById(fileId)
+                .orElseThrow(() -> new EntityNotFoundException("File not found"));
+
+        if (!file.getOwner().getEmail().equals(currentUserEmail)) {
+            throw new AccessDeniedException("Only the file owner can edit the message");
+        }
+
+        Users receiver = userRepo.findById(targetUserId)
+                .orElseThrow(() -> new EntityNotFoundException("Target user not found"));
+
+        FilePermission permission = filePermissionRepo
+                .findByFileAndSharedWith(file, receiver)
+                .orElseThrow(() -> new EntityNotFoundException("Sharing relationship not found"));
+
+        permission.setMessage(newMessage);
+        filePermissionRepo.save(permission);
+    }
+
+
+    public void removeMessage(Long fileId, String targetEmail, String currentUserEmail) throws AccessDeniedException {
+        Users targetUser = userRepo.findByEmail(targetEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Files file = fileRepo.findById(fileId)
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+
+        FilePermission permission = filePermissionRepo
+                .findByFileAndSharedWith(file, targetUser)
+                .orElseThrow(() -> new IllegalArgumentException("Permission not found"));
+
+        boolean isOwner = file.getOwner().getEmail().equals(currentUserEmail);
+        boolean isReceiver = targetEmail.equals(currentUserEmail);
+
+        if (!isOwner && !isReceiver) {
+            throw new AccessDeniedException("You are not authorized to remove this message.");
+        }
+
+        permission.setMessage(null);
+        filePermissionRepo.save(permission);
+    }
 
 }

@@ -128,9 +128,6 @@ public class StorageService {
                 .filter(file -> file.getDisplayName().startsWith(finalOldFolderPath))
                 .collect(Collectors.toList());
 
-        System.out.println("Renaming folder from: " + oldFolderPath + " to: " + newFolderPath);
-        System.out.println("Found " + filesInFolder.size() + " files to move");
-
         for (Files file : filesInFolder) {
             try {
                 String oldS3Key = file.getS3Key();
@@ -138,8 +135,6 @@ public class StorageService {
 
                 String newDisplayName = oldDisplayName.replace(oldFolderPath, newFolderPath);
                 String newS3Key = oldS3Key.replace(oldFolderPath, newFolderPath);
-
-                System.out.println("Moving file: " + oldS3Key + " -> " + newS3Key);
 
                 CopyObjectRequest copyRequest = CopyObjectRequest.builder()
                         .sourceBucket(bucketName)
@@ -161,8 +156,6 @@ public class StorageService {
                 file.setDisplayName(newDisplayName);
                 fileRepo.save(file);
 
-                System.out.println("Successfully moved: " + oldS3Key + " -> " + newS3Key);
-
             } catch (Exception e) {
                 System.err.println("Failed to move file: " + file.getS3Key() + " - " + e.getMessage());
                 throw new RuntimeException("Failed to rename folder: " + e.getMessage());
@@ -180,13 +173,9 @@ public class StorageService {
                 .filter(file -> file.getDisplayName().startsWith(finalFolderPath))
                 .collect(Collectors.toList());
 
-        System.out.println("Deleting folder: " + folderPath);
-        System.out.println("Found " + filesInFolder.size() + " files to delete");
-
         for (Files file : filesInFolder) {
             try {
                 String s3Key = file.getS3Key();
-                System.out.println("Deleting file: " + s3Key);
 
                 if (doesFileExist(s3Key)) {
                     DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
@@ -198,8 +187,6 @@ public class StorageService {
                 }
 
                 fileRepo.delete(file);
-
-                System.out.println("Successfully deleted: " + s3Key);
 
             } catch (Exception e) {
                 System.err.println("Failed to delete file: " + file.getS3Key() + " - " + e.getMessage());

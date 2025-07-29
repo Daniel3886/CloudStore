@@ -7,5 +7,6 @@ public class ShareFileRequestDto {
     private Long fileId;
     private String targetUserEmail;
     private PermissionType permissionType;
+    private String message;
 
 }

@@ -1,5 +1,6 @@
 package com.daniel.backend.sharing.controller;
 
+import com.daniel.backend.sharing.dto.MessageUpdateRequestDto;
 import com.daniel.backend.sharing.dto.ShareFileRequestDto;
 import com.daniel.backend.sharing.dto.SharedFileDto;
 import com.daniel.backend.sharing.service.FileSharingService;
@@ -45,8 +46,6 @@ public class FileSharingController {
     public ResponseEntity<?> getUsersFileIsSharedWith(@PathVariable Long fileId, HttpServletRequest request) {
         try {
             String currentUserEmail = request.getUserPrincipal().getName();
-            System.out.println("Current logged-in user owner (/{fileId}/users): " + currentUserEmail);
-            System.out.println("file id: " + fileId + "");
             List<String> sharedUsers = fileSharingService.getUsersFileIsSharedWith(fileId, currentUserEmail);
             return ResponseEntity.ok(sharedUsers);
         } catch (Exception e) {
@@ -61,11 +60,40 @@ public class FileSharingController {
             HttpServletRequest request) {
         try {
             String currentUserEmail = request.getUserPrincipal().getName();
-            System.out.println("Current logged-in user owner (/{fileId}/user/{email}): " + currentUserEmail);
             fileSharingService.revokeAccess(fileId, email, currentUserEmail);
             return ResponseEntity.ok("Access revoked for user: " + email);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to revoke access: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{fileId}/shared/{targetUserId}/message")
+    public ResponseEntity<?> updateMessage(
+            @PathVariable Long fileId,
+            @PathVariable Long targetUserId,
+            @RequestBody MessageUpdateRequestDto request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            String currentUserEmail = httpRequest.getUserPrincipal().getName();
+            fileSharingService.updateMessage(fileId, targetUserId, currentUserEmail, request.getMessage());
+            return ResponseEntity.ok("Message updated");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to update message: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{fileId}/user/{email}/message")
+    public ResponseEntity<?> removePunchcardMessage(
+            @PathVariable Long fileId,
+            @PathVariable String email,
+            HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            fileSharingService.removeMessage(fileId, email, currentUserEmail);
+            return ResponseEntity.ok("Message removed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to remove message: " + e.getMessage());
         }
     }
 

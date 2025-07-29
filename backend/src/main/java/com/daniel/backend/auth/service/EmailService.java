@@ -39,8 +39,6 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlMessage, true);
             mailSender.send(message);
-            System.out.println("Sending email from: " + from + " to: " + to);
-
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send verification email", e);
         }
@@ -69,7 +67,6 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlMessage, true);
             mailSender.send(message);
-            System.out.println("Sending email from: " + from + " to: " + to);
 
         } catch (MessagingException e) {
             throw new RuntimeException("Failed to send verification email", e);

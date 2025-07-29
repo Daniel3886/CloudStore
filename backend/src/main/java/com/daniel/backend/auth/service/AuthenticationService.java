@@ -120,7 +120,6 @@ public class AuthenticationService {
 
         String code = generateVerificationCode();
 
-        System.out.println(code);
         user.setVerificationCode(code);
         user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(10));
         user.setLastVerificationEmailSentAt(LocalDateTime.now());

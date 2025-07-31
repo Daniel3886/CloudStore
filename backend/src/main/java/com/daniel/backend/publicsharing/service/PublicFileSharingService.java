@@ -1,5 +1,6 @@
 package com.daniel.backend.publicsharing.service;
 
+import com.daniel.backend.audit.service.AuditLogService;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
 import com.daniel.backend.file.service.StorageService;
@@ -25,6 +26,10 @@ public class PublicFileSharingService {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
+
     public String generatePublicLink(Long fileId, String ownerEmail) throws AccessDeniedException {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -43,6 +48,14 @@ public class PublicFileSharingService {
                 .active(true)
                 .build();
 
+        auditLogService.log(
+                "PUBLIC_LINK_GENERATION",
+                ownerEmail,
+                file.getId().toString(),
+                "Generated a public link " + ownerEmail
+        );
+
+
         publicTokenRepo.save(accessToken);
 
         return "https://cloudstore.com/share/public/access/" + token;
@@ -51,6 +64,14 @@ public class PublicFileSharingService {
     public PublicFileResponse getPublicFileWithMetadata(String token) {
         Files file = validateAndGetToken(token).getFile();
         byte[] fileContent = storageService.downloadFile(file.getS3Key());
+
+        auditLogService.log(
+                "PUBLIC_FILE_ACCESS",
+                "anonymous",
+                file.getId().toString(),
+                "File accessed via public link"
+        );
+
         return new PublicFileResponse(fileContent, file.getDisplayName());
     }
 
@@ -64,6 +85,13 @@ public class PublicFileSharingService {
         if (!accessToken.getFile().getOwner().getEmail().equalsIgnoreCase(requesterEmail.trim())) {
             throw new AccessDeniedException("Only the owner can revoke this link.");
         }
+
+        auditLogService.log(
+                "PUBLIC_LINK_REVOCATION",
+                requesterEmail,
+                accessToken.getFile().getId().toString(),
+                "Revoked a public link"
+        );
 
         accessToken.setActive(false);
         publicTokenRepo.save(accessToken);

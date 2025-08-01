@@ -51,10 +51,30 @@ public class StorageController {
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteFile(@RequestParam String fileName) {
         try {
-            return new ResponseEntity<>(service.deleteFile(fileName), HttpStatus.OK);
+            return new ResponseEntity<>(service.softDeleteFile(fileName), HttpStatus.OK);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Delete failed: " + e.getMessage());
+                    .body("Soft delete failed: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{fileName}/permanent")
+    public ResponseEntity<String> permanentlyDeleteFile(@PathVariable String fileName) {
+        try {
+            return new ResponseEntity<>(service.permanentlyDeleteFile(fileName), HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Permanent delete failed: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{fileName}/restore")
+    public ResponseEntity<String> restoreFile(@PathVariable String fileName) {
+        try {
+            return new ResponseEntity<>(service.restoreFile(fileName), HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Restore failed: " + e.getMessage());
         }
     }
 
@@ -63,6 +83,16 @@ public class StorageController {
         try {
             List<S3ObjectDto> files = service.listObjects();
             return ResponseEntity.ok(files);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    @GetMapping("/trash")
+    public ResponseEntity<List<S3ObjectDto>> listTrashFiles() {
+        try {
+            List<S3ObjectDto> trashFiles = service.listTrashedFiles();
+            return ResponseEntity.ok(trashFiles);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }

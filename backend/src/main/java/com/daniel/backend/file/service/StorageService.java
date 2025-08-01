@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -106,33 +107,6 @@ public class StorageService {
         return objectBytes.asByteArray();
     }
 
-    public String deleteFile(String fileName) {
-        if(!doesFileExist(fileName)) {
-            throw new RuntimeException("File not found: " + fileName);
-        }
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(fileName)
-                .build();
-
-        Files metadata = fileRepo.findByS3Key(fileName)
-                .orElseThrow(() -> new RuntimeException("File metadata not found: " + fileName));
-
-        String ownerEmail = metadata.getOwner().getEmail();
-
-        auditLogService.log(
-                "FILE_DELETE",
-                ownerEmail,
-                null,
-                "Deleted file: " + fileName
-        );
-
-        fileRepo.delete(metadata);
-        s3Client.deleteObject(deleteObjectRequest);
-
-        return "File deleted successfully: " + fileName;
-    }
-
     public void renameFolder(String oldFolderPath, String newFolderPath) {
         if (!oldFolderPath.endsWith("/")) {
             oldFolderPath += "/";
@@ -144,7 +118,7 @@ public class StorageService {
         String finalOldFolderPath = oldFolderPath;
         List<Files> filesInFolder = fileRepo.findAll().stream()
                 .filter(file -> file.getDisplayName().startsWith(finalOldFolderPath))
-                .collect(Collectors.toList());
+                .toList();
 
         for (Files file : filesInFolder) {
             try {
@@ -196,7 +170,7 @@ public class StorageService {
         String finalFolderPath = folderPath;
         List<Files> filesInFolder = fileRepo.findAll().stream()
                 .filter(file -> file.getDisplayName().startsWith(finalFolderPath))
-                .collect(Collectors.toList());
+                .toList();
 
         for (Files file : filesInFolder) {
             try {
@@ -263,7 +237,10 @@ public class StorageService {
     }
 
     public List<S3ObjectDto> listObjects() {
-        List<Files> dbFiles = fileRepo.findAll();
+        List<Files> dbFiles = fileRepo.findAll().stream()
+                .filter(file -> file.getDeletedAt() == null)
+                .toList();
+
 
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucketName)
@@ -275,6 +252,10 @@ public class StorageService {
 
         List<S3ObjectDto> dtos = new ArrayList<>();
 
+        return mapDbFilesToDtos(dbFiles, s3ObjectMap, dtos);
+    }
+
+    private List<S3ObjectDto> mapDbFilesToDtos(List<Files> dbFiles, Map<String, S3Object> s3ObjectMap, List<S3ObjectDto> dtos) {
         for (Files dbFile : dbFiles) {
             S3Object s3Object = s3ObjectMap.get(dbFile.getS3Key());
             if (s3Object != null) {
@@ -313,4 +294,86 @@ public class StorageService {
                 .orElseThrow(() -> new RuntimeException("File not found in metadata"));
         return metadata.getDisplayName();
     }
+
+    public String softDeleteFile(String fileName) {
+        Files metadata = fileRepo.findByS3Key(fileName)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        metadata.setDeletedAt(LocalDateTime.now());
+        fileRepo.save(metadata);
+
+        auditLogService.log(
+                "FILE_SOFT_DELETE",
+                metadata.getOwner().getEmail(),
+                null,
+                "Soft-deleted file: " + fileName
+        );
+
+        return "File moved to trash: " + fileName;
+    }
+
+    public String restoreFile(String fileName) {
+        Files metadata = fileRepo.findByS3Key(fileName)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (metadata.getDeletedAt() == null) {
+            throw new RuntimeException("File is not in trash");
+        }
+
+        metadata.setDeletedAt(null);
+        fileRepo.save(metadata);
+
+        auditLogService.log(
+                "FILE_RESTORE",
+                metadata.getOwner().getEmail(),
+                null,
+                "Restored file from trash: " + fileName
+        );
+
+        return "File restored from trash: " + fileName;
+    }
+
+    public String permanentlyDeleteFile(String fileName) {
+        Files metadata = fileRepo.findByS3Key(fileName)
+                .orElseThrow(() -> new RuntimeException("File not found"));
+
+        if (metadata.getDeletedAt() == null) {
+            throw new RuntimeException("File is not in trash");
+        }
+
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(fileName)
+                .build());
+
+        fileRepo.delete(metadata);
+
+        auditLogService.log(
+                "FILE_PERMANENT_DELETE",
+                metadata.getOwner().getEmail(),
+                null,
+                "Permanently deleted file: " + fileName
+        );
+
+        return "File permanently deleted: " + fileName;
+    }
+
+    public List<S3ObjectDto> listTrashedFiles() {
+        List<Files> trashedFiles = fileRepo.findAll().stream()
+                .filter(file -> file.getDeletedAt() != null)
+                .toList();
+
+        List<S3ObjectDto> dtos = new ArrayList<>();
+
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .build();
+
+        List<S3Object> s3Objects = s3Client.listObjectsV2(request).contents();
+        Map<String, S3Object> s3ObjectMap = s3Objects.stream()
+                .collect(Collectors.toMap(S3Object::key, obj -> obj));
+
+        return mapDbFilesToDtos(trashedFiles, s3ObjectMap, dtos);
+    }
+
 }

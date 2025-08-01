@@ -1,5 +1,6 @@
 package com.daniel.backend.file.service;
 
+import com.daniel.backend.audit.service.AuditLogService;
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.dto.S3ObjectDto;
@@ -37,6 +38,9 @@ public class StorageService {
 
     @Autowired
     private UserRepo userRepo;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     public String uploadFile(MultipartFile file, String ownerEmail) {
         File fileObj = convertMultiPartFileToFile(file);
@@ -78,6 +82,13 @@ public class StorageService {
 
         fileRepo.save(metadata);
 
+        auditLogService.log(
+                "FILE_UPLOAD",
+                ownerEmail,
+                s3Key.getBytes().length + "",
+                "Uploaded file: " + originalFileName
+        );
+
         return "File uploaded successfully: " + s3Key;
     }
 
@@ -107,7 +118,14 @@ public class StorageService {
         Files metadata = fileRepo.findByS3Key(fileName)
                 .orElseThrow(() -> new RuntimeException("File metadata not found: " + fileName));
 
+        String ownerEmail = metadata.getOwner().getEmail();
 
+        auditLogService.log(
+                "FILE_DELETE",
+                ownerEmail,
+                null,
+                "Deleted file: " + fileName
+        );
 
         fileRepo.delete(metadata);
         s3Client.deleteObject(deleteObjectRequest);
@@ -156,6 +174,13 @@ public class StorageService {
                 file.setDisplayName(newDisplayName);
                 fileRepo.save(file);
 
+                auditLogService.log(
+                        "FILE_MOVE",
+                        file.getOwner().getEmail(),
+                        null,
+                        "Moved file from '" + oldS3Key + "' to '" + newS3Key + "'"
+                );
+
             } catch (Exception e) {
                 System.err.println("Failed to move file: " + file.getS3Key() + " - " + e.getMessage());
                 throw new RuntimeException("Failed to rename folder: " + e.getMessage());
@@ -176,6 +201,7 @@ public class StorageService {
         for (Files file : filesInFolder) {
             try {
                 String s3Key = file.getS3Key();
+                String email = file.getOwner().getEmail();
 
                 if (doesFileExist(s3Key)) {
                     DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
@@ -185,6 +211,13 @@ public class StorageService {
 
                     s3Client.deleteObject(deleteRequest);
                 }
+
+                auditLogService.log(
+                        "FILE_DELETE",
+                        email,
+                        null,
+                        "Deleted file as part of folder removal: " + s3Key
+                );
 
                 fileRepo.delete(file);
 
@@ -261,7 +294,17 @@ public class StorageService {
     public void renameFile(String s3Key, String newDisplayName) {
         Files metadata = fileRepo.findByS3Key(s3Key)
                 .orElseThrow(() -> new RuntimeException("File not found"));
+
+        String oldDisplayName = metadata.getDisplayName();
         metadata.setDisplayName(newDisplayName);
+
+        auditLogService.log(
+                "FILE_RENAME",
+                metadata.getOwner().getEmail(),
+                null,
+                "Renamed file from '" + oldDisplayName + "' to '" + newDisplayName + "'"
+        );
+
         fileRepo.save(metadata);
     }
 

@@ -1,5 +1,6 @@
 package com.daniel.backend.sharing.service;
 
+import com.daniel.backend.audit.service.AuditLogService;
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.entity.Files;
@@ -29,6 +30,10 @@ public class FileSharingService {
     @Autowired
     private FilePermissionRepo filePermissionRepo;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
+
     public void shareFile(ShareFileRequestDto dto, String senderEmail) throws AccessDeniedException {
         Files file = fileRepo.findById(dto.getFileId())
                 .orElseThrow(() -> new AccessDeniedException("File not found"));
@@ -42,6 +47,14 @@ public class FileSharingService {
         if (sender.getEmail().equals(recipient.getEmail())) {
             throw new IllegalArgumentException("You cannot share a file with yourself.");
         }
+
+        auditLogService.log(
+                "SHARE_FILE",
+                sender.getEmail(),
+                file.getId().toString(),
+                "Shared file with " + recipient.getEmail()
+        );
+
 
         FilePermission permission = new FilePermission();
         permission.setFile(file);
@@ -101,6 +114,14 @@ public class FileSharingService {
             throw new RuntimeException("User does not have access to this file");
         }
 
+        auditLogService.log(
+                "REVOKE_ACCESS",
+                ownerEmail,
+                file.getId().toString(),
+                "Revoked access from " + targetEmail
+        );
+
+
         filePermissionRepo.deleteAll(permissions);
     }
 
@@ -119,6 +140,14 @@ public class FileSharingService {
         FilePermission permission = filePermissionRepo
                 .findByFileAndSharedWith(file, receiver)
                 .orElseThrow(() -> new EntityNotFoundException("Sharing relationship not found"));
+
+        auditLogService.log(
+                "UPDATE_MESSAGE",
+                currentUserEmail,
+                file.getId().toString(),
+                "Updated message for user ID " + targetUserId
+        );
+
 
         permission.setMessage(newMessage);
         filePermissionRepo.save(permission);
@@ -142,6 +171,14 @@ public class FileSharingService {
         if (!isOwner && !isReceiver) {
             throw new AccessDeniedException("You are not authorized to remove this message.");
         }
+
+        auditLogService.log(
+                "REMOVE_MESSAGE",
+                currentUserEmail,
+                file.getId().toString(),
+                "Removed message for " + targetEmail
+        );
+
 
         permission.setMessage(null);
         filePermissionRepo.save(permission);

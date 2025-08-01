@@ -1,5 +1,6 @@
 package com.daniel.backend.auth.service;
 
+import com.daniel.backend.audit.service.AuditLogService;
 import com.daniel.backend.auth.dto.*;
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.auth.repository.UserRepo;
@@ -25,6 +26,9 @@ public class AuthenticationService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private AuditLogService auditLogService;
 
     public String register(String username, String email, String password) {
         String encodedPassword = passwordEncoder.encode(password);
@@ -58,6 +62,13 @@ public class AuthenticationService {
         }
         repo.save(user);
         emailService.sendVerificationEmail(email, code);
+
+        auditLogService.log(
+                "USER_REGISTER",
+                email,
+                null,
+                "User registered an account"
+        );
 
         return existingUser.isPresent()
                 ? "Verification code re-sent to your email."

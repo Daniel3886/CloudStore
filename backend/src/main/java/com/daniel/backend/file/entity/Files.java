@@ -28,5 +28,12 @@ public class Files {
     @JoinColumn(name = "owner_email", referencedColumnName = "email")
     private Users owner;
 
+    @Column(name = "is_deleted")
+    private boolean isDeleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+
     private LocalDateTime uploadedAt;
 }

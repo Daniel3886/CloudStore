@@ -61,7 +61,7 @@ public class StorageService {
         }
 
         String timestampFileName = System.currentTimeMillis() + "-" + actualFileName;
-        String s3Key = folderPath + timestampFileName;
+        String s3Key = (folderPath + timestampFileName).replaceAll("\\s+", "_");
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)

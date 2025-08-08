@@ -1,11 +1,11 @@
-package com.daniel.backend.dnsValidation.service;
+package com.daniel.backend.auth.service;
 
 import org.springframework.stereotype.Service;
 import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
 
 @Service
-public class DnsValidationService {
+public class DomainValidationService {
 
     public boolean isDomainValid(String email) {
         try {

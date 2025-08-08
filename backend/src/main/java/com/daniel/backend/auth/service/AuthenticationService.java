@@ -30,12 +30,19 @@ public class AuthenticationService {
     @Autowired
     private AuditLogService auditLogService;
 
+    @Autowired
+    private DomainValidationService domainValidationService;
+
     public String register(String username, String email, String password) {
         String encodedPassword = passwordEncoder.encode(password);
         String code = generateVerificationCode();
 
         Optional<Users> existingUserByEmail = repo.findByEmail(email);
         Optional<Users> existingUserByUsername = repo.findByUsername(username);
+
+        if (!domainValidationService.isDomainValid(email)) {
+            throw new IllegalArgumentException("Email domain is invalid.");
+        }
 
         if (existingUserByUsername.isPresent()) {
             Users userWithThatUsername = existingUserByUsername.get();

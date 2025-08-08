@@ -2,12 +2,11 @@ package com.daniel.backend.auth.controller;
 
 import com.daniel.backend.auth.dto.*;
 import com.daniel.backend.auth.service.AuthenticationService;
+//import com.daniel.backend.auth.service.DomainValidationService;
+import com.daniel.backend.auth.service.DomainValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
@@ -17,6 +16,9 @@ public class UserController {
     @Autowired
     private AuthenticationService userService;
 
+    @Autowired
+    private DomainValidationService dnsValidationService;
+
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(
@@ -24,7 +26,12 @@ public class UserController {
                 request.getUsername(), request.getEmail(), request.getPassword()));
     }
 
-    @PostMapping("/verify")
+    @GetMapping("/validate")
+    public boolean validateEmail(@RequestParam String email) {
+        return dnsValidationService.isDomainValid(email);
+    }
+
+    @PostMapping("/verify-token")
     public ResponseEntity<String> verify(@RequestBody VerifyRequest request) {
         String token = userService.verify(request);
         return ResponseEntity.ok("Verification successful. Token: " + token);

@@ -102,8 +102,7 @@
 			<scope>compile</scope>
 		</dependency>
 
-<!--        TODO: Change the destination of this dependency to another folder -->
-		<dependency>
+        <dependency>
 			<groupId>dnsjava</groupId>
 			<artifactId>dnsjava</artifactId>
 			<version>3.6.0</version>
@@ -136,26 +135,6 @@
 					</excludes>
 				</configuration>
 			</plugin>
-
-<!--            TODO: Implement this in a different folder because it is wont work with the current setup-->
-<!--            <plugin>-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-shade-plugin</artifactId>-->
-<!--                <version>3.2.4</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals><goal>shade</goal></goals>-->
-<!--                        <configuration>-->
-<!--                            <transformers>-->
-<!--                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-<!--                                    <mainClass>com.cloudstore.lambda.MXChecker</mainClass>-->
-<!--                                </transformer>-->
-<!--                            </transformers>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
 		</plugins>
 	</build>
 </project>

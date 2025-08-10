@@ -51,9 +51,6 @@ public class PublicFileSharingController {
                         .build());
             }
 
-            //For debugging purposes
-            System.out.println("Content-Type being sent: " + response.mediaType());
-
             return new ResponseEntity<>(response.content(), headers, HttpStatus.OK);
 
         } catch (RuntimeException e) {

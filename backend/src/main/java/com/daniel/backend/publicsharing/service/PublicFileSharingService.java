@@ -41,6 +41,9 @@ public class PublicFileSharingService {
     @Value("${AWS_BUCKET_NAME}")
     private String bucketName;
 
+    @Value("${file.preview.max-size}")
+    private long maxPreviewSize;
+
     public Map<String, String> generatePublicLink(Long fileId, String ownerEmail, HttpServletRequest request) throws AccessDeniedException {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -75,10 +78,19 @@ public class PublicFileSharingService {
                 token
         );
 
-        return Map.of(
-                "previewLink", baseUrl + "?preview=true",
-                "downloadLink", baseUrl
-        );
+        boolean allowPreview = file.getSize() <= maxPreviewSize;
+
+        if (allowPreview) {
+            return Map.of(
+                    "previewLink", baseUrl + "?preview=true",
+                    "downloadLink", baseUrl
+            );
+        } else {
+            return Map.of(
+                    "downloadLink", baseUrl,
+                    "message", "Preview disabled for files larger than " + (maxPreviewSize / (1024 * 1024)) + "MB"
+            );
+        }
     }
 
 

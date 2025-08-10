@@ -34,6 +34,8 @@ public class Files {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(nullable = false)
+    private long size;
 
     private LocalDateTime uploadedAt;
 }

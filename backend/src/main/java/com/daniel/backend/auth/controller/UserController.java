@@ -2,7 +2,6 @@ package com.daniel.backend.auth.controller;
 
 import com.daniel.backend.auth.dto.*;
 import com.daniel.backend.auth.service.AuthenticationService;
-//import com.daniel.backend.auth.service.DomainValidationService;
 import com.daniel.backend.auth.service.DomainValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

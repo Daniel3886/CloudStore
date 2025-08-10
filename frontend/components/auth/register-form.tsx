@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react"
+import { FormError } from "@/components/ui/form-error"
+import { FieldError } from "@/components/ui/field-error"
+import { toast } from "@/hooks/use-toast"
 
 export function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -17,100 +19,78 @@ export function RegisterForm() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+  const [formError, setFormError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const router = useRouter()
-  const { toast } = useToast()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }))
+    }
+
+    // Clear form error when user starts typing
+    if (formError) {
+      setFormError("")
+    }
   }
 
   const validateForm = () => {
-    if (formData.username.length > 20) {
-      toast({
-        title: "Invalid username",
-        description: "Username must be no more than 20 characters long.",
-        variant: "destructive",
-      })
-      return false
+    const errors: Record<string, string> = {}
+
+    // Username validation
+    if (!formData.username) {
+      errors.username = "Username is required"
+    } else if (formData.username.length < 3) {
+      errors.username = "Username must be at least 3 characters long"
+    } else if (formData.username.length > 20) {
+      errors.username = "Username must be no more than 20 characters long"
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      })
-      return false
+    // Email validation
+    if (!formData.email) {
+      errors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "Please enter a valid email address"
     }
 
-    if (formData.password.length < 8) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      })
-      return false
+    // Password validation
+    if (!formData.password) {
+      errors.password = "Password is required"
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters long"
+    } else if (formData.password.length > 128) {
+      errors.password = "Password must be no more than 128 characters long"
+    } else if (!/\d/.test(formData.password)) {
+      errors.password = "Password must contain at least one number"
+    } else if (!/[a-zA-Z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one letter"
     }
 
-    if (formData.password.length > 128) {
-      toast({
-        title: "Password too long",
-        description: "Password must be no more than 128 characters long.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    if (!/\d/.test(formData.password)) {
-      toast({
-        title: "Weak password",
-        description: "Password must contain at least one number.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    if (!/[a-zA-Z]/.test(formData.password)) {
-      toast({
-        title: "Weak password",
-        description: "Password must contain at least one letter.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    return true
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string, defaultMessage: string) => {
+  const parseBackendError = (responseText: string) => {
     try {
       const errorData = JSON.parse(responseText)
-      if (errorData.message) {
-        return errorData.message
-      }
-      if (errorData.error) {
-        return errorData.error
-      }
-      return defaultMessage
+      return errorData.message || errorData.error || responseText
     } catch {
-      return responseText || defaultMessage
+      return responseText.trim() || "An unexpected error occurred"
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setDebugInfo(null)
+    setFormError("")
 
     if (!validateForm()) return
 
     setIsLoading(true)
-    setDebugInfo("Validation passed, sending registration request...")
 
     try {
       const requestBody = {
@@ -118,11 +98,6 @@ export function RegisterForm() {
         email: formData.email,
         password: formData.password,
       }
-
-      setDebugInfo(
-        (prev) =>
-          `${prev}\nSending request to: http://localhost:8080/auth/register\nPayload: ${JSON.stringify(requestBody)}`,
-      )
 
       const response = await fetch("http://localhost:8080/auth/register", {
         method: "POST",
@@ -135,36 +110,26 @@ export function RegisterForm() {
         credentials: "include",
       })
 
-      setDebugInfo((prev) => `${prev}\nResponse received: Status ${response.status}`)
-
       const responseText = await response.text()
-      setDebugInfo((prev) => `${prev}\nResponse body: ${responseText}`)
 
       if (response.ok) {
-        setDebugInfo((prev) => `${prev}\nRegistration successful!`)
         toast({
+          variant: "success",
           title: "Account created!",
           description: "Please check your email for verification code.",
         })
 
+        // Store email for verification page
         sessionStorage.setItem("pendingVerificationEmail", formData.email)
+
+        // Redirect to verification page
         router.push("/verify")
       } else {
-        const errorMsg = parseBackendError(responseText, "Registration failed")
-        setDebugInfo((prev) => `${prev}\nRegistration failed: ${errorMsg}`)
-        toast({
-          title: "Registration failed",
-          description: errorMsg,
-          variant: "destructive",
-        })
+        const errorMessage = parseBackendError(responseText)
+        setFormError(errorMessage)
       }
     } catch (error: any) {
-      setDebugInfo((prev) => `${prev}\nCaught error: ${error.message}`)
-      toast({
-        title: "Network error",
-        description: "Unable to connect to the server. Please check your internet connection and try again.",
-        variant: "destructive",
-      })
+      setFormError("Unable to create account. Please check your connection and try again.")
     } finally {
       setIsLoading(false)
     }
@@ -177,61 +142,69 @@ export function RegisterForm() {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="username"
-            type="text"
-            placeholder="Username"
-            value={formData.username}
-            onChange={handleInputChange}
-            className="pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
+        {formError && <FormError message={formError} />}
+
+        <div className="space-y-1">
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="username"
+              type="text"
+              placeholder="Username (3-20 characters)"
+              value={formData.username}
+              onChange={handleInputChange}
+              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldErrors.username ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+          </div>
+          <FieldError message={fieldErrors.username} />
         </div>
 
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="email"
-            type="email"
-            placeholder="Email address"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
+        <div className="space-y-1">
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="email"
+              type="email"
+              placeholder="Email address"
+              value={formData.email}
+              onChange={handleInputChange}
+              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+          </div>
+          <FieldError message={fieldErrors.email} />
         </div>
 
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>Password requirements:</p>
-          <ul className="list-disc list-inside space-y-0.5 ml-2">
-            <li>At least 8 characters long</li>
-            <li>Contains at least one letter</li>
-            <li>Contains at least one number</li>
-          </ul>
+        <div className="space-y-1">
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Password (8+ chars, include letters & numbers)"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={`pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldErrors.password ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+          <FieldError message={fieldErrors.password} />
         </div>
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
@@ -248,13 +221,6 @@ export function RegisterForm() {
           </span>
         </div>
       </form>
-
-      {debugInfo && (
-        <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-40">
-          <p className="font-semibold mb-1">Debug Information:</p>
-          {debugInfo}
-        </div>
-      )}
     </div>
   )
 }

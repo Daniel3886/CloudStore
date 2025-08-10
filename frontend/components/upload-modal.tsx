@@ -12,14 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { Upload, X, FileIcon, CheckCircle, AlertCircle } from "lucide-react"
-import { showSuccess, showError } from "@/components/ui/notification"
+import { Upload, X, FileIcon, CheckCircle, AlertCircle, FolderOpen } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 interface UploadModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploadComplete?: () => void
-  currentPath?: string
 }
 
 interface FileUploadStatus {
@@ -29,42 +28,93 @@ interface FileUploadStatus {
   error?: string
 }
 
-export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath = "" }: UploadModalProps) {
+export function UploadModal({ open, onOpenChange, onUploadComplete }: UploadModalProps) {
   const [files, setFiles] = useState<FileUploadStatus[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const addMoreInputRef = useRef<HTMLInputElement>(null)
+  const additionalFileInputRef = useRef<HTMLInputElement>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
 
-  const processFiles = (newFiles: File[], existingFiles: FileUploadStatus[]) => {
-    const processedFiles: FileUploadStatus[] = newFiles.map((file) => ({
-      file: file,
-      status: "pending",
-      progress: 0,
-    }))
+  const handleDuplicateFiles = (newFiles: File[], existingFiles: FileUploadStatus[]): File[] => {
+    const existingNames = existingFiles.map((f) => f.file.name)
 
-    return processedFiles
+    return newFiles.map((file) => {
+      let fileName = file.name
+      let counter = 1
+
+      // Check if file name already exists
+      while (existingNames.includes(fileName)) {
+        const lastDotIndex = file.name.lastIndexOf(".")
+        if (lastDotIndex === -1) {
+          // No extension
+          fileName = `${file.name} (${counter})`
+        } else {
+          // Has extension
+          const nameWithoutExt = file.name.substring(0, lastDotIndex)
+          const extension = file.name.substring(lastDotIndex)
+          fileName = `${nameWithoutExt} (${counter})${extension}`
+        }
+        counter++
+      }
+
+      // If name was changed, create new File object with updated name
+      if (fileName !== file.name) {
+        const newFile = new File([file], fileName, { type: file.type })
+        return newFile
+      }
+
+      return file
+    })
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files)
-      const processedFiles = processFiles(newFiles, files)
-      setFiles((prev) => [...prev, ...processedFiles])
+      const newFileArray = Array.from(e.target.files)
+      const processedFiles = handleDuplicateFiles(newFileArray, files)
+
+      const newFiles = processedFiles.map((file) => ({
+        file,
+        status: "pending" as const,
+        progress: 0,
+      }))
+
+      setFiles((prev) => [...prev, ...newFiles])
     }
-    e.target.value = ""
   }
 
-  const handleAddMoreFiles = () => {
-    addMoreInputRef.current?.click()
+  const handleAdditionalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFileArray = Array.from(e.target.files)
+      const processedFiles = handleDuplicateFiles(newFileArray, files)
+
+      const newFiles = processedFiles.map((file) => ({
+        file,
+        status: "pending" as const,
+        progress: 0,
+      }))
+
+      setFiles((prev) => [...prev, ...newFiles])
+    }
+
+    // Reset the input
+    if (additionalFileInputRef.current) {
+      additionalFileInputRef.current.value = ""
+    }
   }
 
   const handleFiles = useCallback(
     (fileList: FileList) => {
-      const newFiles = Array.from(fileList)
-      const processedFiles = processFiles(newFiles, files)
-      setFiles((prev) => [...prev, ...processedFiles])
+      const newFileArray = Array.from(fileList)
+      const processedFiles = handleDuplicateFiles(newFileArray, files)
+
+      const newFiles = processedFiles.map((file) => ({
+        file,
+        status: "pending" as const,
+        progress: 0,
+      }))
+
+      setFiles((prev) => [...prev, ...newFiles])
     },
     [files],
   )
@@ -72,14 +122,7 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    const rect = dropZoneRef.current?.getBoundingClientRect()
-    if (
-      rect &&
-      e.clientX >= rect.left &&
-      e.clientX <= rect.right &&
-      e.clientY >= rect.top &&
-      e.clientY <= rect.bottom
-    ) {
+    if (e.dataTransfer.types.includes("Files")) {
       setDragActive(true)
     }
   }, [])
@@ -87,8 +130,9 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+
     const rect = dropZoneRef.current?.getBoundingClientRect()
-    if (rect && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY <= rect.bottom)) {
+    if (rect && (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom)) {
       setDragActive(false)
     }
   }, [])
@@ -106,6 +150,7 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
       e.preventDefault()
       e.stopPropagation()
       setDragActive(false)
+
       if (e.dataTransfer.files && e.dataTransfer.files[0]) {
         handleFiles(e.dataTransfer.files)
       }
@@ -117,6 +162,10 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
     setFiles(files.filter((_, i) => i !== index))
   }
 
+  const clearAllFiles = () => {
+    setFiles([])
+  }
+
   const resetToInitialState = () => {
     setFiles([])
     setUploading(false)
@@ -124,8 +173,8 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
-    if (addMoreInputRef.current) {
-      addMoreInputRef.current.value = ""
+    if (additionalFileInputRef.current) {
+      additionalFileInputRef.current.value = ""
     }
   }
 
@@ -134,35 +183,7 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
       setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, status: "uploading", progress: 0 } : f)))
 
       const formData = new FormData()
-
-      let s3Key: string
-      let displayName: string
-
-      if (currentPath) {
-        const timestamp = Date.now()
-        const originalFileName = fileStatus.file.name
-        s3Key = `${currentPath}/${timestamp}-${originalFileName}`
-
-        displayName = `${currentPath}/${originalFileName}`
-
-        console.log("Uploading to folder:")
-        console.log("- Current path:", currentPath)
-        console.log("- S3 key:", s3Key)
-        console.log("- Display name:", displayName)
-      } else {
-        const timestamp = Date.now()
-        s3Key = `${timestamp}-${fileStatus.file.name}`
-        displayName = fileStatus.file.name
-
-        console.log("Uploading to root:")
-        console.log("- S3 key:", s3Key)
-        console.log("- Display name:", displayName)
-      }
-
-      const fileToUpload = new File([fileStatus.file], s3Key, { type: fileStatus.file.type })
-      formData.append("file", fileToUpload)
-
-      formData.append("displayName", displayName)
+      formData.append("file", fileStatus.file)
 
       const headers: Record<string, string> = {}
       const accessToken = localStorage.getItem("accessToken")
@@ -187,12 +208,14 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
           }
+
           const retryResponse = await fetch("http://localhost:8080/file/upload", {
             method: "POST",
             headers,
             body: formData,
             credentials: "include",
           })
+
           if (retryResponse.ok) {
             setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, status: "completed", progress: 100 } : f)))
             return true
@@ -217,7 +240,8 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
       if (!refreshToken) {
         return false
       }
-      const response = await fetch("http://localhost:8080/auth/refresh-token", {
+
+      const response = await fetch("http://localhost:8080/auth/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -225,6 +249,7 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
         body: JSON.stringify({ refreshToken }),
         credentials: "include",
       })
+
       if (response.ok) {
         const data = await response.json()
         localStorage.setItem("accessToken", data.accessToken)
@@ -263,17 +288,22 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
     setUploading(false)
 
     if (successCount > 0) {
-      showSuccess(
-        "Upload complete",
-        `Successfully uploaded ${successCount} file(s)${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
-      )
+      toast({
+        variant: "success",
+        title: "Upload complete",
+        description: `Successfully uploaded ${successCount} file(s)${errorCount > 0 ? `, ${errorCount} failed` : ""}`,
+      })
       if (onUploadComplete) {
         onUploadComplete()
       }
     }
 
     if (errorCount > 0 && successCount === 0) {
-      showError("Upload failed", `Failed to upload ${errorCount} file(s)`)
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: `Failed to upload ${errorCount} file(s)`,
+      })
     }
 
     if (errorCount === 0) {
@@ -287,18 +317,19 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
   const getStatusIcon = (status: FileUploadStatus["status"]) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
+        return <CheckCircle className="h-5 w-5 text-green-500" />
       case "error":
-        return <AlertCircle className="h-4 w-4 text-red-500" />
+        return <AlertCircle className="h-5 w-5 text-red-500" />
       case "uploading":
-        return <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+        return <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       default:
-        return <FileIcon className="h-4 w-4 text-gray-500" />
+        return <FileIcon className="h-5 w-5 text-muted-foreground" />
     }
   }
 
   const allCompleted = files.length > 0 && files.every((f) => f.status === "completed" || f.status === "error")
   const hasErrors = files.some((f) => f.status === "error")
+  const pendingFiles = files.filter((f) => f.status === "pending").length
 
   const handleCancel = () => {
     if (uploading) {
@@ -317,140 +348,158 @@ export function UploadModal({ open, onOpenChange, onUploadComplete, currentPath 
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Upload files</DialogTitle>
-          <DialogDescription>
-            Upload files to {currentPath ? `"${currentPath}"` : "your storage"}. Files will be organized using stable
-            folder prefixes.
-          </DialogDescription>
+          <DialogDescription>Upload files to your storage. You can upload multiple files at once.</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          {!uploading && files.length === 0 && (
-            <div
-              ref={dropZoneRef}
-              className={`
-                relative border-2 border-dashed rounded-lg p-12 text-center cursor-pointer
-                 transition-colors duration-200 ease-in-out
-                min-h-[200px]
-                  ${
-                    dragActive
-                      ? "border-primary bg-primary/10"
-                      : "border-muted-foreground/25 hover:bg-muted/50 hover:border-muted-foreground/40"
-                  }
-              `}
-              onClick={() => fileInputRef.current?.click()}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              <div className="pointer-events-none">
-                <Upload
-                  className={`
-                  h-12 w-12 mx-auto transition-colors duration-200
-                   ${dragActive ? "text-primary" : "text-muted-foreground"}
-                `}
-                />
-                <div className="h-[24px] mt-2">
-                  <p className="font-medium text-sm">
-                    {dragActive ? "Drop files here" : "Drag and drop files here or click to browse"}
-                  </p>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">Support for documents, images, videos, and more</p>
-              </div>
-              <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
-            </div>
-          )}
 
-          {!uploading && files.length > 0 && (
-            <div
-              ref={dropZoneRef}
-              className={`
-                relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
-                 transition-colors duration-200 ease-in-out
-                ${
-                  dragActive
-                    ? "border-primary bg-primary/10"
-                    : "border-muted-foreground/25 hover:bg-muted/50 hover:border-muted-foreground/40"
-                }
-              `}
-              onClick={handleAddMoreFiles}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-            >
-              <div className="pointer-events-none">
-                <Upload
-                  className={`
-                  h-8 w-8 mx-auto transition-colors duration-200
-                   ${dragActive ? "text-primary" : "text-muted-foreground"}
+        <div className="grid gap-4 py-4">
+          <div
+            ref={dropZoneRef}
+            className={`
+              relative border-2 border-dashed rounded-lg text-center cursor-pointer 
+              transition-all duration-200 ease-in-out
+              ${files.length === 0 ? "p-12 min-h-[200px]" : "p-6 min-h-[120px]"}
+              ${
+                dragActive
+                  ? "border-primary bg-primary/10 scale-[1.02]"
+                  : "border-muted-foreground/25 hover:bg-muted/50 hover:border-muted-foreground/40"
+              }
+            `}
+            onClick={() =>
+              files.length === 0 ? fileInputRef.current?.click() : additionalFileInputRef.current?.click()
+            }
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+          >
+            <div className="pointer-events-none">
+              <Upload
+                className={`
+                  ${files.length === 0 ? "h-12 w-12" : "h-8 w-8"} mx-auto transition-all duration-200 
+                  ${dragActive ? "text-primary" : "text-muted-foreground"}
                 `}
-                />
-                <div className="h-[20px] mt-1">
-                  <p className="font-medium text-sm">{dragActive ? "Drop more files here" : "Add more files"}</p>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Drag and drop or click to browse for additional files
+              />
+              <div className={`${files.length === 0 ? "h-[24px] mt-2" : "h-[20px] mt-1"}`}>
+                <p className={`font-medium ${files.length === 0 ? "text-sm" : "text-xs"}`}>
+                  {dragActive
+                    ? "Drop files here"
+                    : files.length === 0
+                      ? "Drag and drop files here or click to browse"
+                      : "Drag more files here or click to add more"}
                 </p>
               </div>
-              <input ref={addMoreInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+              {files.length === 0 && (
+                <p className="text-sm text-muted-foreground mt-1">Support for documents, images, videos, and more</p>
+              )}
             </div>
-          )}
+
+            <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileChange} />
+            <input
+              ref={additionalFileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleAdditionalFileChange}
+            />
+          </div>
 
           {files.length > 0 && (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {files.map((fileStatus, index) => (
-                <div
-                  key={`${fileStatus.file.name}-${index}`}
-                  className="flex items-center justify-between p-3 border rounded-md"
-                >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    {getStatusIcon(fileStatus.status)}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{fileStatus.file.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <p className="text-xs text-muted-foreground">
-                          {(fileStatus.file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                        {currentPath && <p className="text-xs text-blue-600">→ {currentPath}/</p>}
-                        {fileStatus.status === "uploading" && (
-                          <div className="flex-1 max-w-20">
-                            <Progress value={fileStatus.progress} className="h-1" />
-                          </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">
+                  {files.length} file{files.length !== 1 ? "s" : ""} selected
+                  {pendingFiles > 0 && ` (${pendingFiles} pending)`}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => additionalFileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <FolderOpen className="h-4 w-4 mr-1" />
+                    Browse Files
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={clearAllFiles} disabled={uploading}>
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {files.map((fileStatus, index) => (
+                  <div
+                    key={`${fileStatus.file.name}-${index}`}
+                    className="flex items-center justify-between p-3 bg-muted/30 rounded-md border"
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {getStatusIcon(fileStatus.status)}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{fileStatus.file.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-xs text-muted-foreground">
+                            {(fileStatus.file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                          {fileStatus.status === "uploading" && (
+                            <div className="flex-1 max-w-20">
+                              <Progress value={fileStatus.progress} className="h-1" />
+                            </div>
+                          )}
+                          {fileStatus.status === "completed" && (
+                            <span className="text-xs text-green-600 font-medium">Uploaded</span>
+                          )}
+                          {fileStatus.status === "error" && (
+                            <span className="text-xs text-red-600 font-medium">Failed</span>
+                          )}
+                        </div>
+                        {fileStatus.error && (
+                          <p className="text-xs text-red-500 mt-1 truncate">
+                            {fileStatus.error.length > 50
+                              ? `${fileStatus.error.substring(0, 50)}...`
+                              : fileStatus.error}
+                          </p>
                         )}
                       </div>
-                      {fileStatus.error && <p className="text-xs text-red-500 mt-1">{fileStatus.error}</p>}
                     </div>
+
+                    {!uploading && fileStatus.status === "pending" && (
+                      <Button variant="ghost" size="icon" onClick={() => removeFile(index)} className="h-8 w-8">
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
-                  {!uploading && fileStatus.status === "pending" && (
-                    <Button variant="ghost" size="icon" onClick={() => removeFile(index)}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
 
           {allCompleted && !hasErrors && (
-            <div className="mt-4 p-4 bg-green-50 rounded-lg">
-              <div className="flex items-center space-x-2 text-green-800">
-                <CheckCircle className="h-5 w-5" />
-                <span className="font-medium">All files uploaded successfully!</span>
-              </div>
+            <div className="flex items-center gap-2 text-green-500 justify-center p-3 bg-green-50 rounded-md">
+              <CheckCircle className="h-5 w-5" />
+              <p className="text-sm font-medium">All files uploaded successfully!</p>
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            {allCompleted ? "Close" : files.length > 0 && !uploading ? "Clear All" : "Cancel"}
+
+        <DialogFooter className="sm:justify-between">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={allCompleted ? handleClose : handleCancel}
+            disabled={uploading}
+          >
+            {allCompleted ? "Close" : files.length > 0 && !uploading ? "Back" : "Cancel"}
           </Button>
+
           {!allCompleted && (
-            <Button onClick={handleUpload} disabled={uploading || files.length === 0}>
-              {uploading ? "Uploading..." : "Upload"}
+            <Button type="button" onClick={handleUpload} disabled={files.length === 0 || uploading}>
+              {uploading
+                ? `Uploading ${files.filter((f) => f.status === "uploading").length}/${files.length}...`
+                : `Upload ${files.length} file${files.length !== 1 ? "s" : ""}`}
             </Button>
           )}
         </DialogFooter>

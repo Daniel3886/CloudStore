@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
 import { Eye, EyeOff, Loader2, Lock, ArrowLeft, CheckCircle } from "lucide-react"
+import { FormError } from "@/components/ui/form-error"
+import { FieldError } from "@/components/ui/field-error"
+import { toast } from "@/hooks/use-toast"
 
 export function ResetPasswordForm() {
   const [formData, setFormData] = useState({
@@ -19,107 +21,81 @@ export function ResetPasswordForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [isValidSession, setIsValidSession] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
   const [resetSuccess, setResetSuccess] = useState(false)
+  const [formError, setFormError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
 
   const router = useRouter()
-  const { toast } = useToast()
 
   useEffect(() => {
     const verifiedEmail = sessionStorage.getItem("verifiedResetEmail")
-
-    setDebugInfo(`Verified email from session: ${verifiedEmail ? "Present" : "Missing"}`)
 
     if (verifiedEmail) {
       setEmail(verifiedEmail)
       setIsValidSession(true)
     } else {
-      toast({
-        title: "Invalid session",
-        description: "Please start the password reset process from the beginning.",
-        variant: "destructive",
-      })
+      setFormError("Invalid session. Please start the password reset process from the beginning.")
     }
-  }, [toast])
+  }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }))
+    }
+
+    // Clear form error when user starts typing
+    if (formError) {
+      setFormError("")
+    }
   }
 
   const validateForm = () => {
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password mismatch",
-        description: "Passwords do not match. Please make sure both passwords are identical.",
-        variant: "destructive",
-      })
-      return false
+    const errors: Record<string, string> = {}
+
+    // Password validation
+    if (!formData.password) {
+      errors.password = "Password is required"
+    } else if (formData.password.length < 8) {
+      errors.password = "Password must be at least 8 characters long"
+    } else if (formData.password.length > 128) {
+      errors.password = "Password must be no more than 128 characters long"
+    } else if (!/\d/.test(formData.password)) {
+      errors.password = "Password must contain at least one number"
+    } else if (!/[a-zA-Z]/.test(formData.password)) {
+      errors.password = "Password must contain at least one letter"
     }
 
-    if (formData.password.length < 8) {
-      toast({
-        title: "Weak password",
-        description: "Password must be at least 8 characters long.",
-        variant: "destructive",
-      })
-      return false
+    // Confirm password validation
+    if (!formData.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password"
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match"
     }
 
-    if (formData.password.length > 128) {
-      toast({
-        title: "Password too long",
-        description: "Password must be no more than 128 characters long.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    if (!/\d/.test(formData.password)) {
-      toast({
-        title: "Weak password",
-        description: "Password must contain at least one number.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    if (!/[a-zA-Z]/.test(formData.password)) {
-      toast({
-        title: "Weak password",
-        description: "Password must contain at least one letter.",
-        variant: "destructive",
-      })
-      return false
-    }
-
-    return true
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string, defaultMessage: string) => {
+  const parseBackendError = (responseText: string) => {
     try {
       const errorData = JSON.parse(responseText)
-      if (errorData.message) {
-        return errorData.message
-      }
-      if (errorData.error) {
-        return errorData.error
-      }
-      return defaultMessage
+      return errorData.message || errorData.error || responseText
     } catch {
-      return responseText || defaultMessage
+      return responseText.trim() || "An unexpected error occurred"
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormError("")
 
     if (!validateForm()) return
 
     setIsLoading(true)
-    setDebugInfo("Sending password reset request...")
 
     try {
       const requestBody = {
@@ -127,12 +103,7 @@ export function ResetPasswordForm() {
         newPassword: formData.password,
       }
 
-      setDebugInfo(
-        (prev) =>
-          `${prev}\nSending request to: http://localhost:8080/auth/reset-password\nPayload: ${JSON.stringify({ email, newPassword: formData.password })}`,
-      )
-
-      const response = await fetch("http://localhost:8080/auth/reset-password", {
+      const response = await fetch("http://localhost:8080/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -143,18 +114,15 @@ export function ResetPasswordForm() {
         credentials: "include",
       })
 
-      setDebugInfo((prev) => `${prev}\nResponse status: ${response.status}`)
-
       const responseText = await response.text()
-      setDebugInfo((prev) => `${prev}\nResponse: ${responseText}`)
 
       if (response.ok) {
-        setDebugInfo((prev) => `${prev}\nPassword reset successful!`)
         setResetSuccess(true)
 
         sessionStorage.removeItem("verifiedResetEmail")
 
         toast({
+          variant: "success",
           title: "Password reset successful!",
           description: "Your password has been updated. You can now sign in with your new password.",
         })
@@ -163,21 +131,11 @@ export function ResetPasswordForm() {
           router.push("/login")
         }, 3000)
       } else {
-        const errorMsg = parseBackendError(responseText, "Failed to reset password")
-        setDebugInfo((prev) => `${prev}\nFailed: ${errorMsg}`)
-        toast({
-          title: "Password reset failed",
-          description: errorMsg,
-          variant: "destructive",
-        })
+        const errorMessage = parseBackendError(responseText)
+        setFormError(errorMessage)
       }
     } catch (error: any) {
-      setDebugInfo((prev) => `${prev}\nError: ${error.message}`)
-      toast({
-        title: "Network error",
-        description: "Unable to connect to the server. Please check your internet connection and try again.",
-        variant: "destructive",
-      })
+      setFormError("Unable to reset password. Please check your connection and try again.")
     } finally {
       setIsLoading(false)
     }
@@ -205,13 +163,6 @@ export function ResetPasswordForm() {
             <Link href="/login">Back to login</Link>
           </Button>
         </div>
-
-        {debugInfo && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-32 text-left">
-            <p className="font-semibold mb-1">Debug Information:</p>
-            {debugInfo}
-          </div>
-        )}
       </div>
     )
   }
@@ -236,13 +187,6 @@ export function ResetPasswordForm() {
             Go to Login
           </Button>
         </div>
-
-        {debugInfo && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-32 text-left">
-            <p className="font-semibold mb-1">Debug Information:</p>
-            {debugInfo}
-          </div>
-        )}
       </div>
     )
   }
@@ -262,48 +206,60 @@ export function ResetPasswordForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="password"
-            type={showPassword ? "text" : "password"}
-            placeholder="New password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setShowPassword(!showPassword)}
-          >
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
+        {formError && <FormError message={formError} />}
+
+        <div className="space-y-1">
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="New password (8+ chars, include letters & numbers)"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={`pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldErrors.password ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+          <FieldError message={fieldErrors.password} />
         </div>
 
-        <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
-            placeholder="Confirm new password"
-            value={formData.confirmPassword}
-            onChange={handleInputChange}
-            className="pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-          >
-            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
+        <div className="space-y-1">
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className={`pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldErrors.confirmPassword ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
+          <FieldError message={fieldErrors.confirmPassword} />
         </div>
 
         <div className="text-xs text-muted-foreground space-y-1">
@@ -321,13 +277,6 @@ export function ResetPasswordForm() {
           Reset Password
         </Button>
       </form>
-
-      {debugInfo && (
-        <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-32">
-          <p className="font-semibold mb-1">Debug Information:</p>
-          {debugInfo}
-        </div>
-      )}
 
       <div className="text-center">
         <Button variant="ghost" asChild className="h-auto p-0">

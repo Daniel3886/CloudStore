@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,52 +14,28 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { showSuccess, showError } from "@/components/ui/notification"
+import { toast } from "@/hooks/use-toast"
 
 interface NewFolderModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  currentPath?: string
-  virtualFolders?: string[]
-  saveVirtualFolders?: (folders: string[]) => void
-  onFolderCreated?: () => void
 }
 
-export function NewFolderModal({
-  open,
-  onOpenChange,
-  currentPath = "",
-  virtualFolders = [],
-  saveVirtualFolders,
-  onFolderCreated,
-}: NewFolderModalProps) {
+export function NewFolderModal({ open, onOpenChange }: NewFolderModalProps) {
   const [folderName, setFolderName] = useState("")
+  // const { toast } = useToast()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!folderName.trim()) {
-      showError("Invalid name", "Folder name cannot be empty.")
-      return
-    }
+    if (!folderName.trim()) return
 
-    const folderPath = currentPath ? `${currentPath}/${folderName.trim()}` : folderName.trim()
-
-    if (virtualFolders.includes(folderPath)) {
-      showError("Folder exists", "A folder with this name already exists.")
-      return
-    }
-
-    if (saveVirtualFolders) {
-      const updatedFolders = [...virtualFolders, folderPath]
-      saveVirtualFolders(updatedFolders)
-    }
-
-    showSuccess("Folder created", `Folder "${folderName}" created successfully.`)
-
-    if (onFolderCreated) {
-      onFolderCreated()
-    }
+    // In a real app, you would call an API to create the folder
+    toast({
+      variant: "success",
+      title: "Folder created",
+      description: `Successfully created folder "${folderName}"`,
+    })
 
     onOpenChange(false)
     setFolderName("")

@@ -6,27 +6,61 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useToast } from "@/hooks/use-toast"
 import { Loader2, Mail, CheckCircle, ArrowLeft } from "lucide-react"
+import { FormError } from "@/components/ui/form-error"
+import { FieldError } from "@/components/ui/field-error"
+import { toast } from "@/hooks/use-toast"
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
+  const [formError, setFormError] = useState("")
+  const [fieldError, setFieldError] = useState("")
 
   const router = useRouter()
-  const { toast } = useToast()
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+
+    // Clear errors when user starts typing
+    if (fieldError) setFieldError("")
+    if (formError) setFormError("")
+  }
+
+  const validateForm = () => {
+    if (!email) {
+      setFieldError("Email is required")
+      return false
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError("Please enter a valid email address")
+      return false
+    }
+
+    return true
+  }
+
+  const parseBackendError = (responseText: string) => {
+    try {
+      const errorData = JSON.parse(responseText)
+      return errorData.message || errorData.error || responseText
+    } catch {
+      return responseText.trim() || "An unexpected error occurred"
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setFormError("")
+
+    if (!validateForm()) return
+
     setIsLoading(true)
-    setDebugInfo(null)
 
     try {
-      setDebugInfo("Sending forgot password request...")
-
-      const response = await fetch("http://localhost:8080/auth/forgot-password", {
+      const response = await fetch("http://localhost:8080/forgot-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,42 +71,31 @@ export function ForgotPasswordForm() {
         credentials: "include",
       })
 
-      setDebugInfo((prev) => `${prev}\nResponse status: ${response.status}`)
-
       const responseText = await response.text()
-      setDebugInfo((prev) => `${prev}\nResponse: ${responseText}`)
 
       if (response.ok) {
         setEmailSent(true)
-        setDebugInfo((prev) => `${prev}\nReset email sent successfully!`)
 
+        // Store email for verification flow
         sessionStorage.setItem("passwordResetEmail", email)
         sessionStorage.setItem("resetFlowActive", "true")
 
         toast({
+          variant: "success",
           title: "Verification code sent!",
           description: "Check your email for the 6-digit verification code.",
         })
 
+        // Redirect to verify page for password reset flow
         setTimeout(() => {
           router.push("/verify-password")
-        }, 2000) 
+        }, 2000)
       } else {
-        const errorMsg = responseText || "Failed to send verification code"
-        setDebugInfo((prev) => `${prev}\nFailed: ${errorMsg}`)
-        toast({
-          title: "Failed to send verification code",
-          description: errorMsg,
-          variant: "destructive",
-        })
+        const errorMessage = parseBackendError(responseText)
+        setFormError(errorMessage)
       }
     } catch (error: any) {
-      setDebugInfo((prev) => `${prev}\nError: ${error.message}`)
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
-      })
+      setFormError("Unable to send verification code. Please check your connection and try again.")
     } finally {
       setIsLoading(false)
     }
@@ -97,20 +120,13 @@ export function ForgotPasswordForm() {
         </div>
 
         <div className="space-y-3">
-          <Button onClick={() => router.push("/verify")} className="w-full h-11">
+          <Button onClick={() => router.push("/verify-password")} className="w-full h-11">
             Continue to verification
           </Button>
           <Button variant="outline" onClick={() => setEmailSent(false)} className="w-full h-11">
             Try another email
           </Button>
         </div>
-
-        {debugInfo && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-32">
-            <p className="font-semibold mb-1">Debug Information:</p>
-            {debugInfo}
-          </div>
-        )}
       </div>
     )
   }
@@ -129,16 +145,23 @@ export function ForgotPasswordForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary"
-            required
-          />
+        {formError && <FormError message={formError} />}
+
+        <div className="space-y-1">
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={handleInputChange}
+              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                fieldError ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              required
+            />
+          </div>
+          <FieldError message={fieldError} />
         </div>
 
         <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
@@ -146,13 +169,6 @@ export function ForgotPasswordForm() {
           Send verification code
         </Button>
       </form>
-
-      {debugInfo && (
-        <div className="mt-4 p-3 bg-muted/50 rounded-md text-xs font-mono whitespace-pre-wrap overflow-auto max-h-32">
-          <p className="font-semibold mb-1">Debug Information:</p>
-          {debugInfo}
-        </div>
-      )}
 
       <div className="text-center">
         <Button variant="ghost" asChild className="h-auto p-0">

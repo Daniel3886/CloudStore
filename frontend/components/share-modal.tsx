@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "@/hooks/use-toast"
 import { Copy, FileIcon, Link, Mail, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -27,13 +27,13 @@ interface ShareModalProps {
 export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
   const [email, setEmail] = useState("")
   const [permission, setPermission] = useState("viewer")
-  const { toast } = useToast()
 
   const handleShare = () => {
     if (!email.trim()) return
 
     // In a real app, you would call an API to share the file
     toast({
+      variant: "success",
       title: "File shared",
       description: `Successfully shared "${file.name}" with ${email}`,
     })
@@ -46,6 +46,7 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
     navigator.clipboard.writeText(`https://cloudstore.example/share/${file.id}`)
 
     toast({
+      variant: "success",
       title: "Link copied",
       description: "Sharing link copied to clipboard",
     })

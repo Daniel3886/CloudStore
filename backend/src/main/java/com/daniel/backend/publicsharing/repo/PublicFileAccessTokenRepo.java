@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PublicFileAccessTokenRepository extends JpaRepository<PublicFileAccessToken, Long> {
+public interface PublicFileAccessTokenRepo extends JpaRepository<PublicFileAccessToken, Long> {
     Optional<PublicFileAccessToken> findByTokenAndActiveTrue(String token);
 
     List<PublicFileAccessToken> findAllByFileOwnerEmailAndActiveTrue(String ownerEmail);

@@ -5,13 +5,19 @@ import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
 import com.daniel.backend.file.service.StorageService;
 import com.daniel.backend.publicsharing.entity.PublicFileAccessToken;
-import com.daniel.backend.publicsharing.repo.PublicFileAccessTokenRepository;
+import com.daniel.backend.publicsharing.repo.PublicFileAccessTokenRepo;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.MediaType;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -21,7 +27,7 @@ public class PublicFileSharingService {
     private FileRepo fileRepo;
 
     @Autowired
-    private PublicFileAccessTokenRepository publicTokenRepo;
+    private PublicFileAccessTokenRepo publicTokenRepo;
 
     @Autowired
     private StorageService storageService;
@@ -29,8 +35,13 @@ public class PublicFileSharingService {
     @Autowired
     private AuditLogService auditLogService;
 
+    @Autowired
+    private S3Client s3Client;
 
-    public String generatePublicLink(Long fileId, String ownerEmail) throws AccessDeniedException {
+    @Value("${AWS_BUCKET_NAME}")
+    private String bucketName;
+
+    public Map<String, String> generatePublicLink(Long fileId, String ownerEmail, HttpServletRequest request) throws AccessDeniedException {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
@@ -55,15 +66,35 @@ public class PublicFileSharingService {
                 "Generated a public link " + ownerEmail
         );
 
-
         publicTokenRepo.save(accessToken);
 
-        return "https://cloudstore.com/share/public/access/" + token;
+        String baseUrl = String.format("%s://%s%s/share/public/access/%s",
+                request.getScheme(),
+                request.getServerName(),
+                request.getServerPort() == 80 || request.getServerPort() == 443 ? "" : ":" + request.getServerPort(),
+                token
+        );
+
+        return Map.of(
+                "previewLink", baseUrl + "?preview=true",
+                "downloadLink", baseUrl
+        );
     }
 
+
     public PublicFileResponse getPublicFileWithMetadata(String token) {
-        Files file = validateAndGetToken(token).getFile();
+        PublicFileAccessToken accessToken = publicTokenRepo.findByTokenAndActiveTrue(token)
+                .orElseThrow(() -> new RuntimeException("Invalid or inactive public link."));
+
+        if (accessToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            accessToken.setActive(false);
+            publicTokenRepo.save(accessToken);
+            throw new RuntimeException("This link has expired.");
+        }
+
+        Files file = accessToken.getFile();
         byte[] fileContent = storageService.downloadFile(file.getS3Key());
+        MediaType mediaType = getFileMediaType(file.getS3Key());
 
         auditLogService.log(
                 "PUBLIC_FILE_ACCESS",
@@ -72,8 +103,9 @@ public class PublicFileSharingService {
                 "File accessed via public link"
         );
 
-        return new PublicFileResponse(fileContent, file.getDisplayName());
+        return new PublicFileResponse(fileContent, file.getDisplayName(), mediaType);
     }
+
 
     public List<PublicFileAccessToken> getActiveLinksByOwner(String ownerEmail) {
         return publicTokenRepo.findAllByFileOwnerEmailAndActiveTrue(ownerEmail);
@@ -110,5 +142,22 @@ public class PublicFileSharingService {
         return access;
     }
 
-    public record PublicFileResponse(byte[] content, String filename) {}
+    private MediaType getFileMediaType(String s3Key) {
+        try {
+            String contentType = s3Client.headObject(HeadObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Key)
+                            .build())
+                    .contentType();
+
+            if (contentType != null && !contentType.isBlank()) {
+                return MediaType.parseMediaType(contentType);
+            }
+        } catch (Exception e) {
+            System.err.println("Error retrieving content type for file: " + s3Key + " - " + e.getMessage());
+        }
+        return MediaType.APPLICATION_OCTET_STREAM;
+    }
+
+    public record PublicFileResponse(byte[] content, String filename, MediaType mediaType) {}
 }

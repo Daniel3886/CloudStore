@@ -4,13 +4,11 @@ import com.daniel.backend.publicsharing.service.PublicFileSharingService;
 import com.daniel.backend.publicsharing.service.PublicFileSharingService.PublicFileResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/share/public")
@@ -21,29 +19,53 @@ public class PublicFileSharingController {
 
 
     @PostMapping("/{fileId}")
-    public ResponseEntity<?> generatePublicLink(@PathVariable Long fileId, HttpServletRequest request) throws AccessDeniedException {
+    public ResponseEntity<?> generatePublicLink(
+            @PathVariable Long fileId,
+            HttpServletRequest request) throws AccessDeniedException {
+
         String currentUserEmail = request.getUserPrincipal().getName();
-        String url = publicSharingService.generatePublicLink(fileId, currentUserEmail);
-        return ResponseEntity.ok(url);
+
+        Map<String, String> links = publicSharingService.generatePublicLink(fileId, currentUserEmail, request);
+
+        return ResponseEntity.ok(links);
     }
 
+
     @GetMapping("/access/{token}")
-    public ResponseEntity<byte[]> downloadPublicFile(@PathVariable String token) {
+    public ResponseEntity<byte[]> downloadPublicFile(
+            @PathVariable String token,
+            @RequestParam(name = "preview", required = false) Boolean preview) {
         try {
             PublicFileResponse response = publicSharingService.getPublicFileWithMetadata(token);
 
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + response.filename() + "\"")
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .body(response.content());
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(response.mediaType());
+
+            if (Boolean.TRUE.equals(preview)) {
+                headers.setContentDisposition(ContentDisposition.inline()
+                        .filename(response.filename())
+                        .build());
+            } else {
+                headers.setContentDisposition(ContentDisposition.attachment()
+                        .filename(response.filename())
+                        .build());
+            }
+
+            //For debugging purposes
+            System.out.println("Content-Type being sent: " + response.mediaType());
+
+            return new ResponseEntity<>(response.content(), headers, HttpStatus.OK);
 
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
+
     @DeleteMapping("/access/{token}")
-    public ResponseEntity<?> revokePublicLink(@PathVariable String token, HttpServletRequest request) throws AccessDeniedException {
+    public ResponseEntity<?> revokePublicLink(
+            @PathVariable String token,
+            HttpServletRequest request) throws AccessDeniedException {
         String ownerEmail = request.getUserPrincipal().getName();
         publicSharingService.revokeToken(token, ownerEmail);
         return ResponseEntity.ok("Public access link revoked.");

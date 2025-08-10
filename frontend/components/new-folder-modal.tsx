@@ -23,14 +23,12 @@ interface NewFolderModalProps {
 
 export function NewFolderModal({ open, onOpenChange }: NewFolderModalProps) {
   const [folderName, setFolderName] = useState("")
-  // const { toast } = useToast()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!folderName.trim()) return
 
-    // In a real app, you would call an API to create the folder
     toast({
       variant: "success",
       title: "Folder created",

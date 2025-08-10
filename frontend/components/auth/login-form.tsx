@@ -29,12 +29,10 @@ export function LoginForm() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
 
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }))
     }
 
-    // Clear form error when user starts typing
     if (formError) {
       setFormError("")
     }

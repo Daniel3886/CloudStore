@@ -1,4 +1,3 @@
-// Authentication utility functions and types
 
 export interface User {
   id: string
@@ -16,19 +15,16 @@ export interface AuthResponse {
   user: User
 }
 
-// Get access token from storage
 export function getAccessToken(): string | null {
   if (typeof window === "undefined") return null
   return localStorage.getItem("accessToken")
 }
 
-// Get refresh token from storage
 export function getRefreshToken(): string | null {
   if (typeof window === "undefined") return null
   return localStorage.getItem("refreshToken")
 }
 
-// Remove tokens from storage
 export function clearTokens(): void {
   if (typeof window === "undefined") return
 
@@ -38,12 +34,10 @@ export function clearTokens(): void {
   sessionStorage.removeItem("pendingVerificationEmail")
 }
 
-// Check if user is authenticated
 export function isAuthenticated(): boolean {
   return !!getAccessToken()
 }
 
-// Decode JWT token (basic implementation)
 export function decodeToken(token: string): any {
   try {
     const base64Url = token.split(".")[1]
@@ -60,7 +54,6 @@ export function decodeToken(token: string): any {
   }
 }
 
-// Check if token is expired
 export function isTokenExpired(token: string): boolean {
   const decoded = decodeToken(token)
   if (!decoded || !decoded.exp) return true
@@ -68,7 +61,6 @@ export function isTokenExpired(token: string): boolean {
   return Date.now() >= decoded.exp * 1000
 }
 
-// Refresh access token using refresh token
 export async function refreshAccessToken(): Promise<boolean> {
   try {
     const refreshToken = getRefreshToken()
@@ -93,7 +85,6 @@ export async function refreshAccessToken(): Promise<boolean> {
       }
       return true
     } else {
-      // Refresh token is invalid, clear all tokens
       clearTokens()
       return false
     }
@@ -104,17 +95,14 @@ export async function refreshAccessToken(): Promise<boolean> {
   }
 }
 
-// API request with automatic token refresh
 export async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const accessToken = getAccessToken()
 
-  // Properly type the headers object
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   }
 
-  // Only add auth header if access token exists
   if (accessToken) {
     headers["Authorization"] = `Bearer ${accessToken}`
   }
@@ -124,18 +112,15 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
     headers,
   })
 
-  // Handle token refresh if needed
   if (response.status === 401 && accessToken) {
     const refreshSuccess = await refreshAccessToken()
     if (refreshSuccess) {
-      // Retry original request with new token
       const newAccessToken = getAccessToken()
       if (newAccessToken) {
         headers["Authorization"] = `Bearer ${newAccessToken}`
       }
       response = await fetch(url, { ...options, headers })
     } else {
-      // Refresh failed, redirect to login
       if (typeof window !== "undefined") {
         window.location.href = "/login"
       }
@@ -145,7 +130,6 @@ export async function authenticatedFetch(url: string, options: RequestInit = {})
   return response
 }
 
-// Helper function to make authenticated API calls
 export async function apiCall<T = any>(
   endpoint: string,
   options: RequestInit = {},

@@ -42,12 +42,10 @@ export function ResetPasswordForm() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
 
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }))
     }
 
-    // Clear form error when user starts typing
     if (formError) {
       setFormError("")
     }
@@ -56,7 +54,6 @@ export function ResetPasswordForm() {
   const validateForm = () => {
     const errors: Record<string, string> = {}
 
-    // Password validation
     if (!formData.password) {
       errors.password = "Password is required"
     } else if (formData.password.length < 8) {
@@ -69,7 +66,6 @@ export function ResetPasswordForm() {
       errors.password = "Password must contain at least one letter"
     }
 
-    // Confirm password validation
     if (!formData.confirmPassword) {
       errors.confirmPassword = "Please confirm your password"
     } else if (formData.password !== formData.confirmPassword) {

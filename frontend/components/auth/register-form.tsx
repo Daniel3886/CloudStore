@@ -28,12 +28,10 @@ export function RegisterForm() {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
 
-    // Clear field error when user starts typing
     if (fieldErrors[name]) {
       setFieldErrors((prev) => ({ ...prev, [name]: "" }))
     }
 
-    // Clear form error when user starts typing
     if (formError) {
       setFormError("")
     }
@@ -42,7 +40,6 @@ export function RegisterForm() {
   const validateForm = () => {
     const errors: Record<string, string> = {}
 
-    // Username validation
     if (!formData.username) {
       errors.username = "Username is required"
     } else if (formData.username.length < 3) {
@@ -51,14 +48,12 @@ export function RegisterForm() {
       errors.username = "Username must be no more than 20 characters long"
     }
 
-    // Email validation
     if (!formData.email) {
       errors.email = "Email is required"
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       errors.email = "Please enter a valid email address"
     }
 
-    // Password validation
     if (!formData.password) {
       errors.password = "Password is required"
     } else if (formData.password.length < 8) {
@@ -119,10 +114,8 @@ export function RegisterForm() {
           description: "Please check your email for verification code.",
         })
 
-        // Store email for verification page
         sessionStorage.setItem("pendingVerificationEmail", formData.email)
 
-        // Redirect to verification page
         router.push("/verify")
       } else {
         const errorMessage = parseBackendError(responseText)

@@ -85,7 +85,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return true
       } else {
-        // Refresh token is invalid, clear all tokens
         localStorage.removeItem("accessToken")
         localStorage.removeItem("refreshToken")
         localStorage.removeItem("userEmail")

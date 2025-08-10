@@ -43,14 +43,11 @@ export function UploadModal({ open, onOpenChange, onUploadComplete }: UploadModa
       let fileName = file.name
       let counter = 1
 
-      // Check if file name already exists
       while (existingNames.includes(fileName)) {
         const lastDotIndex = file.name.lastIndexOf(".")
         if (lastDotIndex === -1) {
-          // No extension
           fileName = `${file.name} (${counter})`
         } else {
-          // Has extension
           const nameWithoutExt = file.name.substring(0, lastDotIndex)
           const extension = file.name.substring(lastDotIndex)
           fileName = `${nameWithoutExt} (${counter})${extension}`
@@ -58,7 +55,6 @@ export function UploadModal({ open, onOpenChange, onUploadComplete }: UploadModa
         counter++
       }
 
-      // If name was changed, create new File object with updated name
       if (fileName !== file.name) {
         const newFile = new File([file], fileName, { type: file.type })
         return newFile
@@ -97,7 +93,6 @@ export function UploadModal({ open, onOpenChange, onUploadComplete }: UploadModa
       setFiles((prev) => [...prev, ...newFiles])
     }
 
-    // Reset the input
     if (additionalFileInputRef.current) {
       additionalFileInputRef.current.value = ""
     }

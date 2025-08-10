@@ -23,7 +23,6 @@ export function ForgotPasswordForm() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
 
-    // Clear errors when user starts typing
     if (fieldError) setFieldError("")
     if (formError) setFormError("")
   }
@@ -76,7 +75,6 @@ export function ForgotPasswordForm() {
       if (response.ok) {
         setEmailSent(true)
 
-        // Store email for verification flow
         sessionStorage.setItem("passwordResetEmail", email)
         sessionStorage.setItem("resetFlowActive", "true")
 
@@ -86,7 +84,6 @@ export function ForgotPasswordForm() {
           description: "Check your email for the 6-digit verification code.",
         })
 
-        // Redirect to verify page for password reset flow
         setTimeout(() => {
           router.push("/verify-password")
         }, 2000)

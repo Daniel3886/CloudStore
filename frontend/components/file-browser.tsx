@@ -112,7 +112,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
     deleteFile(selectedFile, () => {
       if (selectedFile.isFolder) {
-        // Update virtual folders
         const folderPath = currentPath ? `${currentPath}/${selectedFile.name}` : selectedFile.name
         const updatedFolders = virtualFolders.filter((folder) => !folder.startsWith(folderPath))
         saveVirtualFolders(updatedFolders)
@@ -129,7 +128,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   const handleRename = async (file: FileItem, newName: string): Promise<string> => {
     const error = await renameFile(file, newName, currentPath, () => {
       if (file.isFolder) {
-        // Update virtual folders
         const oldFolderPath = currentPath ? `${currentPath}/${file.name}` : file.name
         const newFolderPath = currentPath ? `${currentPath}/${newName}` : newName
 

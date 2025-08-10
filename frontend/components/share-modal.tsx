@@ -31,7 +31,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
   const handleShare = () => {
     if (!email.trim()) return
 
-    // In a real app, you would call an API to share the file
     toast({
       variant: "success",
       title: "File shared",
@@ -42,7 +41,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
   }
 
   const copyLink = () => {
-    // In a real app, you would generate and copy a sharing link
     navigator.clipboard.writeText(`https://cloudstore.example/share/${file.id}`)
 
     toast({

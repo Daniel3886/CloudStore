@@ -21,13 +21,11 @@ export function EmailVerificationForm() {
   const { toast } = useToast()
 
   useEffect(() => {
-    // Get email from session storage (set during registration)
     const pendingEmail = sessionStorage.getItem("pendingVerificationEmail")
     if (pendingEmail) {
       setEmail(pendingEmail)
     }
 
-    // Start countdown for resend button
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
       return () => clearTimeout(timer)
@@ -39,9 +37,6 @@ export function EmailVerificationForm() {
     setIsLoading(true)
 
     try {
-      // API Call: POST /api/auth/verify-email
-      // Expected payload: { email, verificationCode }
-      // Expected response: { message, token?, user? }
 
       const response = await fetch("http://localhost:8080/auth/verify", {
         method: "POST",
@@ -62,15 +57,12 @@ export function EmailVerificationForm() {
           description: "Your email has been successfully verified.",
         })
 
-        // Clear pending verification email
         sessionStorage.removeItem("pendingVerificationEmail")
 
-        // If token is returned, store it and redirect to dashboard
         if (data.token) {
           sessionStorage.setItem("token", data.token)
           router.push("/files")
         } else {
-          // Otherwise redirect to login
           router.push("/login")
         }
       } else {
@@ -95,12 +87,6 @@ export function EmailVerificationForm() {
     setIsResending(true)
 
     try {
-      // API Call: POST /api/auth/resend-verification
-      // Expected payload: { email }
-      // Expected response: { message }
-
-
-      // TODO: Change the api to something more appropriate?
       const response = await fetch("http://localhost:8080/auth/signup", {
         method: "POST",
         headers: {

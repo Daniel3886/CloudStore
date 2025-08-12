@@ -43,6 +43,7 @@ public class StorageController {
                     .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
                     .body(new ByteArrayResource(data));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
@@ -53,6 +54,7 @@ public class StorageController {
         try {
             return new ResponseEntity<>(service.softDeleteFile(fileName), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Soft delete failed: " + e.getMessage());
         }
@@ -63,6 +65,7 @@ public class StorageController {
         try {
             return new ResponseEntity<>(service.permanentlyDeleteFile(fileName), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Permanent delete failed: " + e.getMessage());
         }
@@ -73,6 +76,7 @@ public class StorageController {
         try {
             return new ResponseEntity<>(service.restoreFile(fileName), HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Restore failed: " + e.getMessage());
         }
@@ -84,6 +88,7 @@ public class StorageController {
             List<S3ObjectDto> files = service.listObjects();
             return ResponseEntity.ok(files);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -94,6 +99,7 @@ public class StorageController {
             List<S3ObjectDto> trashFiles = service.listTrashedFiles();
             return ResponseEntity.ok(trashFiles);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
@@ -107,6 +113,7 @@ public class StorageController {
             service.renameFile(s3Key, newDisplayName);
             return ResponseEntity.ok("Renamed successfully");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Rename failed: " + e.getMessage());
         }
@@ -121,6 +128,7 @@ public class StorageController {
             service.renameFolder(oldFolderPath, newFolderPath);
             return ResponseEntity.ok("Folder renamed successfully");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Folder rename failed: " + e.getMessage());
         }
@@ -132,6 +140,7 @@ public class StorageController {
             service.deleteFolder(folderPath);
             return ResponseEntity.ok("Folder deleted successfully");
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Folder delete failed: " + e.getMessage());
         }

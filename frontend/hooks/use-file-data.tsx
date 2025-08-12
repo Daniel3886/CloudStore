@@ -27,7 +27,6 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   const [virtualFolders, setVirtualFolders] = useState<string[]>([])
   const [lastFetchTime, setLastFetchTime] = useState<number>(0)
 
-  // Load virtual folders from localStorage
   useEffect(() => {
     const savedFolders = localStorage.getItem("virtualFolders")
     if (savedFolders) {
@@ -72,7 +71,6 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
   const fetchFiles = useCallback(
     async (force = false) => {
-      // Prevent multiple rapid fetches (debounce for 1 second)
       const now = Date.now()
       if (!force && now - lastFetchTime < 1000) {
         return
@@ -82,12 +80,30 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       setLastFetchTime(now)
 
       try {
-        const response = await makeAuthenticatedRequest("http://localhost:8080/file/list", {
+        let endpoint = "http://localhost:8080/file/list"
+
+        if (type === "trash") {
+          endpoint = "http://localhost:8080/file/trash"
+        }
+
+        const response = await makeAuthenticatedRequest(endpoint, {
           method: "GET",
         })
 
         if (response.ok) {
           const data = await response.json()
+
+          if (!data || !Array.isArray(data)) {
+            console.log("No files found or invalid response format")
+            setFiles([])
+            return
+          }
+
+          if (data.length === 0) {
+            console.log("User has no files yet")
+            setFiles([])
+            return
+          }
 
           const transformedFiles = data.map((file: any, index: number) => {
             const displayName = file.displayName || file.display_name || "Unknown File"
@@ -106,51 +122,64 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
               type: fileType,
               size: file.size || null,
               modified: file.lastModified || new Date().toISOString(),
-              owner: "Unknown",
+              owner: "You", 
               path: filePath,
               isFolder: false,
             }
           })
 
-          const folderItems = virtualFolders.map((folderPath, index) => {
-            const pathParts = folderPath.split("/")
-            const folderName = pathParts.pop() || folderPath
-            const parentPath = pathParts.join("/")
+          let folderItems: any[] = []
+          if (type !== "trash") {
+            folderItems = virtualFolders.map((folderPath, index) => {
+              const pathParts = folderPath.split("/")
+              const folderName = pathParts.pop() || folderPath
+              const parentPath = pathParts.join("/")
 
-            return {
-              id: `folder-${index}`,
-              name: folderName,
-              s3Key: "",
-              displayName: folderName,
-              type: "folder",
-              size: null,
-              modified: new Date().toISOString(),
-              owner: "You",
-              path: parentPath,
-              isFolder: true,
-            }
-          })
+              return {
+                id: `folder-${index}`,
+                name: folderName,
+                s3Key: "",
+                displayName: folderName,
+                type: "folder",
+                size: null,
+                modified: new Date().toISOString(),
+                owner: "You",
+                path: parentPath,
+                isFolder: true,
+              }
+            })
+          }
 
           setFiles([...folderItems, ...transformedFiles])
         } else {
-          throw new Error(`Failed to fetch files: ${response.status}`)
+          if (response.status === 404) {
+            console.log("No files endpoint found or user has no files")
+            setFiles([])
+            return
+          }
+
+          const errorText = await response.text()
+          throw new Error(errorText || `Failed to fetch files: ${response.status}`)
         }
       } catch (error: any) {
         console.error("Error fetching files:", error)
-        toast({
-          variant: "destructive",
-          title: "Failed to load files",
-          description: error.message || "Could not load files from server",
-        })
+
+        if (error.message && !error.message.includes("404")) {
+          toast({
+            variant: "destructive",
+            title: "Failed to load files",
+            description: error.message || "Could not load files from server",
+          })
+        }
+
         setFiles([])
       } finally {
         setLoading(false)
       }
     },
-    [makeAuthenticatedRequest, virtualFolders, getActualFileName, getFileTypeFromName, lastFetchTime],
+    [makeAuthenticatedRequest, virtualFolders, getActualFileName, getFileTypeFromName, lastFetchTime, type],
   )
 
-  // Auto-fetch when dependencies change
   useEffect(() => {
     fetchFiles()
   }, [type, virtualFolders])

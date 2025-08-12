@@ -29,15 +29,16 @@ interface FileItem {
 interface FileCardProps {
   file: FileItem
   isLoading: boolean
+  isTrashView?: boolean
   onFileClick: (file: FileItem) => void
   onFileAction: (action: string, file: FileItem) => void
 }
 
-export function FileCard({ file, isLoading, onFileClick, onFileAction }: FileCardProps) {
+export function FileCard({ file, isLoading, isTrashView = false, onFileClick, onFileAction }: FileCardProps) {
   return (
     <Card
       className="overflow-hidden cursor-pointer hover:shadow-md hover:bg-muted/30 transition-all duration-200"
-      onClick={() => onFileClick(file)}
+      onClick={() => !isTrashView && onFileClick(file)} 
     >
       <CardContent className="p-0">
         <div className="p-6">
@@ -67,54 +68,82 @@ export function FileCard({ file, isLoading, onFileClick, onFileAction }: FileCar
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onFileAction("download", file)
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Download {file.isFolder ? "as ZIP" : ""}
-                </DropdownMenuItem>
-                {!file.isFolder && (
-                  <DropdownMenuItem
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onFileAction("share", file)
-                    }}
-                  >
-                    Share
-                  </DropdownMenuItem>
+
+                {isTrashView ? (
+                  <>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("restore", file)
+                      }}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Restore
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("permanent-delete", file)
+                      }}
+                      className="text-red-500"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Permanently
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("download", file)
+                      }}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Download {file.isFolder ? "as ZIP" : ""}
+                    </DropdownMenuItem>
+                    {!file.isFolder && (
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onFileAction("share", file)
+                        }}
+                      >
+                        Share
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("rename", file)
+                      }}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("details", file)
+                      }}
+                    >
+                      Details
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onFileAction("delete", file)
+                      }}
+                      className="text-red-500"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Move to Trash
+                    </DropdownMenuItem>
+                  </>
                 )}
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onFileAction("rename", file)
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onFileAction("details", file)
-                  }}
-                >
-                  Details
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onFileAction("delete", file)
-                  }}
-                  className="text-red-500"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -125,6 +154,7 @@ export function FileCard({ file, isLoading, onFileClick, onFileAction }: FileCar
             <div className="mt-1 text-xs text-muted-foreground">
               {file.isFolder ? <p>Folder</p> : <p>{formatSize(file.size)}</p>}
               <p>Modified {formatDate(file.modified)}</p>
+              {isTrashView && <p className="text-red-500">In Trash</p>}
             </div>
           </div>
         </div>

@@ -43,12 +43,21 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
   const [currentPath, setCurrentPath] = useState("")
 
-  const { loadingStates, downloadFile, downloadFolder, deleteFile, renameFile, makeAuthenticatedRequest } =
-    useFileOperations()
+  const {
+    loadingStates,
+    downloadFile,
+    downloadFolder,
+    deleteFile,
+    renameFile,
+    restoreFile,
+    permanentlyDeleteFile,
+    makeAuthenticatedRequest,
+  } = useFileOperations()
 
   const { files, loading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
     useFileData({
@@ -57,6 +66,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     })
 
   const filteredFiles = getFilteredFiles(currentPath)
+  const isTrashView = type === "trash"
 
   const handleFileAction = (action: string, file: FileItem) => {
     setSelectedFile(file)
@@ -79,6 +89,17 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       case "delete":
         setDeleteDialogOpen(true)
         break
+      case "permanent-delete":
+        setPermanentDeleteDialogOpen(true)
+        break
+      case "restore":
+        restoreFile(file, () => {
+          refreshFiles()
+          if (onRefresh) {
+            onRefresh()
+          }
+        })
+        break
       case "rename":
         setRenameDialogOpen(true)
         break
@@ -95,6 +116,8 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   }
 
   const handleFileClick = (file: FileItem) => {
+    if (isTrashView) return 
+
     if (file.isFolder) {
       const newPath = currentPath ? `${currentPath}/${file.name}` : file.name
       setCurrentPath(newPath)
@@ -121,6 +144,19 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
         onRefresh()
       }
       setDeleteDialogOpen(false)
+      setSelectedFile(null)
+    })
+  }
+
+  const handlePermanentDeleteConfirm = () => {
+    if (!selectedFile) return
+
+    permanentlyDeleteFile(selectedFile, () => {
+      refreshFiles()
+      if (onRefresh) {
+        onRefresh()
+      }
+      setPermanentDeleteDialogOpen(false)
       setSelectedFile(null)
     })
   }
@@ -166,14 +202,14 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
   return (
     <>
       <FileHeader
-        title={currentPath ? `${currentPath}` : "My Files"}
+        title={currentPath ? `${currentPath}` : isTrashView ? "Trash" : "My Files"}
         onRefresh={handleRefresh}
         currentPath={currentPath}
         virtualFolders={virtualFolders}
         saveVirtualFolders={saveVirtualFolders}
       />
 
-      {currentPath && (
+      {currentPath && !isTrashView && (
         <div className="flex items-center gap-2 mb-4">
           <Button variant="ghost" size="sm" onClick={handleBackClick}>
             <ArrowLeft className="h-4 w-4 mr-1" />
@@ -193,9 +229,13 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       {filteredFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <FileIcon className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No files found</h3>
+          <h3 className="text-lg font-medium mb-2">{isTrashView ? "Trash is empty" : "No files found"}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {type === "all" ? "Upload some files or create a folder to get started" : `No ${type} files found`}
+            {isTrashView
+              ? "Files you delete will appear here for 30 days before being permanently removed."
+              : type === "all"
+                ? "Upload some files or create a folder to get started"
+                : `No ${type} files found`}
           </p>
         </div>
       ) : (
@@ -205,6 +245,7 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
               key={file.id}
               file={file}
               isLoading={loadingStates[file.id] || false}
+              isTrashView={isTrashView}
               onFileClick={handleFileClick}
               onFileAction={handleFileAction}
             />
@@ -215,16 +256,34 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedFile?.isFolder ? "folder" : "file"}</AlertDialogTitle>
+            <AlertDialogTitle>Move {selectedFile?.isFolder ? "folder" : "file"} to trash</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{selectedFile?.name}"? This action cannot be undone.
-              {selectedFile?.isFolder && " All files in this folder will also be permanently deleted from storage."}
+              Are you sure you want to move "{selectedFile?.name}" to trash? You can restore it later from the trash.
+              {selectedFile?.isFolder && " All files in this folder will also be moved to trash."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-500 hover:bg-red-600">
-              Delete
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-orange-500 hover:bg-orange-600">
+              Move to Trash
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={permanentDeleteDialogOpen} onOpenChange={setPermanentDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete {selectedFile?.isFolder ? "folder" : "file"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to permanently delete "{selectedFile?.name}"? This action cannot be undone and the
+              file will be lost forever.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handlePermanentDeleteConfirm} className="bg-red-500 hover:bg-red-600">
+              Delete Permanently
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

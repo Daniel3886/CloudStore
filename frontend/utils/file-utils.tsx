@@ -34,13 +34,11 @@ export const validateFileName = (name: string, isFolder: boolean): string => {
     return `${isFolder ? "Folder" : "File"} name must be less than 255 characters.`
   }
 
-  // Check for invalid characters
   const invalidChars = /[<>:"/\\|?*]/
   if (invalidChars.test(name)) {
     return `${isFolder ? "Folder" : "File"} name contains invalid characters.`
   }
 
-  // Check for reserved names (Windows)
   const reservedNames = [
     "CON",
     "PRN",

@@ -50,7 +50,7 @@ export function RenameDialog({ open, onOpenChange, file, onRename, isLoading }: 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    setError("") // Clear error when user starts typing
+    setError("") 
 
     if (file?.isFolder) {
       setNewFileName(value)

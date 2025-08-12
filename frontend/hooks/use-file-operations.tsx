@@ -60,18 +60,8 @@ export function useFileOperations() {
 
   const makeAuthenticatedRequest = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
-      let headers: Record<string, string> = {}
-
-      if (options.headers instanceof Headers) {
-        options.headers.forEach((value, key) => {
-          headers[key] = value
-        })
-      } else if (
-        options.headers &&
-        typeof options.headers === "object" &&
-        !Array.isArray(options.headers)
-      ) {
-        headers = { ...options.headers as Record<string, string> }
+      const headers: Record<string, string> = {
+        ...options.headers,
       }
 
       const accessToken = localStorage.getItem("accessToken")
@@ -85,11 +75,9 @@ export function useFileOperations() {
         credentials: "include",
       })
 
-      // If we get a 401, try to refresh the token
       if (response.status === 401) {
         const refreshSuccess = await refreshAccessToken()
         if (refreshSuccess) {
-          // Retry with new token
           const newAccessToken = localStorage.getItem("accessToken")
           if (newAccessToken) {
             headers["Authorization"] = `Bearer ${newAccessToken}`
@@ -337,12 +325,104 @@ export function useFileOperations() {
     [makeAuthenticatedRequest],
   )
 
+  const restoreFile = useCallback(
+    async (file: FileItem, onSuccess: () => void): Promise<void> => {
+      if (!file.s3Key) {
+        toast({
+          variant: "destructive",
+          title: "Missing key",
+          description: "Cannot restore file without S3 key.",
+        })
+        return
+      }
+
+      setFileLoading(file.id, true)
+
+      try {
+        const response = await makeAuthenticatedRequest(
+          `http://localhost:8080/file/${encodeURIComponent(file.s3Key)}/restore`,
+          {
+            method: "POST",
+          },
+        )
+
+        if (response.ok) {
+          toast({
+            variant: "success",
+            title: "File restored",
+            description: `${file.name} has been restored from trash.`,
+          })
+          onSuccess()
+        } else {
+          const errorText = await response.text()
+          throw new Error(errorText || `Restore failed: ${response.status}`)
+        }
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Restore failed",
+          description: error.message || "Failed to restore file.",
+        })
+      } finally {
+        setFileLoading(file.id, false)
+      }
+    },
+    [makeAuthenticatedRequest, setFileLoading],
+  )
+
+  const permanentlyDeleteFile = useCallback(
+    async (file: FileItem, onSuccess: () => void): Promise<void> => {
+      if (!file.s3Key) {
+        toast({
+          variant: "destructive",
+          title: "Missing key",
+          description: "Cannot permanently delete file without S3 key.",
+        })
+        return
+      }
+
+      setFileLoading(file.id, true)
+
+      try {
+        const response = await makeAuthenticatedRequest(
+          `http://localhost:8080/file/${encodeURIComponent(file.s3Key)}/permanent`,
+          {
+            method: "DELETE",
+          },
+        )
+
+        if (response.ok) {
+          toast({
+            variant: "success",
+            title: "File permanently deleted",
+            description: `${file.name} has been permanently deleted.`,
+          })
+          onSuccess()
+        } else {
+          const errorText = await response.text()
+          throw new Error(errorText || `Permanent delete failed: ${response.status}`)
+        }
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Permanent delete failed",
+          description: error.message || "Failed to permanently delete file.",
+        })
+      } finally {
+        setFileLoading(file.id, false)
+      }
+    },
+    [makeAuthenticatedRequest, setFileLoading],
+  )
+
   return {
     loadingStates,
     downloadFile,
     downloadFolder,
     deleteFile,
     renameFile,
+    restoreFile,
+    permanentlyDeleteFile,
     makeAuthenticatedRequest,
   }
 }

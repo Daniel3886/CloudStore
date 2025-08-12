@@ -102,7 +102,7 @@ export function EmailVerificationForm() {
           title: "Code sent!",
           description: "A new verification code has been sent to your email.",
         })
-        setCountdown(60) // 60 second cooldown
+        setCountdown(60) 
       } else {
         toast({
           title: "Failed to resend",

@@ -13,7 +13,7 @@ export default function RecentPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <FileHeader title="Recent files" onRefresh={handleRefresh} />
+      <FileHeader title="Recent files" type="recent" onRefresh={handleRefresh} />
       <FileBrowser key={refreshKey} type="recent" onRefresh={handleRefresh} />
     </div>
   )

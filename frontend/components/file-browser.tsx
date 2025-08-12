@@ -14,7 +14,6 @@ import {
 import { RefreshCw, ArrowLeft, FileIcon } from "lucide-react"
 import { ShareModal } from "./share-modal"
 import { FileDetailsModal } from "./file-details-modal"
-import { FileHeader } from "./file-header"
 import { FileCard } from "./file-browser/file-card"
 import { RenameDialog } from "./file-browser/rename-dialog"
 import { useFileOperations } from "@/hooks/use-file-operations"
@@ -201,14 +200,6 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
 
   return (
     <>
-      <FileHeader
-        title={currentPath ? `${currentPath}` : isTrashView ? "Trash" : "My Files"}
-        onRefresh={handleRefresh}
-        currentPath={currentPath}
-        virtualFolders={virtualFolders}
-        saveVirtualFolders={saveVirtualFolders}
-      />
-
       {currentPath && !isTrashView && (
         <div className="flex items-center gap-2 mb-4">
           <Button variant="ghost" size="sm" onClick={handleBackClick}>

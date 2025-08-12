@@ -19,15 +19,31 @@ import { toast } from "@/hooks/use-toast"
 interface NewFolderModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  currentPath?: string
+  virtualFolders?: string[]
+  saveVirtualFolders?: (folders: string[]) => void
 }
 
-export function NewFolderModal({ open, onOpenChange }: NewFolderModalProps) {
+export function NewFolderModal({
+  open,
+  onOpenChange,
+  currentPath = "",
+  virtualFolders = [],
+  saveVirtualFolders,
+}: NewFolderModalProps) {
   const [folderName, setFolderName] = useState("")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!folderName.trim()) return
+
+    const fullFolderPath = currentPath ? `${currentPath}/${folderName.trim()}` : folderName.trim()
+
+    if (saveVirtualFolders) {
+      const updatedFolders = [...virtualFolders, fullFolderPath]
+      saveVirtualFolders(updatedFolders)
+    }
 
     toast({
       variant: "success",
@@ -44,7 +60,10 @@ export function NewFolderModal({ open, onOpenChange }: NewFolderModalProps) {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Create new folder</DialogTitle>
-          <DialogDescription>Enter a name for your new folder.</DialogDescription>
+          <DialogDescription>
+            Enter a name for your new folder.
+            {currentPath && ` It will be created in: ${currentPath}`}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">

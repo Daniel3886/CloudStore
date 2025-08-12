@@ -4,7 +4,7 @@ import { useState } from "react"
 import { FileBrowser } from "@/components/file-browser"
 import { FileHeader } from "@/components/file-header"
 
-export default function SharedPage() {
+export default function TrashPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   const handleRefresh = () => {
@@ -13,8 +13,8 @@ export default function SharedPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <FileHeader title="Shared with me" onRefresh={handleRefresh} />
-      <FileBrowser key={refreshKey} type="shared" onRefresh={handleRefresh} />
+      <FileHeader title="Trash" type="trash" onRefresh={handleRefresh} />
+      <FileBrowser key={refreshKey} type="trash" onRefresh={handleRefresh} />
     </div>
   )
 }

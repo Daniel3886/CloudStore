@@ -260,6 +260,7 @@ public class StorageService {
             S3Object s3Object = s3ObjectMap.get(dbFile.getS3Key());
             if (s3Object != null) {
                 S3ObjectDto dto = new S3ObjectDto(
+                        dbFile.getId(),
                         dbFile.getS3Key(),
                         s3Object.size(),
                         s3Object.lastModified(),

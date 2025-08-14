@@ -1,4 +1,4 @@
-export const formatSize = (bytes: number | null): string => {
+export const formatFileSize = (bytes: number | null): string => {
   if (bytes === null) return ""
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`

@@ -60,9 +60,14 @@ export function useFileOperations() {
 
   const makeAuthenticatedRequest = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
-      const headers: Record<string, string> = {
-        ...options.headers,
-      }
+      
+    const headers: Record<string, string> = {
+      ...(options.headers instanceof Headers
+        ? Object.fromEntries(options.headers.entries())
+        : Array.isArray(options.headers)
+          ? Object.fromEntries(options.headers)
+          : (options.headers as Record<string, string> | undefined) ?? {}),
+    };
 
       const accessToken = localStorage.getItem("accessToken")
       if (accessToken) {

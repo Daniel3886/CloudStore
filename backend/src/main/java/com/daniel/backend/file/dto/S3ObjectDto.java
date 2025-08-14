@@ -10,10 +10,10 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class S3ObjectDto {
+    private Long id;
     private String key;
     private Long size;
     private Instant lastModified;
     private String displayName;
-
 }
 

@@ -18,7 +18,7 @@ import { FileCard } from "./file-browser/file-card"
 import { RenameDialog } from "./file-browser/rename-dialog"
 import { useFileOperations } from "@/hooks/use-file-operations"
 import { useFileData } from "@/hooks/use-file-data"
-import { getBreadcrumbs } from "@/utils/file-utils"
+import { getBreadcrumbs } from "@/lib/file-utils"
 
 interface FileItem {
   id: string

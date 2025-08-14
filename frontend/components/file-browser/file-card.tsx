@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Download, Trash2, Edit, MoreVertical } from "lucide-react"
 import { FileIconComponent } from "./file-icons"
-import { formatSize, formatDate } from "@/utils/file-utils"
+import { formatFileSize, formatDate } from "@/lib/file-utils"
 
 interface FileItem {
   id: string
@@ -152,7 +152,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
               {file.name}
             </h3>
             <div className="mt-1 text-xs text-muted-foreground">
-              {file.isFolder ? <p>Folder</p> : <p>{formatSize(file.size)}</p>}
+              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size)}</p>}
               <p>Modified {formatDate(file.modified)}</p>
               {isTrashView && <p className="text-red-500">In Trash</p>}
             </div>

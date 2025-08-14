@@ -1,20 +1,9 @@
-"use client"
+import { SharedFilesBrowser } from "@/components/shared-files-browser"
 
-import { useState } from "react"
-import { FileBrowser } from "@/components/file-browser"
-import { FileHeader } from "@/components/file-header"
-
-export default function TrashPage() {
-  const [refreshKey, setRefreshKey] = useState(0)
-
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1)
-  }
-
+export default function SharedPage() {
   return (
-    <div className="flex flex-col gap-6">
-      <FileHeader title="Trash" type="trash" onRefresh={handleRefresh} />
-      <FileBrowser key={refreshKey} type="trash" onRefresh={handleRefresh} />
+    <div className="container mx-auto py-6">
+      <SharedFilesBrowser />
     </div>
   )
 }

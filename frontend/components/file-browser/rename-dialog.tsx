@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FormError } from "@/components/ui/form-error"
-import { getFileExtension, getFileNameWithoutExtension, validateFileName } from "@/utils/file-utils"
+import { getFileExtension, getFileNameWithoutExtension, validateFileName } from "@/lib/file-utils"
 
 interface FileItem {
   id: string

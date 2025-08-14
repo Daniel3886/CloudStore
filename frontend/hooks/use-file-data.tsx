@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react"
 import { toast } from "@/hooks/use-toast"
 
 interface FileItem {
-  id: string
+  id: number
   name: string
   type: string
   size: number | null
@@ -107,7 +107,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
           const transformedFiles = data.map((file: any, index: number) => {
             const displayName = file.displayName || file.display_name || "Unknown File"
-            const s3Key = file.key || ""
+            const s3Key = file.key || file.s3Key || ""
             const actualFileName = getActualFileName(displayName)
             const fileType = getFileTypeFromName(actualFileName)
             const pathParts = displayName.split("/")
@@ -115,14 +115,14 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
             const filePath = pathParts.join("/")
 
             return {
-              id: `file-${index}`,
+              id: `file-${file.id ?? file.fileId}`,
               name: actualFileName,
               s3Key: s3Key,
               displayName: displayName,
               type: fileType,
               size: file.size || null,
               modified: file.lastModified || new Date().toISOString(),
-              owner: "You", 
+              owner: file.sharedBy || "You", 
               path: filePath,
               isFolder: false,
             }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -9,156 +10,152 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  FileIcon,
-  FileTextIcon,
-  FolderIcon,
-  ImageIcon,
-  FileArchiveIcon,
-  FileAudioIcon,
-  FileVideoIcon,
-  Calendar,
-  User,
-  HardDrive,
-  Clock,
-  Link,
-} from "lucide-react"
 import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileIcon, Calendar, HardDrive, User, Share2, Download, Trash2, Edit3, Copy } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { formatDate, formatFileSize } from "@/lib/file-utils"
+import { ShareModal } from "./share-modal"
+import { FileSharingManagement } from "./file-sharing-management"
 
 interface FileDetailsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  file: any
+  file: {
+    id?: string | number
+    name: string
+    displayName?: string
+    size?: number
+    uploadedAt?: string
+    s3Key?: string
+    owner?: string
+  } | null
+  onDelete?: (file: any) => void
+  onRename?: (file: any) => void
+  onDownload?: (file: any) => void
 }
 
-export function FileDetailsModal({ open, onOpenChange, file }: FileDetailsModalProps) {
+export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename, onDownload }: FileDetailsModalProps) {
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [managementModalOpen, setManagementModalOpen] = useState(false)
+
   if (!file) return null
 
-  const formatSize = (bytes: number | null) => {
-    if (bytes === null || bytes === undefined) return "N/A"
-    if (bytes === 0) return "0 B"
-
-    const units = ["B", "KB", "MB", "GB", "TB", "PB"]
-    const k = 1024
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    const unitIndex = Math.min(i, units.length - 1)
-    const size = bytes / Math.pow(k, unitIndex)
-
-    let formattedSize: string
-    if (size >= 100) {
-      formattedSize = size.toFixed(0)
-    } else if (size >= 10) {
-      formattedSize = size.toFixed(1)
-    } else {
-      formattedSize = size.toFixed(2)
-    }
-
-    formattedSize = Number.parseFloat(formattedSize).toString()
-
-    return `${formattedSize} ${units[unitIndex]}`
-  }
-
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/files/${file.s3Key || file.id}`
+    navigator.clipboard.writeText(link)
+    toast({
+      title: "Link copied",
+      description: "File link copied to clipboard",
     })
   }
 
-  const getFileIcon = (fileType: string) => {
-    switch (fileType) {
-      case "folder":
-        return <FolderIcon className="h-12 w-12 text-blue-500" />
-      case "image":
-        return <ImageIcon className="h-12 w-12 text-green-500" />
-      case "pdf":
-      case "document":
-        return <FileTextIcon className="h-12 w-12 text-red-500" />
-      case "archive":
-        return <FileArchiveIcon className="h-12 w-12 text-yellow-500" />
-      case "audio":
-        return <FileAudioIcon className="h-12 w-12 text-purple-500" />
-      case "video":
-        return <FileVideoIcon className="h-12 w-12 text-pink-500" />
-      default:
-        return <FileIcon className="h-12 w-12 text-gray-500" />
-    }
+  const handleShare = () => {
+    setShareModalOpen(true)
+  }
+
+  const handleManageSharing = () => {
+    setManagementModalOpen(true)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>File Details</DialogTitle>
-          <DialogDescription>Information about "{file.name}"</DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <div className="flex items-start gap-4">
-            {getFileIcon(file.type)}
-            <div>
-              <h3 className="font-medium">{file.name}</h3>
-              <p className="text-sm text-muted-foreground">{file.type.charAt(0).toUpperCase() + file.type.slice(1)}</p>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileIcon className="h-5 w-5" />
+              File Details
+            </DialogTitle>
+            <DialogDescription>View and manage file information and sharing settings.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">{file.displayName || file.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {file.size && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <HardDrive className="h-4 w-4 text-muted-foreground" />
+                    <span>{formatFileSize(file.size)}</span>
+                  </div>
+                )}
+
+                {file.uploadedAt && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Uploaded {formatDate(file.uploadedAt)}</span>
+                  </div>
+                )}
+
+                {file.owner && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span>Owned by {file.owner}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Separator />
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+
+              <Button variant="outline" size="sm" onClick={handleManageSharing}>
+                <User className="h-4 w-4 mr-2" />
+                Manage
+              </Button>
+
+              {onDownload && (
+                <Button variant="outline" size="sm" onClick={() => onDownload(file)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              )}
+
+              <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Link
+              </Button>
+
+              {onRename && (
+                <Button variant="outline" size="sm" onClick={() => onRename(file)}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Rename
+                </Button>
+              )}
+
+              {onDelete && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDelete(file)}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              )}
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Created:</span>
-              <span className="text-sm text-muted-foreground">{formatDate(file.modified)}</span>
-            </div>
+      <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} file={file} />
 
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Modified:</span>
-              <span className="text-sm text-muted-foreground">{formatDate(file.modified)}</span>  
-            </div>
-
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Owner:</span>
-              <span className="text-sm text-muted-foreground">{file.owner}</span>  {/* TODO: add a owner role */}
-            </div>
-
-            {file.type !== "folder" && (
-              <div className="flex items-center gap-2">
-                <HardDrive className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Size:</span>
-                <span className="text-sm text-muted-foreground">{formatSize(file.size)}</span>
-              </div>
-            )}
-
-            {file.type === "folder" && (
-              <div className="flex items-center gap-2">
-                <FileIcon className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Items:</span>
-                <span className="text-sm text-muted-foreground">{file.items}</span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <Link className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Location:</span>
-              <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                /My Files/{file.type === "folder" ? file.name : ""}
-              </span>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
+    </>
   )
 }

@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileIcon, Calendar, HardDrive, User, Share2, Download, Trash2, Edit3, Copy } from "lucide-react"
+import { FileIcon, Calendar, HardDrive, User, Share2, Download, Trash2, Edit3, Globe, Users } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { formatDate, formatFileSize } from "@/lib/file-utils"
 import { ShareModal } from "./share-modal"
 import { FileSharingManagement } from "./file-sharing-management"
+import { PublicLinkGenerator } from "./public-link-generator"
 
 interface FileDetailsModalProps {
   open: boolean
@@ -38,16 +39,54 @@ interface FileDetailsModalProps {
 export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename, onDownload }: FileDetailsModalProps) {
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [managementModalOpen, setManagementModalOpen] = useState(false)
+  const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false)
 
   if (!file) return null
 
-  const handleCopyLink = () => {
-    const link = `${window.location.origin}/files/${file.s3Key || file.id}`
-    navigator.clipboard.writeText(link)
-    toast({
-      title: "Link copied",
-      description: "File link copied to clipboard",
-    })
+  const handleDownload = async () => {
+    if (!file.s3Key) {
+      toast({
+        variant: "destructive",
+        title: "Cannot download",
+        description: "File location not available",
+      })
+      return
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/files/download/${encodeURIComponent(file.s3Key)}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to download file")
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement("a")
+      link.href = url
+      link.download = file.name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
+
+      toast({
+        title: "Download started",
+        description: `Downloading "${file.name}"`,
+      })
+    } catch (error: any) {
+      console.error("Failed to download file:", error)
+      toast({
+        variant: "destructive",
+        title: "Download failed",
+        description: error.message || "Could not download the file",
+      })
+    }
   }
 
   const handleShare = () => {
@@ -56,6 +95,10 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
 
   const handleManageSharing = () => {
     setManagementModalOpen(true)
+  }
+
+  const handlePublicLink = () => {
+    setPublicLinkModalOpen(true)
   }
 
   return (
@@ -101,47 +144,55 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
 
             <Separator />
 
-            <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" size="sm" onClick={handleShare}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
-              </Button>
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Sharing Options</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={handleShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
 
-              <Button variant="outline" size="sm" onClick={handleManageSharing}>
-                <User className="h-4 w-4 mr-2" />
-                Manage
-              </Button>
+                <Button variant="outline" size="sm" onClick={handleManageSharing}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage
+                </Button>
 
-              {onDownload && (
-                <Button variant="outline" size="sm" onClick={() => onDownload(file)}>
+                <Button variant="outline" size="sm" onClick={handlePublicLink} className="col-span-2 bg-transparent">
+                  <Globe className="h-4 w-4 mr-2" />
+                  Generate Public Link
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">File Actions</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={onDownload ? () => onDownload(file) : handleDownload}>
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
-              )}
 
-              <Button variant="outline" size="sm" onClick={handleCopyLink}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Link
-              </Button>
+                {onRename && (
+                  <Button variant="outline" size="sm" onClick={() => onRename(file)}>
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Rename
+                  </Button>
+                )}
 
-              {onRename && (
-                <Button variant="outline" size="sm" onClick={() => onRename(file)}>
-                  <Edit3 className="h-4 w-4 mr-2" />
-                  Rename
-                </Button>
-              )}
-
-              {onDelete && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDelete(file)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              )}
+                {onDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDelete(file)}
+                    className="text-red-600 hover:text-red-700 col-span-2"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete File
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -156,6 +207,8 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
       <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} file={file} />
 
       <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
+
+      <PublicLinkGenerator open={publicLinkModalOpen} onOpenChange={setPublicLinkModalOpen} file={file} />
     </>
   )
 }

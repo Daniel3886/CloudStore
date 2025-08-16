@@ -115,7 +115,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
             const filePath = pathParts.join("/")
 
             return {
-              id: `file-${file.id ?? file.fileId}`,
+              id: file.id ?? file.fileId,
               name: actualFileName,
               s3Key: s3Key,
               displayName: displayName,

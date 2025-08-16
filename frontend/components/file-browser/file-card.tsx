@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, Trash2, Edit, MoreVertical } from "lucide-react"
+import { Download, Trash2, Share2, Edit, MoreVertical } from "lucide-react"
 import { FileIconComponent } from "./file-icons"
 import { formatFileSize, formatDate } from "@/lib/file-utils"
 
@@ -110,6 +110,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
                           onFileAction("share", file)
                         }}
                       >
+                        <Share2 className="h-4 w-4 mr-2" />
                         Share
                       </DropdownMenuItem>
                     )}

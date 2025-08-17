@@ -12,19 +12,7 @@ import {
 import { Download, Trash2, Share2, Edit, MoreVertical } from "lucide-react"
 import { FileIconComponent } from "./file-icons"
 import { formatFileSize, formatDate } from "@/lib/file-utils"
-
-interface FileItem {
-  id: string
-  name: string
-  type: string
-  size: number | null
-  modified: string
-  owner?: string
-  s3Key?: string
-  displayName: string
-  path: string
-  isFolder: boolean
-}
+import { FileItem } from "@/lib/file"
 
 interface FileCardProps {
   file: FileItem
@@ -44,7 +32,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
         <div className="p-6">
           <div className="flex items-start justify-between">
             <div className="pointer-events-none">
-              <FileIconComponent fileType={file.type} />
+              <FileIconComponent fileType={file.type ?? "file"} />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -153,8 +141,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
               {file.name}
             </h3>
             <div className="mt-1 text-xs text-muted-foreground">
-              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size)}</p>}
-              <p>Modified {formatDate(file.modified)}</p>
+              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size ?? null)}</p>}
               {isTrashView && <p className="text-red-500">In Trash</p>}
             </div>
           </div>

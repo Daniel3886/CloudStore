@@ -16,7 +16,7 @@ interface PublicLinkGeneratorProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   file: {
-    id: number | string 
+    id: number 
     name: string
     displayName?: string
     size?: number
@@ -31,6 +31,13 @@ export function PublicLinkGenerator({ open, onOpenChange, file }: PublicLinkGene
   try {
     const response = await PublicFileSharingAPI.generatePublicLink(file.id)
     setPublicLinks(response)
+
+    const normalizedId = Number(file.id)
+    if (isNaN(normalizedId)) {
+      console.error("Invalid file id:", file.id)
+      return
+    }
+
   } catch (error: any) {
     console.error("Failed to generate link:", error)
     toast({

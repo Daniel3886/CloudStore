@@ -15,19 +15,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FormError } from "@/components/ui/form-error"
 import { getFileExtension, getFileNameWithoutExtension, validateFileName } from "@/lib/file-utils"
+import { FileItem } from "@/lib/file"
 
-interface FileItem {
-  id: string
-  name: string
-  type: string
-  size: number | null
-  modified: string
-  owner?: string
-  s3Key?: string
-  displayName: string
-  path: string
-  isFolder: boolean
-}
 
 interface RenameDialogProps {
   open: boolean

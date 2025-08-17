@@ -207,8 +207,17 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
       <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} file={file} />
 
       <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
+      {file.id != null && (
+      <PublicLinkGenerator
+        open={publicLinkModalOpen}
+        onOpenChange={setPublicLinkModalOpen}
+        file={{
+          ...file,
+          id: Number(file.id), // 🔑 force id to always be number
+        }}
+      />
+    )}
 
-      <PublicLinkGenerator open={publicLinkModalOpen} onOpenChange={setPublicLinkModalOpen} file={file} />
     </>
   )
 }

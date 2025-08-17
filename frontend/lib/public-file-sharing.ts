@@ -4,14 +4,29 @@ export interface PublicLinkResponse {
   message?: string
 }
 
-interface PublicLinkGeneratorProps {
+// interface PublicFileAccessToken {
+//   file: {
+//     id: number    
+//     name: string
+//     displayName?: string
+//     size?: number
+//   }
+// }
+
+// public-file-sharing.ts
+export interface PublicFileAccessToken {
+  id: number
+  token: string
   file: {
-    id: number    
-    name: string
-    displayName?: string
-    size?: number
+    id: number
+    displayName: string
+    s3Key: string
+    size: number
   }
+  expiresAt: string
+  active: boolean
 }
+
 
 
 async function makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
@@ -45,7 +60,7 @@ export class PublicFileSharingAPI {
     return response.json() as Promise<PublicLinkResponse>
   }
 
-  static async getActiveLinks(): Promise<PublicLinkGeneratorProps[]> {
+  static async getActiveLinks(): Promise<PublicFileAccessToken[]> {
     const response = await makeAuthenticatedRequest("http://localhost:8080/share/public/list")
 
     if (!response.ok) {
@@ -53,7 +68,7 @@ export class PublicFileSharingAPI {
       throw new Error(errorText || "Failed to fetch active links")
     }
 
-   return response.json() as Promise<PublicLinkGeneratorProps[]>
+   return response.json() as Promise<PublicFileAccessToken[]>
   }
 
   static async revokePublicLink(token: string): Promise<void> {

@@ -2,19 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { toast } from "@/hooks/use-toast"
-
-interface FileItem {
-  id: number
-  name: string
-  type: string
-  size: number | null
-  modified: string
-  owner?: string
-  s3Key?: string
-  displayName: string
-  path: string
-  isFolder: boolean
-}
+import { FileItem } from "@/lib/file"
 
 interface UseFileDataProps {
   type?: "all" | "shared" | "recent" | "trash"
@@ -192,7 +180,8 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
         if (type === "recent") {
           const oneWeekAgo = new Date()
           oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-          typeMatch = new Date(file.modified) > oneWeekAgo
+          const modifiedDate = file.modified ? new Date(file.modified) : new Date(0)
+          typeMatch = modifiedDate > oneWeekAgo
         }
 
         const pathMatch = file.path === currentPath
@@ -206,7 +195,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
     (folderPath: string) => {
       return files.filter((file) => {
         if (file.isFolder) return false
-        return file.displayName.startsWith(folderPath + "/")
+        return (file.displayName ?? "").startsWith(folderPath + "/")
       })
     },
     [files],

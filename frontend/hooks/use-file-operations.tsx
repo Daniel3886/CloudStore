@@ -2,24 +2,12 @@
 
 import { useState, useCallback } from "react"
 import { toast } from "@/hooks/use-toast"
-
-interface FileItem {
-  id: string
-  name: string
-  type: string
-  size: number | null
-  modified: string
-  owner?: string
-  s3Key?: string
-  displayName: string
-  path: string
-  isFolder: boolean
-}
+import { FileItem } from "@/lib/file"
 
 export function useFileOperations() {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
 
-  const setFileLoading = useCallback((fileId: string, loading: boolean) => {
+  const setFileLoading = useCallback((fileId: number, loading: boolean) => {
     setLoadingStates((prev) => ({ ...prev, [fileId]: loading }))
   }, [])
 

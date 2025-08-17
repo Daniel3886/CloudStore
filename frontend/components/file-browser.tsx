@@ -19,19 +19,7 @@ import { RenameDialog } from "./file-browser/rename-dialog"
 import { useFileOperations } from "@/hooks/use-file-operations"
 import { useFileData } from "@/hooks/use-file-data"
 import { getBreadcrumbs } from "@/lib/file-utils"
-
-interface FileItem {
-  id: string
-  name: string
-  type: string
-  size: number | null
-  modified: string
-  owner?: string
-  s3Key?: string
-  displayName: string
-  path: string
-  isFolder: boolean
-}
+import { FileItem } from "../lib/file"
 
 interface FileBrowserProps {
   type?: "all" | "shared" | "recent" | "trash"

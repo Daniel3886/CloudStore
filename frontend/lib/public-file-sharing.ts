@@ -4,16 +4,6 @@ export interface PublicLinkResponse {
   message?: string
 }
 
-// interface PublicFileAccessToken {
-//   file: {
-//     id: number    
-//     name: string
-//     displayName?: string
-//     size?: number
-//   }
-// }
-
-// public-file-sharing.ts
 export interface PublicFileAccessToken {
   id: number
   token: string
@@ -49,33 +39,53 @@ async function makeAuthenticatedRequest(url: string, options: RequestInit = {}):
 
 export class PublicFileSharingAPI {
   static async generatePublicLink(fileId: number): Promise<PublicLinkResponse> {
+    console.log("🔍 [PUBLIC API] Generating public link for file ID:", fileId)
+
     const response = await makeAuthenticatedRequest(`http://localhost:8080/share/public/${fileId}`, {
       method: "POST",
     })
 
-    if (!response.ok) {
-      throw new Error(await response.text())
-    }
-
-    return response.json() as Promise<PublicLinkResponse>
-  }
-
-  static async getActiveLinks(): Promise<PublicFileAccessToken[]> {
-    const response = await makeAuthenticatedRequest("http://localhost:8080/share/public/list")
+    console.log("🔍 [PUBLIC API] Generate public link response status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
+      console.error("❌ [PUBLIC API] Generate public link error:", errorText)
+      throw new Error(errorText || "Failed to generate public link")
+    }
+
+    const linkResponse = await response.json()
+    console.log("✅ [PUBLIC API] Generate public link success:", linkResponse)
+
+    return linkResponse
+  }
+
+  static async getActiveLinks(): Promise<PublicFileAccessToken[]> {
+    console.log("🔍 [PUBLIC API] Getting active public links")
+
+    const response = await makeAuthenticatedRequest("http://localhost:8080/share/public/list")
+
+    console.log("🔍 [PUBLIC API] Get active links response status:", response.status)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error("❌ [PUBLIC API] Get active links error:", errorText)
       throw new Error(errorText || "Failed to fetch active links")
     }
 
-   return response.json() as Promise<PublicFileAccessToken[]>
+    const links = await response.json()
+    console.log("✅ [PUBLIC API] Get active links success:", links.length, "links")
+
+    return links
   }
 
   static async revokePublicLink(token: string): Promise<void> {
+    console.log("🔍 [PUBLIC API] Revoking public link with token:", token)
 
     const response = await makeAuthenticatedRequest(`http://localhost:8080/share/public/access/${token}`, {
       method: "DELETE",
     })
+
+    console.log("🔍 [PUBLIC API] Revoke public link response status:", response.status)
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -84,6 +94,7 @@ export class PublicFileSharingAPI {
     }
 
     const responseText = await response.text()
+    console.log("✅ [PUBLIC API] Revoke public link success:", responseText)
   }
 
   static getPublicFileUrl(token: string, preview = false): string {

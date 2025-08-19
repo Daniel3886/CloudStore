@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { FileBrowser } from "@/components/file-browser"
 import { FileHeader } from "@/components/file-header"
+import { FileBrowser } from "@/components/file-browser"
 import { AuditLogBrowser } from "@/components/audit-log-browser"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Files, Activity } from "lucide-react"
+import { Clock, Activity } from "lucide-react"
 
 export default function RecentPage() {
   const [refreshKey, setRefreshKey] = useState(0)
@@ -15,13 +15,13 @@ export default function RecentPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <FileHeader title="Recent" type="recent" onRefresh={handleRefresh} />
+    <div className="space-y-6">
+      <FileHeader title="Recent Activity" type="recent" onRefresh={handleRefresh} />
 
       <Tabs defaultValue="files" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="files" className="flex items-center gap-2">
-            <Files className="h-4 w-4" />
+            <Clock className="h-4 w-4" />
             Recent Files
           </TabsTrigger>
           <TabsTrigger value="activity" className="flex items-center gap-2">
@@ -31,11 +31,11 @@ export default function RecentPage() {
         </TabsList>
 
         <TabsContent value="files" className="mt-6">
-          <FileBrowser key={refreshKey} type="recent" onRefresh={handleRefresh} />
+          <FileBrowser key={`files-${refreshKey}`} type="recent" />
         </TabsContent>
 
         <TabsContent value="activity" className="mt-6">
-          <AuditLogBrowser refreshKey={refreshKey} />
+          <AuditLogBrowser />
         </TabsContent>
       </Tabs>
     </div>

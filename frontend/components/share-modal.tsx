@@ -36,8 +36,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
 
     setIsSharing(true)
     try {
-      // const fileId = typeof file.id === "number" ? file.id : Number.parseInt(file.id.toString(), 10)
-
       const fileId = Number(file.id)
       if (isNaN(fileId)) {
         toast({ variant: "destructive", title: "Invalid file ID" })

@@ -213,7 +213,7 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
         onOpenChange={setPublicLinkModalOpen}
         file={{
           ...file,
-          id: Number(file.id), // 🔑 force id to always be number
+          id: Number(file.id), 
         }}
       />
     )}

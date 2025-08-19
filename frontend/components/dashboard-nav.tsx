@@ -41,10 +41,6 @@ export function DashboardNav() {
   return (
     <nav className="hidden border-r bg-background md:block w-64">
       <div className="flex h-full flex-col gap-2 p-4">
-        <Button className="justify-start gap-2 mb-6" size="lg">
-          <FileIcon className="h-4 w-4" />
-          New Upload
-        </Button>
         <ScrollArea className="flex-1">
           <div className="space-y-1">
             {navItems.map((item) => (

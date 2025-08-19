@@ -54,7 +54,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
   const initializeManagement = async () => {
 
     if (!file) {
-      console.error("❌ [MANAGEMENT] No file object provided")
       return
     }
 

@@ -51,7 +51,7 @@ public class FileSharingService {
         auditLogService.log(
                 "SHARE_FILE",
                 sender.getEmail(),
-                file.getId().toString(),
+                file,
                 "Shared file with " + recipient.getEmail()
         );
 
@@ -117,7 +117,7 @@ public class FileSharingService {
         auditLogService.log(
                 "REVOKE_ACCESS",
                 ownerEmail,
-                file.getId().toString(),
+                file,
                 "Revoked access from " + targetEmail
         );
 
@@ -144,7 +144,7 @@ public class FileSharingService {
         auditLogService.log(
                 "UPDATE_MESSAGE",
                 currentUserEmail,
-                file.getId().toString(),
+                file,
                 "Updated message for user ID " + targetUserId
         );
 
@@ -175,7 +175,7 @@ public class FileSharingService {
         auditLogService.log(
                 "REMOVE_MESSAGE",
                 currentUserEmail,
-                file.getId().toString(),
+                file,
                 "Removed message for " + targetEmail
         );
 

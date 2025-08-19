@@ -86,7 +86,7 @@ public class StorageService {
         auditLogService.log(
                 "FILE_UPLOAD",
                 ownerEmail,
-                s3Key.getBytes().length + "",
+                metadata,
                 "Uploaded file: " + originalFileName
         );
 

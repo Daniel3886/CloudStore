@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "@/hooks/use-toast"
 import {
   Upload,
   Download,
@@ -19,20 +20,33 @@ import {
   Activity,
   Clock,
   FileText,
+  UserPlus,
+  Link,
+  MessageSquare,
 } from "lucide-react"
-import { fetchAuditLogsByPeriod, type AuditLog } from "@/lib/audit-log"
-import { toast } from "@/components/ui/use-toast"
+import { fetchAuditLogsByPeriod, shouldShowFileName, type AuditLog } from "@/lib/audit-log"
 
 const getActionIcon = (action: string) => {
   const actionLower = action.toLowerCase()
 
   if (actionLower.includes("upload")) return Upload
-  if (actionLower.includes("download")) return Download
+  if (actionLower.includes("download") || actionLower.includes("access")) return Download
   if (actionLower.includes("share")) return Share2
   if (actionLower.includes("delete") || actionLower.includes("trash")) return Trash2
-  if (actionLower.includes("edit") || actionLower.includes("rename") || actionLower.includes("update")) return Edit
+  if (
+    actionLower.includes("edit") ||
+    actionLower.includes("rename") ||
+    actionLower.includes("update") ||
+    actionLower.includes("move")
+  )
+    return Edit
+  if (actionLower.includes("restore")) return RefreshCw
   if (actionLower.includes("view") || actionLower.includes("access")) return Eye
   if (actionLower.includes("folder") || actionLower.includes("create")) return FolderPlus
+  if (actionLower.includes("register")) return UserPlus
+  if (actionLower.includes("link") || actionLower.includes("public")) return Link
+  if (actionLower.includes("message")) return MessageSquare
+  if (actionLower.includes("revoke")) return Trash2
 
   return Activity
 }
@@ -40,16 +54,26 @@ const getActionIcon = (action: string) => {
 const getActionColor = (action: string) => {
   const actionLower = action.toLowerCase()
 
-  if (actionLower.includes("upload") || actionLower.includes("create"))
-    return "bg-green-100 text-green-800 border-green-200"
+  if (actionLower.includes("upload") || actionLower.includes("create") || actionLower.includes("register"))
+    return "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-800"
   if (actionLower.includes("download") || actionLower.includes("access"))
-    return "bg-blue-100 text-blue-800 border-blue-200"
-  if (actionLower.includes("share")) return "bg-purple-100 text-purple-800 border-purple-200"
-  if (actionLower.includes("delete") || actionLower.includes("trash")) return "bg-red-100 text-red-800 border-red-200"
-  if (actionLower.includes("edit") || actionLower.includes("rename") || actionLower.includes("update"))
-    return "bg-orange-100 text-orange-800 border-orange-200"
+    return "bg-blue-500/10 text-blue-700 border-blue-200 dark:bg-blue-500/20 dark:text-blue-400 dark:border-blue-800"
+  if (actionLower.includes("share") || actionLower.includes("link") || actionLower.includes("public"))
+    return "bg-purple-500/10 text-purple-700 border-purple-200 dark:bg-purple-500/20 dark:text-purple-400 dark:border-purple-800"
+  if (actionLower.includes("delete") || actionLower.includes("trash") || actionLower.includes("revoke"))
+    return "bg-red-500/10 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-400 dark:border-red-800"
+  if (
+    actionLower.includes("edit") ||
+    actionLower.includes("rename") ||
+    actionLower.includes("update") ||
+    actionLower.includes("move") ||
+    actionLower.includes("message")
+  )
+    return "bg-amber-500/10 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-800"
+  if (actionLower.includes("restore"))
+    return "bg-green-500/10 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800"
 
-  return "bg-gray-100 text-gray-800 border-gray-200"
+  return "bg-slate-500/10 text-slate-700 border-slate-200 dark:bg-slate-500/20 dark:text-slate-400 dark:border-slate-800"
 }
 
 const formatRelativeTime = (timestamp: string) => {
@@ -80,7 +104,6 @@ export function AuditLogBrowser() {
       const auditLogs = await fetchAuditLogsByPeriod(period)
       setLogs(auditLogs)
     } catch (error) {
-      console.error("Failed to fetch audit logs:", error)
       toast({
         title: "Error",
         description: "Failed to load activity logs. Please try again.",
@@ -140,8 +163,8 @@ export function AuditLogBrowser() {
               <SelectItem value="90">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={fetchLogs}>
-            Refresh <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" size="icon" onClick={fetchLogs}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -157,12 +180,13 @@ export function AuditLogBrowser() {
       ) : (
         <ScrollArea className="h-[600px]">
           <div className="space-y-3">
-            {logs.map((log) => {
+            {logs.map((log, index) => {
               const ActionIcon = getActionIcon(log.action)
               const actionColor = getActionColor(log.action)
+              const showFileName = shouldShowFileName(log.action) && log.fileDisplayName
 
               return (
-                <Card key={log.id} className="transition-colors hover:bg-muted/50">
+                <Card key={`${log.action}-${log.timestamp}-${index}`} className="transition-colors hover:bg-muted/50">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="flex-shrink-0 p-2 rounded-full bg-muted">
@@ -170,14 +194,14 @@ export function AuditLogBrowser() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <Badge variant="outline" className={actionColor}>
-                            {log.action}
+                            {log.action.replace(/_/g, " ")}
                           </Badge>
-                          {log.fileId && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          {showFileName && (
+                            <div className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-2 py-1 rounded">
                               <FileText className="h-3 w-3" />
-                              <span>File ID: {log.fileId}</span>
+                              <span className="font-medium">{log.fileDisplayName}</span>
                             </div>
                           )}
                         </div>

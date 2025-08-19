@@ -57,7 +57,6 @@ export class FileSharingAPI {
 
     const response = await makeAuthenticatedRequest("http://localhost:8080/share/received")
 
-    console.log("Get shared files response status:", response.status)
     if (!response.ok) {
       const errorText = await response.text()
       throw new Error(errorText || "Failed to fetch shared files")
@@ -142,7 +141,6 @@ export class FileSharingAPI {
   static async getUserFiles(): Promise<any[]> {
     try {
       const response = await makeAuthenticatedRequest("http://localhost:8080/file/list")
-      console.log("Get user files response status:", response.status)
 
       if (!response.ok) {
         const errorText = await response.text()

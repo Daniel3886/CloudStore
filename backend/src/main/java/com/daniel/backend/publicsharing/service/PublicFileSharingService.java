@@ -65,7 +65,7 @@ public class PublicFileSharingService {
         auditLogService.log(
                 "PUBLIC_LINK_GENERATION",
                 ownerEmail,
-                file.getId().toString(),
+                file,
                 "Generated a public link " + ownerEmail
         );
 
@@ -111,7 +111,7 @@ public class PublicFileSharingService {
         auditLogService.log(
                 "PUBLIC_FILE_ACCESS",
                 "anonymous",
-                file.getId().toString(),
+                file,
                 "File accessed via public link"
         );
 
@@ -133,7 +133,7 @@ public class PublicFileSharingService {
         auditLogService.log(
                 "PUBLIC_LINK_REVOCATION",
                 requesterEmail,
-                accessToken.getFile().getId().toString(),
+                accessToken.getFile(),
                 "Revoked a public link"
         );
 

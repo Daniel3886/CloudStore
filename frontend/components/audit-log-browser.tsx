@@ -89,6 +89,13 @@ const formatRelativeTime = (timestamp: string) => {
   return date.toLocaleDateString()
 }
 
+const formatDateTime = (timestamp: string) => {
+  const date = new Date(timestamp)
+  const dateStr = date.toLocaleDateString()
+  const timeStr = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })
+  return { dateStr, timeStr }
+}
+
 const formatFullTimestamp = (timestamp: string) => {
   return new Date(timestamp).toLocaleString()
 }
@@ -184,6 +191,8 @@ export function AuditLogBrowser() {
               const ActionIcon = getActionIcon(log.action)
               const actionColor = getActionColor(log.action)
               const showFileName = shouldShowFileName(log.action) && log.fileDisplayName
+              const relativeTime = formatRelativeTime(log.timestamp)
+              const { timeStr } = formatDateTime(log.timestamp)
 
               return (
                 <Card key={`${log.action}-${log.timestamp}-${index}`} className="transition-colors hover:bg-muted/50">
@@ -210,7 +219,9 @@ export function AuditLogBrowser() {
 
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          <span title={formatFullTimestamp(log.timestamp)}>{formatRelativeTime(log.timestamp)}</span>
+                          <span title={formatFullTimestamp(log.timestamp)}>
+                            {relativeTime} <span className="mx-1">•</span> {timeStr}
+                          </span>
                         </div>
                       </div>
                     </div>

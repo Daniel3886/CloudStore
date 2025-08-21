@@ -15,6 +15,7 @@ import java.util.List;
 public class AuditLogService {
 
     private final AuditLogRepo repo;
+    private static final int MAX_LOGS_PER_USER = 100;
 
     public void log(String action, String performedBy, Files fileId, String description) {
         AuditLog log = AuditLog.builder()
@@ -25,6 +26,14 @@ public class AuditLogService {
                 .timestamp(LocalDateTime.now())
                 .build();
         repo.save(log);
+
+        long count = repo.countByPerformedBy(performedBy);
+
+        if (count > MAX_LOGS_PER_USER) {
+            long excess = count - MAX_LOGS_PER_USER;
+            List<AuditLog> oldestLogs = repo.findOldestLogsForUser(performedBy, (int) excess);
+            repo.deleteAll(oldestLogs);
+        }
     }
 
     public List<AuditLogDto> getAllLogsForUser(String email) {

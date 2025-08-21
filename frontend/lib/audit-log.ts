@@ -8,8 +8,6 @@ export interface AuditLog {
   fileDisplayName?: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
-
 export async function fetchAllAuditLogs(): Promise<AuditLog[]> {
 
   try {
@@ -18,7 +16,7 @@ export async function fetchAllAuditLogs(): Promise<AuditLog[]> {
       throw new Error("Authentication required")
     }
 
-    const response = await fetch(`${API_BASE_URL}/activity/all`, {
+    const response = await fetch("http://localhost:8080/activity/all", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -45,7 +43,7 @@ export async function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
       throw new Error("Authentication required")
     }
 
-    const response = await fetch(`${API_BASE_URL}/activity?days=${days}`, {
+    const response = await fetch("http://localhost:8080/activity?days=${days}", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

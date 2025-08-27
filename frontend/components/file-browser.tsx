@@ -24,9 +24,10 @@ import { FileItem } from "../lib/file"
 interface FileBrowserProps {
   type?: "all" | "shared" | "recent" | "trash"
   onRefresh?: () => void
+  searchQuery?: string
 }
 
-export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
+export function FileBrowser({ type = "all", onRefresh, searchQuery = "" }: FileBrowserProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -53,6 +54,9 @@ export function FileBrowser({ type = "all", onRefresh }: FileBrowserProps) {
     })
 
   const filteredFiles = getFilteredFiles(currentPath)
+    .filter((file) =>
+      file.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   const isTrashView = type === "trash"
 
   const handleFileAction = (action: string, file: FileItem) => {

@@ -14,6 +14,7 @@ interface FileHeaderProps {
   currentPath?: string
   virtualFolders?: string[]
   saveVirtualFolders?: (folders: string[]) => void
+  onSearch?: (query: string) => void
 }
 
 export function FileHeader({
@@ -23,6 +24,7 @@ export function FileHeader({
   currentPath,
   virtualFolders,
   saveVirtualFolders,
+  onSearch,
 }: FileHeaderProps) {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
@@ -48,7 +50,11 @@ export function FileHeader({
       </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search files and folders..." className="pl-9" />
+        <Input 
+          placeholder="Search files and folders..." 
+          className="pl-9"
+          onChange={(e) => onSearch?.(e.target.value)}
+        />
       </div>
 
       {showActionButtons && (

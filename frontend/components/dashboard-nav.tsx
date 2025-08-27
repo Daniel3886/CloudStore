@@ -5,7 +5,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetHeader,
+} from "@/components/ui/sheet"
 import { Files, Clock, Users, Trash2, Activity, Menu } from "lucide-react"
 
 const navigation = [
@@ -34,17 +40,13 @@ const navigation = [
     href: "/trash",
     icon: Trash2,
   },
-]
+];
 
 export function NavigationContent() {
   const pathname = usePathname()
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="px-3 py-2">
-        <div className="flex items-center gap-2 font-semibold">
-        </div>
-      </div>
       <nav className="flex flex-col gap-1 px-2">
         {navigation.map((item) => {
           const isActive = pathname === item.href
@@ -56,7 +58,7 @@ export function NavigationContent() {
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -85,11 +87,16 @@ export function MobileNavTrigger() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open navigation menu">
+        <Button variant="ghost" size="icon" aria-label="Open navigation menu">
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className="w-64 p-0 pt-3">
+        <SheetHeader className="px-4 pb-3 border-b">
+          <SheetTitle className="text-xl font-bold tracking-tight text-foreground">
+            Navigation Menu
+          </SheetTitle>
+        </SheetHeader>
         <div className="flex h-full flex-col">
           <NavigationContent />
         </div>

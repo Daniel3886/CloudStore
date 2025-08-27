@@ -43,13 +43,15 @@ export async function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
       throw new Error("Authentication required")
     }
 
-    const response = await fetch("http://localhost:8080/activity?days=${days}", {
+    const response = await fetch(`http://localhost:8080/activity?days=${days}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     })
+
+    console.log("Response", response)
 
     if (!response.ok) {
       throw new Error(`Failed to fetch audit logs: ${response.statusText}`)

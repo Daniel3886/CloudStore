@@ -25,16 +25,18 @@ interface FileBrowserProps {
   type?: "all" | "shared" | "recent" | "trash"
   onRefresh?: () => void
   searchQuery?: string
+  currentPath?: string
+  onCurrentPathChange?: React.Dispatch<React.SetStateAction<string>>
 }
 
-export function FileBrowser({ type = "all", onRefresh, searchQuery = "" }: FileBrowserProps) {
+
+export function FileBrowser({ type = "all", onRefresh, searchQuery = "", currentPath = "", onCurrentPathChange }: FileBrowserProps) {
   const [shareOpen, setShareOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
-  const [currentPath, setCurrentPath] = useState("")
 
   const {
     loadingStates,
@@ -47,7 +49,7 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "" }: FileB
     makeAuthenticatedRequest,
   } = useFileOperations()
 
-  const { files, loading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
+  const { loading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
     useFileData({
       type,
       makeAuthenticatedRequest,
@@ -99,27 +101,22 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "" }: FileB
     }
   }
 
-  const handleRefresh = () => {
-    refreshFiles()
-    if (onRefresh) {
-      onRefresh()
-    }
-  }
-
   const handleFileClick = (file: FileItem) => {
     if (isTrashView) return 
 
     if (file.isFolder) {
-      const newPath = currentPath ? `${currentPath}/${file.name}` : file.name
-      setCurrentPath(newPath)
-    }
+  const newPath = currentPath ? `${currentPath}/${file.name}` : file.name
+  onCurrentPathChange?.(newPath)
+}
+
   }
 
   const handleBackClick = () => {
-    const pathParts = currentPath.split("/")
-    pathParts.pop()
-    setCurrentPath(pathParts.join("/"))
-  }
+  const pathParts = currentPath.split("/")
+  pathParts.pop()
+  onCurrentPathChange?.(pathParts.join("/"))
+}
+
 
   const handleDeleteConfirm = () => {
     if (!selectedFile) return

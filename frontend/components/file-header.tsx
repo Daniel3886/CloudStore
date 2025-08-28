@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Search, Upload } from "lucide-react"
-import { UploadModal } from "./upload-modal"
-import { NewFolderModal } from "./new-folder-modal"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Plus, Search, Upload } from "lucide-react";
+import { UploadModal } from "./upload-modal";
+import { NewFolderModal } from "./new-folder-modal";
 
 interface FileHeaderProps {
-  title?: string
-  type?: "all" | "shared" | "recent" | "starred" | "trash"
-  onRefresh?: () => void
-  currentPath?: string
-  onSearch?: (query: string) => void
+  title?: string;
+  type?: "all" | "shared" | "recent" | "starred" | "trash";
+  onRefresh?: () => void;
+  currentPath?: string;
+  onSearch?: (query: string) => void;
 }
 
 export function FileHeader({
@@ -22,17 +22,16 @@ export function FileHeader({
   currentPath = "",
   onSearch,
 }: FileHeaderProps) {
-  const [uploadOpen, setUploadOpen] = useState(false)
-  const [newFolderOpen, setNewFolderOpen] = useState(false)
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
 
-  const showActionButtons = type === "all"
+  const showActionButtons = type === "all";
 
   const handleFolderCreated = () => {
-    console.log("FileHeader: Folder created, triggering refresh")
     if (onRefresh) {
-      onRefresh()
+      onRefresh();
     }
-  }
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -53,8 +52,8 @@ export function FileHeader({
       </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input 
-          placeholder="Search files and folders..." 
+        <Input
+          placeholder="Search files and folders..."
           className="pl-9"
           onChange={(e) => onSearch?.(e.target.value)}
         />
@@ -62,11 +61,13 @@ export function FileHeader({
 
       {showActionButtons && (
         <>
-          <UploadModal 
-            open={uploadOpen} 
-            onOpenChange={setUploadOpen} 
-            onUploadComplete={onRefresh} 
+          <UploadModal
+            open={uploadOpen}
+            onOpenChange={setUploadOpen}
+            onUploadComplete={onRefresh}
+            currentPath={currentPath} 
           />
+
           <NewFolderModal
             open={newFolderOpen}
             onOpenChange={setNewFolderOpen}
@@ -76,5 +77,5 @@ export function FileHeader({
         </>
       )}
     </div>
-  )
+  );
 }

@@ -51,8 +51,6 @@ export async function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
       },
     })
 
-    console.log("Response", response)
-
     if (!response.ok) {
       throw new Error(`Failed to fetch audit logs: ${response.statusText}`)
     }

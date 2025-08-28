@@ -13,7 +13,7 @@ export default function TrashPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <FileHeader title="Trash" onRefresh={handleRefresh} />
+      <FileHeader title="Trash" type="trash" onRefresh={handleRefresh} />
       <FileBrowser key={refreshKey} type="trash" onRefresh={handleRefresh} />
     </div>
   )

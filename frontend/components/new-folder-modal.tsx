@@ -45,9 +45,6 @@ export function NewFolderModal({
 
       const fullFolderPath = currentPath ? `${currentPath}/${folderName.trim()}` : folderName.trim()
 
-      console.log("Creating folder:", fullFolderPath)
-      console.log("Existing folders:", existingFolders)
-
       if (existingFolders.includes(fullFolderPath)) {
         toast({
           variant: "destructive",
@@ -59,12 +56,10 @@ export function NewFolderModal({
       }
 
       const updatedFolders = [...existingFolders, fullFolderPath]
-      console.log("Updated folders:", updatedFolders)
 
       localStorage.setItem("virtualFolders", JSON.stringify(updatedFolders))
 
       const verifyFolders = localStorage.getItem("virtualFolders")
-      console.log("Verified saved folders:", verifyFolders)
 
       toast({
         title: "Folder created",

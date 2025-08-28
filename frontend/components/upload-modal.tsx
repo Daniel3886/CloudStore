@@ -26,7 +26,7 @@ interface UploadModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onUploadComplete?: () => void
-  currentPath?: string   
+  currentPath?: string
 }
 interface FileUploadStatus {
   file: File;
@@ -196,73 +196,54 @@ export function UploadModal({
     }
   };
 
-  const uploadSingleFile = async (fileStatus: FileUploadStatus, index: number): Promise<boolean> => {
-  try {
-    setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, status: "uploading", progress: 0 } : f)))
-
-    const formData = new FormData()
-
-    const uploadFileName = currentPath ? `${currentPath}/${fileStatus.file.name}` : fileStatus.file.name
-    formData.append("file", fileStatus.file, uploadFileName) 
-
-    const headers: Record<string, string> = {}
-    const accessToken = localStorage.getItem("accessToken")
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`
-
-    const response = await fetch("http://localhost:8080/file/upload", {
-      method: "POST",
-      headers,
-      body: formData,
-      credentials: "include",
-    })
-
-    if (response.ok) {
-      setFiles((prev) => prev.map((f, i) => (i === index ? { ...f, status: "completed", progress: 100 } : f)))
-      return true
-    } else {
-      const errorText = await response.text()
-      throw new Error(errorText || `Upload failed: ${response.status}`)
-    }
-  } catch (error: any) {
-    setFiles((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, status: "error", progress: 0, error: error.message } : f)),
-    )
-    return false
-  }
-}
-
-
-  const refreshAccessToken = async (): Promise<boolean> => {
+  const uploadSingleFile = async (
+    fileStatus: FileUploadStatus,
+    index: number
+  ): Promise<boolean> => {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      if (!refreshToken) {
-        return false;
-      }
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index ? { ...f, status: "uploading", progress: 0 } : f
+        )
+      );
 
-      const response = await fetch("http://localhost:8080/auth/refresh", {
+      const formData = new FormData();
+
+      const uploadFileName = currentPath
+        ? `${currentPath}/${fileStatus.file.name}`
+        : fileStatus.file.name;
+      formData.append("file", fileStatus.file, uploadFileName);
+
+      const headers: Record<string, string> = {};
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+
+      const response = await fetch("http://localhost:8080/file/upload", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
+        headers,
+        body: formData,
         credentials: "include",
       });
 
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("accessToken", data.accessToken);
-        if (data.refreshToken) {
-          localStorage.setItem("refreshToken", data.refreshToken);
-        }
+        setFiles((prev) =>
+          prev.map((f, i) =>
+            i === index ? { ...f, status: "completed", progress: 100 } : f
+          )
+        );
         return true;
       } else {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userEmail");
-        return false;
+        const errorText = await response.text();
+        throw new Error(errorText || `Upload failed: ${response.status}`);
       }
-    } catch (error) {
-      console.error("Token refresh failed:", error);
+    } catch (error: any) {
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index
+            ? { ...f, status: "error", progress: 0, error: error.message }
+            : f
+        )
+      );
       return false;
     }
   };
@@ -523,7 +504,7 @@ export function UploadModal({
           )}
 
           {allCompleted && !hasErrors && (
-            <div className="flex items-center gap-2 text-green-500 justify-center p-3 bg-green-50 rounded-md">
+            <div className="flex items-center gap-2 justify-center p-3 rounded-md bg-success/10 text-success-foreground">
               <CheckCircle className="h-5 w-5" />
               <p className="text-sm font-medium">
                 All files uploaded successfully!

@@ -12,8 +12,6 @@ interface FileHeaderProps {
   type?: "all" | "shared" | "recent" | "starred" | "trash"
   onRefresh?: () => void
   currentPath?: string
-  virtualFolders?: string[]
-  saveVirtualFolders?: (folders: string[]) => void
   onSearch?: (query: string) => void
 }
 
@@ -21,15 +19,20 @@ export function FileHeader({
   title = "My Files",
   type = "all",
   onRefresh,
-  currentPath,
-  virtualFolders,
-  saveVirtualFolders,
+  currentPath = "",
   onSearch,
 }: FileHeaderProps) {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [newFolderOpen, setNewFolderOpen] = useState(false)
 
   const showActionButtons = type === "all"
+
+  const handleFolderCreated = () => {
+    console.log("FileHeader: Folder created, triggering refresh")
+    if (onRefresh) {
+      onRefresh()
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -59,13 +62,16 @@ export function FileHeader({
 
       {showActionButtons && (
         <>
-          <UploadModal open={uploadOpen} onOpenChange={setUploadOpen} onUploadComplete={onRefresh} />
+          <UploadModal 
+            open={uploadOpen} 
+            onOpenChange={setUploadOpen} 
+            onUploadComplete={onRefresh} 
+          />
           <NewFolderModal
             open={newFolderOpen}
             onOpenChange={setNewFolderOpen}
             currentPath={currentPath}
-            virtualFolders={virtualFolders}
-            saveVirtualFolders={saveVirtualFolders}
+            onFolderCreated={handleFolderCreated}
           />
         </>
       )}

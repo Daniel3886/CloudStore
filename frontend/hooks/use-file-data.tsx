@@ -16,13 +16,23 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   const [lastFetchTime, setLastFetchTime] = useState<number>(0)
 
   useEffect(() => {
-    const savedFolders = localStorage.getItem("virtualFolders")
-    if (savedFolders) {
-      setVirtualFolders(JSON.parse(savedFolders))
+    const loadVirtualFolders = () => {
+      const savedFolders = localStorage.getItem("virtualFolders")
+      if (savedFolders) {
+        const parsed = JSON.parse(savedFolders)
+        console.log("Loaded virtual folders from localStorage:", parsed)
+        setVirtualFolders(parsed)
+      } else {
+        console.log("No virtual folders found in localStorage")
+        setVirtualFolders([])
+      }
     }
+
+    loadVirtualFolders()
   }, [])
 
   const saveVirtualFolders = useCallback((folders: string[]) => {
+    console.log("Saving virtual folders:", folders)
     setVirtualFolders(folders)
     localStorage.setItem("virtualFolders", JSON.stringify(folders))
   }, [])
@@ -68,6 +78,11 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       setLastFetchTime(now)
 
       try {
+        const savedFolders = localStorage.getItem("virtualFolders")
+        const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
+        
+        console.log("fetchFiles - Current virtual folders from localStorage:", currentVirtualFolders)
+
         let endpoint = "http://localhost:8080/file/list"
 
         if (type === "trash") {
@@ -83,13 +98,57 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
           if (!data || !Array.isArray(data)) {
             console.log("No files found or invalid response format")
-            setFiles([])
+            let folderItems: any[] = []
+            if (type !== "trash") {
+              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
+                const pathParts = folderPath.split("/")
+                const folderName = pathParts.pop() || folderPath
+                const parentPath = pathParts.join("/")
+
+                return {
+                  id: `folder-${index}`,
+                  name: folderName,
+                  s3Key: "",
+                  displayName: folderName,
+                  type: "folder",
+                  size: null,
+                  modified: new Date().toISOString(),
+                  owner: "You",
+                  path: parentPath,
+                  isFolder: true,
+                }
+              })
+            }
+            console.log("Setting files to folder items only:", folderItems)
+            setFiles(folderItems)
             return
           }
 
           if (data.length === 0) {
             console.log("User has no files yet")
-            setFiles([])
+            let folderItems: any[] = []
+            if (type !== "trash") {
+              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
+                const pathParts = folderPath.split("/")
+                const folderName = pathParts.pop() || folderPath
+                const parentPath = pathParts.join("/")
+
+                return {
+                  id: `folder-${index}`,
+                  name: folderName,
+                  s3Key: "",
+                  displayName: folderName,
+                  type: "folder",
+                  size: null,
+                  modified: new Date().toISOString(),
+                  owner: "You",
+                  path: parentPath,
+                  isFolder: true,
+                }
+              })
+            }
+            console.log("Setting files to folder items only:", folderItems)
+            setFiles(folderItems)
             return
           }
 
@@ -118,7 +177,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
           let folderItems: any[] = []
           if (type !== "trash") {
-            folderItems = virtualFolders.map((folderPath, index) => {
+            folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
               const pathParts = folderPath.split("/")
               const folderName = pathParts.pop() || folderPath
               const parentPath = pathParts.join("/")
@@ -138,11 +197,44 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
             })
           }
 
-          setFiles([...folderItems, ...transformedFiles])
+          console.log("Final folderItems:", folderItems)
+          console.log("Final transformedFiles:", transformedFiles)
+          const allFiles = [...folderItems, ...transformedFiles]
+          console.log("Setting all files:", allFiles)
+          setFiles(allFiles)
+          
+          if (JSON.stringify(currentVirtualFolders) !== JSON.stringify(virtualFolders)) {
+            setVirtualFolders(currentVirtualFolders)
+          }
         } else {
           if (response.status === 404) {
             console.log("No files endpoint found or user has no files")
-            setFiles([])
+            let folderItems: any[] = []
+            if (type !== "trash") {
+              const savedFolders = localStorage.getItem("virtualFolders")
+              const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
+              
+              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
+                const pathParts = folderPath.split("/")
+                const folderName = pathParts.pop() || folderPath
+                const parentPath = pathParts.join("/")
+
+                return {
+                  id: `folder-${index}`,
+                  name: folderName,
+                  s3Key: "",
+                  displayName: folderName,
+                  type: "folder",
+                  size: null,
+                  modified: new Date().toISOString(),
+                  owner: "You",
+                  path: parentPath,
+                  isFolder: true,
+                }
+              })
+            }
+            console.log("404 response - Setting files to folder items:", folderItems)
+            setFiles(folderItems)
             return
           }
 
@@ -160,21 +252,56 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
           })
         }
 
-        setFiles([])
+        let folderItems: any[] = []
+        if (type !== "trash") {
+          const savedFolders = localStorage.getItem("virtualFolders")
+          const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
+          
+          folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
+            const pathParts = folderPath.split("/")
+            const folderName = pathParts.pop() || folderPath
+            const parentPath = pathParts.join("/")
+
+            return {
+              id: `folder-${index}`,
+              name: folderName,
+              s3Key: "",
+              displayName: folderName,
+              type: "folder",
+              size: null,
+              modified: new Date().toISOString(),
+              owner: "You",
+              path: parentPath,
+              isFolder: true,
+            }
+          })
+        }
+        console.log("Error case - Setting files to folder items:", folderItems)
+        setFiles(folderItems)
       } finally {
         setLoading(false)
       }
     },
-    [makeAuthenticatedRequest, virtualFolders, getActualFileName, getFileTypeFromName, lastFetchTime, type],
+    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, lastFetchTime, type, virtualFolders],
   )
 
   useEffect(() => {
     fetchFiles()
-  }, [type, virtualFolders])
+  }, [type]) 
+
+  useEffect(() => {
+    if (virtualFolders.length > 0 || localStorage.getItem("virtualFolders")) {
+      console.log("Virtual folders changed, refreshing files...")
+      fetchFiles(true)
+    }
+  }, [virtualFolders])
 
   const getFilteredFiles = useCallback(
     (currentPath: string) => {
-      return files.filter((file) => {
+      console.log("getFilteredFiles - currentPath:", currentPath)
+      console.log("getFilteredFiles - all files:", files)
+      
+      const filtered = files.filter((file) => {
         let typeMatch = true
         if (type === "shared") typeMatch = file.owner !== "You"
         if (type === "recent") {
@@ -185,8 +312,12 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
         }
 
         const pathMatch = file.path === currentPath
+        console.log(`File ${file.name}: path="${file.path}", currentPath="${currentPath}", pathMatch=${pathMatch}, typeMatch=${typeMatch}`)
         return typeMatch && pathMatch
       })
+      
+      console.log("getFilteredFiles - filtered result:", filtered)
+      return filtered
     },
     [files, type],
   )
@@ -202,6 +333,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   )
 
   const refreshFiles = useCallback(() => {
+    console.log("refreshFiles called - force fetching...")
     fetchFiles(true)
   }, [fetchFiles])
 

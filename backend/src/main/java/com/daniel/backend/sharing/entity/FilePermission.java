@@ -25,8 +25,8 @@ public class FilePermission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "file_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "file_id", referencedColumnName = "id")
     private Files file;
 
     @ManyToOne

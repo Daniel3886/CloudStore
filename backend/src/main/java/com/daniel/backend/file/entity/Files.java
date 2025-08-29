@@ -1,10 +1,13 @@
 package com.daniel.backend.file.entity;
 
+import com.daniel.backend.sharing.entity.FilePermission;
 import jakarta.persistence.*;
 import com.daniel.backend.auth.entity.Users;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "files")
@@ -27,6 +30,9 @@ public class Files {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_email", referencedColumnName = "email")
     private Users owner;
+
+    @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FilePermission> permissions = new ArrayList<>();
 
     @Column(name = "is_deleted")
     private boolean isDeleted = false;

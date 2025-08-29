@@ -339,12 +339,12 @@ public class StorageService {
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
         if (metadata.getDeletedAt() == null) {
-            throw new RuntimeException("File is not in trash");
+            throw new RuntimeException("File must be in trash before permanent deletion");
         }
 
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
-                .key(fileName)
+                .key(metadata.getS3Key())
                 .build());
 
         fileRepo.delete(metadata);

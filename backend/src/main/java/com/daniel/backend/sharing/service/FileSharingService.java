@@ -6,6 +6,7 @@ import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
 import com.daniel.backend.sharing.dto.ShareFileRequestDto;
+import com.daniel.backend.sharing.dto.ShareStatus;
 import com.daniel.backend.sharing.dto.SharedFileDto;
 import com.daniel.backend.sharing.entity.FilePermission;
 import com.daniel.backend.sharing.repository.FilePermissionRepo;
@@ -48,49 +49,145 @@ public class FileSharingService {
             throw new IllegalArgumentException("You cannot share a file with yourself.");
         }
 
+        filePermissionRepo.findAllByFileIdAndSharedWithEmail(dto.getFileId(), dto.getTargetUserEmail())
+                .stream()
+                .filter(fp -> fp.getStatus() == ShareStatus.PENDING)
+                .findAny()
+                .ifPresent(fp -> {
+                    throw new IllegalArgumentException("A share request is already pending for this user.");
+                });
+
+        FilePermission permission = FilePermission.builder()
+                .file(file)
+                .sharedWith(recipient)
+                .permissionType(dto.getPermissionType())
+                .message(dto.getMessage())
+                .sharedAt(LocalDateTime.now())
+                .status(ShareStatus.PENDING)
+                .statusChangedAt(LocalDateTime.now())
+                .build();
+
+        filePermissionRepo.save(permission);
+
         auditLogService.log(
                 "SHARE_FILE",
                 sender.getEmail(),
                 file,
-                "Shared file with " + recipient.getEmail()
+                "Shared file with " + recipient.getEmail() + " (PENDING)"
         );
-
-
-        FilePermission permission = new FilePermission();
-        permission.setFile(file);
-        permission.setSharedWith(recipient);
-        permission.setPermissionType(dto.getPermissionType());
-        permission.setMessage(dto.getMessage());
-        permission.setSharedAt(LocalDateTime.now());
-
-        filePermissionRepo.save(permission);
     }
 
 
-    public List<SharedFileDto> getFilesSharedWithUser(String currentUserEmail) {
-        List<FilePermission> permissions = filePermissionRepo.findBySharedWithEmail(currentUserEmail);
+    public List<SharedFileDto> getSharesSentByUser(String senderEmail) {
+        List<Files> senderFiles = fileRepo.findAll().stream()
+                .filter(file -> file.getOwner().getEmail().equalsIgnoreCase(senderEmail))
+                .toList();
+
+        List<FilePermission> permissions = senderFiles.stream()
+                .flatMap(file -> filePermissionRepo.findByFileId(file.getId()).stream())
+                .toList();
 
         return permissions.stream().map(permission -> {
             Files file = permission.getFile();
             return SharedFileDto.builder()
+                    .permissionId(permission.getId())
                     .fileId(file.getId())
                     .displayName(file.getDisplayName())
                     .sharedBy(file.getOwner().getEmail())
                     .s3Key(file.getS3Key())
                     .message(permission.getMessage())
                     .sharedAt(permission.getSharedAt())
+                    .shareStatus(permission.getStatus())
+                    .shareStatusChangedAt(permission.getStatusChangedAt())
                     .build();
         }).toList();
+    }
+
+
+    public void acceptShare(Long permissionId, String currentUserEmail) {
+        FilePermission permission = filePermissionRepo.findById(permissionId)
+                .orElseThrow(() -> new EntityNotFoundException("Permission not found"));
+
+        if (!permission.getSharedWith().getEmail().equals(currentUserEmail)) {
+            throw new IllegalArgumentException("You are not authorized to accept this share");
+        }
+
+        permission.setStatus(ShareStatus.ACCEPTED);
+        permission.setStatusChangedAt(LocalDateTime.now());
+        filePermissionRepo.save(permission);
+
+        auditLogService.log(
+                "ACCEPT_SHARE",
+                currentUserEmail,
+                permission.getFile(),
+                "Accepted shared file from " + permission.getFile().getOwner().getEmail()
+        );
+
+        auditLogService.log(
+                "SHARE_ACCEPTED",
+                permission.getFile().getOwner().getEmail(),
+                permission.getFile(),
+                "Recipient " + currentUserEmail + " accepted the shared file"
+        );
+    }
+
+    public void declineShare(Long permissionId, String currentUserEmail) {
+        FilePermission permission = filePermissionRepo.findById(permissionId)
+                .orElseThrow(() -> new EntityNotFoundException("Permission not found"));
+
+        if (!permission.getSharedWith().getEmail().equals(currentUserEmail)) {
+            throw new IllegalArgumentException("You are not authorized to decline this share");
+        }
+
+        permission.setStatus(ShareStatus.DECLINED);
+        permission.setStatusChangedAt(LocalDateTime.now());
+        filePermissionRepo.save(permission);
+
+        auditLogService.log(
+                "DECLINE_SHARE",
+                currentUserEmail,
+                permission.getFile(),
+                "Declined shared file from " + permission.getFile().getOwner().getEmail()
+        );
+
+        auditLogService.log(
+                "SHARE_DECLINED",
+                permission.getFile().getOwner().getEmail(),
+                permission.getFile(),
+                "Recipient " + currentUserEmail + " declined the shared file"
+        );
+    }
+
+
+    public List<SharedFileDto> getFilesSharedWithUser(String currentUserEmail) {
+        List<FilePermission> permissions = filePermissionRepo.findBySharedWithEmail(currentUserEmail);
+
+        return permissions.stream()
+                .filter(p -> p.getStatus() == ShareStatus.ACCEPTED || p.getStatus() == ShareStatus.PENDING)
+                .map(p -> {
+                    Files file = p.getFile();
+                    return SharedFileDto.builder()
+                            .permissionId(p.getId())
+                            .fileId(file.getId())
+                            .displayName(file.getDisplayName())
+                            .sharedBy(file.getOwner().getEmail())
+                            .s3Key(file.getS3Key())
+                            .message(p.getMessage())
+                            .shareStatus(p.getStatus())
+                            .shareStatusChangedAt(p.getStatusChangedAt())
+                            .sharedAt(p.getSharedAt())
+                            .build();
+                }).toList();
     }
 
     public List<String> getUsersFileIsSharedWith(Long fileId, String ownerEmail) throws AccessDeniedException {
         Files file = fileRepo.findById(fileId)
                 .orElseThrow(() -> new RuntimeException("File not found"));
 
-        if (file.getOwner() == null || file.getOwner().getEmail() == null ||
-                !file.getOwner().getEmail().equalsIgnoreCase(ownerEmail.trim())) {
+        if (!ownerEmail.equalsIgnoreCase(file.getOwner().getEmail())) {
             throw new AccessDeniedException("You do not own this file");
         }
+
 
         return filePermissionRepo.findByFileId(fileId)
                 .stream()

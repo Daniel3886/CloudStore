@@ -1,19 +1,41 @@
-export const formatFileSize = (bytes: number | null): string => {
-  if (bytes === null) return ""
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+export function formatDate(date: string | Date): string {
+  const dateObj = typeof date === "string" ? new Date(date) : date
+
+  if (isNaN(dateObj.getTime())) {
+    return "Invalid date"
+  }
+
+  const now = new Date()
+  const diffInMs = now.getTime() - dateObj.getTime()
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+
+  if (diffInDays === 0) {
+    return "Today"
+  } else if (diffInDays === 1) {
+    return "Yesterday"
+  } else if (diffInDays < 7) {
+    return `${diffInDays} days ago`
+  } else if (diffInDays < 30) {
+    const weeks = Math.floor(diffInDays / 7)
+    return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`
+  } else if (diffInDays < 365) {
+    const months = Math.floor(diffInDays / 30)
+    return months === 1 ? "1 month ago" : `${months} months ago`
+  } else {
+    return dateObj.toLocaleDateString()
+  }
 }
 
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 Bytes"
+
+  const k = 1024
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+  return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
 }
+
 
 export const getFileExtension = (fileName: string): string => {
   const lastDotIndex = fileName.lastIndexOf(".")

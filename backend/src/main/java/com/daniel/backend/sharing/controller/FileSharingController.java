@@ -6,7 +6,6 @@ import com.daniel.backend.sharing.dto.SharedFileDto;
 import com.daniel.backend.sharing.service.FileSharingService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileSharingController {
 
-    @Autowired
-    private FileSharingService fileSharingService;
+    private final FileSharingService fileSharingService;
 
     @PostMapping
     public ResponseEntity<?> shareFile(@RequestBody ShareFileRequestDto dto, HttpServletRequest request) {
@@ -39,6 +37,17 @@ public class FileSharingController {
             return ResponseEntity.ok(files);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Could not fetch shared files: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/sent")
+    public ResponseEntity<?> getSharesSentByUser(HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            List<SharedFileDto> sentShares = fileSharingService.getSharesSentByUser(currentUserEmail);
+            return ResponseEntity.ok(sentShares);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Could not fetch sent shares: " + e.getMessage());
         }
     }
 
@@ -94,6 +103,27 @@ public class FileSharingController {
             return ResponseEntity.ok("Message removed successfully.");
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Failed to remove message: " + e.getMessage());
+        }
+    }
+    @PostMapping("/accept/{permissionId}")
+    public ResponseEntity<?> acceptSharedFile(@PathVariable Long permissionId, HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            fileSharingService.acceptShare(permissionId, currentUserEmail);
+            return ResponseEntity.ok("File accepted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to accept file: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/decline/{permissionId}")
+    public ResponseEntity<?> declineSharedFile(@PathVariable Long permissionId, HttpServletRequest request) {
+        try {
+            String currentUserEmail = request.getUserPrincipal().getName();
+            fileSharingService.declineShare(permissionId, currentUserEmail);
+            return ResponseEntity.ok("File declined successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to decline file: " + e.getMessage());
         }
     }
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { FileIcon, Download, Calendar, User, MessageSquare, Loader2 } from "lucide-react"
+import { FileIcon, Download, Calendar, User, MessageSquare, Loader2, Check, X, Clock } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { FileSharingAPI, type SharedFileDto } from "@/lib/file-sharing"
 import { formatDate } from "@/lib/file-utils"
@@ -14,16 +14,18 @@ export function SharedFilesBrowser() {
   const [sharedFiles, setSharedFiles] = useState<SharedFileDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [downloadingFiles, setDownloadingFiles] = useState<Set<number>>(new Set())
+  const [processingShares, setProcessingShares] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     loadSharedFiles()
   }, [])
 
   const loadSharedFiles = async () => {
-
     setIsLoading(true)
     try {
       const files = await FileSharingAPI.getSharedFiles()
+      files.forEach((file) => {
+      })
       setSharedFiles(files)
     } catch (error: any) {
       toast({
@@ -33,6 +35,76 @@ export function SharedFilesBrowser() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleAcceptShare = async (file: SharedFileDto) => {
+
+    if (!file.permissionId) {
+      toast({
+        variant: "destructive",
+        title: "Failed to accept share",
+        description: "Permission ID is missing. Please refresh the page and try again.",
+      })
+      return
+    }
+
+    setProcessingShares((prev) => new Set(prev).add(file.permissionId))
+
+    try {
+      await FileSharingAPI.acceptShare(file.permissionId)
+      toast({
+        title: "Share accepted",
+        description: `You now have access to "${file.displayName}"`,
+      })
+      await loadSharedFiles()
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to accept share",
+        description: error.message || "Could not accept the file share",
+      })
+    } finally {
+      setProcessingShares((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(file.permissionId)
+        return newSet
+      })
+    }
+  }
+
+  const handleDeclineShare = async (file: SharedFileDto) => {
+
+    if (!file.permissionId) {
+      toast({
+        variant: "destructive",
+        title: "Failed to decline share",
+        description: "Permission ID is missing. Please refresh the page and try again.",
+      })
+      return
+    }
+
+    setProcessingShares((prev) => new Set(prev).add(file.permissionId))
+
+    try {
+      await FileSharingAPI.declineShare(file.permissionId)
+      toast({
+        title: "Share declined",
+        description: `You have declined access to "${file.displayName}"`,
+      })
+      await loadSharedFiles() 
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to decline share",
+        description: error.message || "Could not decline the file share",
+      })
+    } finally {
+      setProcessingShares((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(file.permissionId)
+        return newSet
+      })
     }
   }
 
@@ -82,6 +154,19 @@ export function SharedFilesBrowser() {
     }
   }
 
+  const getStatusBadge = (status: SharedFileDto["shareStatus"]) => {
+    switch (status) {
+      case "PENDING":
+        return { variant: "secondary" as const, icon: Clock, text: "Pending" }
+      case "ACCEPTED":
+        return { variant: "default" as const, icon: Check, text: "Accepted" }
+      case "DECLINED":
+        return { variant: "destructive" as const, icon: X, text: "Declined" }
+      default:
+        return { variant: "secondary" as const, icon: Clock, text: "Unknown" }
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -111,60 +196,108 @@ export function SharedFilesBrowser() {
       </div>
 
       <div className="grid gap-4">
-        {sharedFiles.map((file) => (
-          <Card key={file.fileId} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <FileIcon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{file.displayName}</CardTitle>
-                    <div className="flex items-center gap-2 mt-1">
-                      <User className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Shared by {file.sharedBy}</span>
+        {sharedFiles.map((file) => {
+          const statusBadge = getStatusBadge(file.shareStatus)
+          const StatusIcon = statusBadge.icon
+          const isProcessing = processingShares.has(file.permissionId)
+
+          return (
+            <Card key={file.fileId} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <FileIcon className="h-5 w-5" />
                     </div>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(file)}
-                  disabled={downloadingFiles.has(file.fileId)}
-                >
-                  {downloadingFiles.has(file.fileId) ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="pt-0">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>Shared {formatDate(file.sharedAt)}</span>
-                </div>
-
-                {file.message && (
-                  <>
-                    <Separator />
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>Message</span>
+                    <div>
+                      <CardTitle className="text-base">{file.displayName}</CardTitle>
+                      <div className="flex items-center gap-2 mt-1">
+                        <User className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground">Shared by {file.sharedBy}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">{file.message}</p>
                     </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Badge variant={statusBadge.variant} className="flex items-center gap-1">
+                      <StatusIcon className="h-3 w-3" />
+                      {statusBadge.text}
+                    </Badge>
+
+                    {file.shareStatus === "PENDING" && (
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleAcceptShare(file)}
+                          disabled={isProcessing}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeclineShare(file)}
+                          disabled={isProcessing}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    )} 
+
+                    {file.shareStatus === "ACCEPTED" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(file)}
+                        disabled={downloadingFiles.has(file.fileId)}
+                      >
+                        {downloadingFiles.has(file.fileId) ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>Shared {formatDate(file.sharedAt)}</span>
+                  </div>
+
+                  {file.shareStatusChangedAt && file.shareStatus !== "PENDING" && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <StatusIcon className="h-4 w-4" />
+                      <span>
+                        {statusBadge.text} {formatDate(file.shareStatusChangedAt)}
+                      </span>
+                    </div>
+                  )}
+
+                  {file.message && (
+                    <>
+                      <Separator />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Message</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">{file.message}</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

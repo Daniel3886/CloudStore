@@ -12,10 +12,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 public class SharedFileDto {
+    private Long permissionId;
     private Long fileId;
     private String displayName;
     private String sharedBy;
     private String s3Key;
     private String message;
     private LocalDateTime sharedAt;
+    private ShareStatus shareStatus;
+    private LocalDateTime shareStatusChangedAt;
 }

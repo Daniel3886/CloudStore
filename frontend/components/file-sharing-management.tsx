@@ -122,7 +122,7 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
   }
 
   const loadSharedUsers = async (fileId: number) => {
-
+    
     setIsLoadingUsers(true)
     try {
       const users = await FileSharingAPI.getFileSharedUsers(fileId)

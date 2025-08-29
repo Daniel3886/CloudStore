@@ -6,12 +6,16 @@ export interface ShareFileRequest {
 }
 
 export interface SharedFileDto {
+  permissionId: number
   fileId: number
   displayName: string
   sharedBy: string
   s3Key: string
   message?: string
   sharedAt: string
+  sharedWithEmail: string
+  shareStatus: "PENDING" | "ACCEPTED" | "DECLINED"
+  shareStatusChangedAt?: string
 }
 
 export interface MessageUpdateRequest {
@@ -38,12 +42,10 @@ async function makeAuthenticatedRequest(url: string, options: RequestInit = {}):
 
 export class FileSharingAPI {
   static async shareFile(request: ShareFileRequest): Promise<void> {
-
     const response = await makeAuthenticatedRequest("http://localhost:8080/share", {
       method: "POST",
       body: JSON.stringify(request),
     })
-
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -54,7 +56,6 @@ export class FileSharingAPI {
   }
 
   static async getSharedFiles(): Promise<SharedFileDto[]> {
-
     const response = await makeAuthenticatedRequest("http://localhost:8080/share/received")
 
     if (!response.ok) {
@@ -63,12 +64,33 @@ export class FileSharingAPI {
     }
 
     const files = await response.json()
-
+    console.log("Raw response from /share/received:", files)
     return files
   }
 
-  static async getFileSharedUsers(fileId: number): Promise<string[]> {
+  static async acceptShare(permissionId: number): Promise<void> {
+    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/accept/${permissionId}`, {
+      method: "POST",
+    })
 
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || "Failed to accept share")
+    }
+  }
+
+  static async declineShare(permissionId: number): Promise<void> {
+    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/decline/${permissionId}`, {
+      method: "POST",
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || "Failed to decline share")
+    }
+  }
+
+  static async getFileSharedUsers(fileId: number): Promise<string[]> {
     const response = await makeAuthenticatedRequest(`http://localhost:8080/share/${fileId}/users`)
 
     if (!response.ok) {
@@ -81,12 +103,10 @@ export class FileSharingAPI {
     }
 
     const users = await response.json()
-
     return users
   }
 
   static async revokeAccess(fileId: number, email: string): Promise<void> {
-
     const response = await makeAuthenticatedRequest(
       `http://localhost:8080/share/${fileId}/user/${encodeURIComponent(email)}`,
       {
@@ -103,7 +123,6 @@ export class FileSharingAPI {
   }
 
   static async updateMessage(fileId: number, targetUserId: number, message: string): Promise<void> {
-
     const response = await makeAuthenticatedRequest(
       `http://localhost:8080/share/${fileId}/shared/${targetUserId}/message`,
       {
@@ -111,7 +130,6 @@ export class FileSharingAPI {
         body: JSON.stringify({ message }),
       },
     )
-
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -122,7 +140,6 @@ export class FileSharingAPI {
   }
 
   static async removeMessage(fileId: number, email: string): Promise<void> {
-
     const response = await makeAuthenticatedRequest(
       `http://localhost:8080/share/${fileId}/user/${encodeURIComponent(email)}/message`,
       {
@@ -148,7 +165,6 @@ export class FileSharingAPI {
       }
 
       const files = await response.json()
-
       return files
     } catch (error) {
       return []

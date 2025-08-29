@@ -208,16 +208,15 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
 
       <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
       {file.id != null && (
-      <PublicLinkGenerator
-        open={publicLinkModalOpen}
-        onOpenChange={setPublicLinkModalOpen}
-        file={{
-          ...file,
-          id: Number(file.id), 
-        }}
-      />
-    )}
-
+        <PublicLinkGenerator
+          open={publicLinkModalOpen}
+          onOpenChange={setPublicLinkModalOpen}
+          file={{
+            ...file,
+            id: Number(file.id),
+          }}
+        />
+      )}
     </>
   )
 }

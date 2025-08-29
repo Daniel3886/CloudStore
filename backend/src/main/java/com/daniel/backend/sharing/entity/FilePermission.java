@@ -3,6 +3,7 @@ package com.daniel.backend.sharing.entity;
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.sharing.dto.PermissionType;
+import com.daniel.backend.sharing.dto.ShareStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,7 +27,7 @@ public class FilePermission {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_id", referencedColumnName = "id")
+    @JoinColumn(name = "file_id")
     private Files file;
 
     @ManyToOne
@@ -41,5 +42,12 @@ public class FilePermission {
     private String message;
 
     private LocalDateTime sharedAt;
+
+    @Column(name = "status_changed_at")
+    private LocalDateTime statusChangedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private ShareStatus status;
 
 }

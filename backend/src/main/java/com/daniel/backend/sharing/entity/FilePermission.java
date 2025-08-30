@@ -2,7 +2,6 @@ package com.daniel.backend.sharing.entity;
 
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.file.entity.Files;
-import com.daniel.backend.sharing.dto.PermissionType;
 import com.daniel.backend.sharing.dto.ShareStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -33,10 +32,6 @@ public class FilePermission {
     @ManyToOne
     @JoinColumn(name = "shared_with_user_id")
     private Users sharedWith;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "permission_type")
-    private PermissionType permissionType;
 
     @Column(columnDefinition = "TEXT")
     private String message;

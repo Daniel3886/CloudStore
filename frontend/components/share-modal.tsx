@@ -46,7 +46,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
       const shareRequest: ShareFileRequest = {
         fileId,
         targetUserEmail: email.trim(),
-        permissionType: permission,
         message: message.trim() || undefined,
       }
 

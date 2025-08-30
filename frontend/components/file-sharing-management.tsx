@@ -142,7 +142,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
       const shareRequest: ShareFileRequest = {
         fileId: actualFileId,
         targetUserEmail: email.trim(),
-        permissionType: permission,
         message: message.trim() || undefined,
       }
 

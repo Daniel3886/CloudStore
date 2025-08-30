@@ -67,7 +67,6 @@ public class FileSharingService {
                 existing.setMessage(dto.getMessage());
                 existing.setSharedAt(LocalDateTime.now());
                 existing.setStatusChangedAt(LocalDateTime.now());
-                existing.setPermissionType(dto.getPermissionType());
 
                 filePermissionRepo.save(existing);
 
@@ -85,7 +84,6 @@ public class FileSharingService {
         FilePermission permission = FilePermission.builder()
                 .file(file)
                 .sharedWith(recipient)
-                .permissionType(dto.getPermissionType())
                 .message(dto.getMessage())
                 .sharedAt(LocalDateTime.now())
                 .status(ShareStatus.PENDING)

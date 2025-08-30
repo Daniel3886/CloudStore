@@ -1,7 +1,6 @@
 export interface ShareFileRequest {
   fileId: number
   targetUserEmail: string
-  permissionType: "VIEWER" | "EDITOR" | "MANAGER"
   message?: string
 }
 

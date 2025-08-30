@@ -1,5 +1,6 @@
 package com.daniel.backend.file.entity;
 
+import com.daniel.backend.audit.entity.AuditLog;
 import com.daniel.backend.sharing.entity.FilePermission;
 import jakarta.persistence.*;
 import com.daniel.backend.auth.entity.Users;

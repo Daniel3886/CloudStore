@@ -17,11 +17,12 @@ public class AuditLogService {
     private final AuditLogRepo repo;
     private static final int MAX_LOGS_PER_USER = 100;
 
-    public void log(String action, String performedBy, Files fileId, String description) {
+    public void log(String action, String performedBy, Files file, String description) {
         AuditLog log = AuditLog.builder()
                 .action(action)
                 .performedBy(performedBy)
-                .file(fileId)
+                .fileId(file != null ? file.getId() : null)
+                .fileName(file != null ? file.getDisplayName() : null)
                 .description(description)
                 .timestamp(LocalDateTime.now())
                 .build();
@@ -44,7 +45,7 @@ public class AuditLogService {
                         log.getPerformedBy(),
                         log.getDescription(),
                         log.getTimestamp(),
-                        log.getFile() != null ? log.getFile().getDisplayName() : null
+                        log.getFileName()
                 ))
                 .toList();
     }
@@ -58,7 +59,7 @@ public class AuditLogService {
                         log.getPerformedBy(),
                         log.getDescription(),
                         log.getTimestamp(),
-                        log.getFile() != null ? log.getFile().getDisplayName() : null
+                        log.getFileName()
                 ))
                 .toList();
     }

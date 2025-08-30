@@ -15,10 +15,12 @@
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
-    
-        @ManyToOne(fetch = FetchType.LAZY)
-        @JoinColumn(name = "file_id", referencedColumnName = "id")
-        private Files file;
+
+        @Column(name = "file_id")
+        private Long fileId;
+
+        @Column(name = "file_name")
+        private String fileName;
     
         private String action;
     

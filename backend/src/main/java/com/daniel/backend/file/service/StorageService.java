@@ -306,7 +306,7 @@ public class StorageService {
         auditLogService.log(
                 "FILE_SOFT_DELETE",
                 metadata.getOwner().getEmail(),
-                null,
+                metadata,
                 "Soft-deleted file: " + fileName
         );
 
@@ -327,7 +327,7 @@ public class StorageService {
         auditLogService.log(
                 "FILE_RESTORE",
                 metadata.getOwner().getEmail(),
-                null,
+                metadata,
                 "Restored file from trash: " + fileName
         );
 
@@ -352,7 +352,7 @@ public class StorageService {
         auditLogService.log(
                 "FILE_PERMANENT_DELETE",
                 metadata.getOwner().getEmail(),
-                null,
+                metadata,
                 "Permanently deleted file: " + fileName
         );
 

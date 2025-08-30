@@ -234,22 +234,41 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "", current
       )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Move {selectedFile?.isFolder ? "folder" : "file"} to trash</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to move "{selectedFile?.name}" to trash? You can restore it later from the trash.
-              {selectedFile?.isFolder && " All files in this folder will also be moved to trash."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-orange-500 hover:bg-orange-600">
-              Move to Trash
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>
+        {selectedFile?.isFolder
+          ? "Permanently delete folder"
+          : `Move ${selectedFile?.isFolder ? "folder" : "file"} to trash`}
+      </AlertDialogTitle>
+      <AlertDialogDescription className={selectedFile?.isFolder ? "text-red-600 font-semibold" : ""}>
+  {selectedFile?.isFolder ? (
+    <>
+      ⚠️ If folder "{selectedFile?.name}" contains files, they <b>will be permanently deleted</b>. This action cannot be undone.
+    </>
+  ) : (
+    `Are you sure you want to move "${selectedFile?.name}" to trash? You can restore it later from the trash.`
+  )}
+</AlertDialogDescription>
+
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
+      <AlertDialogAction
+        onClick={handleDeleteConfirm}
+        className={selectedFile?.isFolder
+          ? "bg-red-500 hover:bg-red-600"
+          : "bg-orange-500 hover:bg-orange-600"}
+      >
+        {selectedFile?.isFolder
+          ? "Delete Permanently"
+          : "Move to Trash"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+
+
 
       <AlertDialog open={permanentDeleteDialogOpen} onOpenChange={setPermanentDeleteDialogOpen}>
         <AlertDialogContent>

@@ -64,7 +64,6 @@ export class FileSharingAPI {
     }
 
     const files = await response.json()
-    console.log("Raw response from /share/received:", files)
     return files
   }
 

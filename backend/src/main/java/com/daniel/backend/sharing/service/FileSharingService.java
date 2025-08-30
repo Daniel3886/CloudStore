@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FileSharingService {
@@ -49,13 +50,37 @@ public class FileSharingService {
             throw new IllegalArgumentException("You cannot share a file with yourself.");
         }
 
-        filePermissionRepo.findAllByFileIdAndSharedWithEmail(dto.getFileId(), dto.getTargetUserEmail())
+        Optional<FilePermission> existingPermissionOpt = filePermissionRepo
+                .findAllByFileIdAndSharedWithEmail(dto.getFileId(), dto.getTargetUserEmail())
                 .stream()
-                .filter(fp -> fp.getStatus() == ShareStatus.PENDING)
-                .findAny()
-                .ifPresent(fp -> {
-                    throw new IllegalArgumentException("A share request is already pending for this user.");
-                });
+                .findFirst();
+
+        if (existingPermissionOpt.isPresent()) {
+            FilePermission existing = existingPermissionOpt.get();
+
+            if (existing.getStatus() == ShareStatus.PENDING) {
+                throw new IllegalArgumentException("A share request is already pending for this user.");
+            }
+
+            if (existing.getStatus() == ShareStatus.DECLINED || existing.getStatus() == ShareStatus.ACCEPTED) {
+                existing.setStatus(ShareStatus.PENDING);
+                existing.setMessage(dto.getMessage());
+                existing.setSharedAt(LocalDateTime.now());
+                existing.setStatusChangedAt(LocalDateTime.now());
+                existing.setPermissionType(dto.getPermissionType());
+
+                filePermissionRepo.save(existing);
+
+                auditLogService.log(
+                        "RESHARE_FILE",
+                        sender.getEmail(),
+                        file,
+                        "Re-shared file with " + recipient.getEmail() + " (PENDING)"
+                );
+
+                return;
+            }
+        }
 
         FilePermission permission = FilePermission.builder()
                 .file(file)
@@ -76,7 +101,6 @@ public class FileSharingService {
                 "Shared file with " + recipient.getEmail() + " (PENDING)"
         );
     }
-
 
     public List<SharedFileDto> getSharesSentByUser(String senderEmail) {
         List<Files> senderFiles = fileRepo.findAll().stream()

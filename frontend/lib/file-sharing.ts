@@ -157,7 +157,6 @@ export class FileSharingAPI {
   static async getUserFiles(): Promise<any[]> {
     try {
       const response = await makeAuthenticatedRequest("http://localhost:8080/file/list")
-
       if (!response.ok) {
         const errorText = await response.text()
         return []

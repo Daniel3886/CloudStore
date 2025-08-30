@@ -49,7 +49,7 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "", current
     makeAuthenticatedRequest,
   } = useFileOperations()
 
-  const { loading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
+  const { initialLoading, backgroundLoading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
     useFileData({
       type,
       makeAuthenticatedRequest,
@@ -176,7 +176,7 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "", current
     return error
   }
 
-  if (loading) {
+  if (initialLoading || backgroundLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2">

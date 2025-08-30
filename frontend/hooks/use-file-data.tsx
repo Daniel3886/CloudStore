@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "@/hooks/use-toast"
 import { FileItem } from "@/lib/file"
 
@@ -11,22 +11,16 @@ interface UseFileDataProps {
 
 export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileDataProps) {
   const [files, setFiles] = useState<FileItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [initialLoading, setInitialLoading] = useState(true) 
+  const [backgroundLoading, setBackgroundLoading] = useState(false) 
+
   const [virtualFolders, setVirtualFolders] = useState<string[]>([])
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0)
+  const cacheRef = useRef<Record<string, FileItem[]>>({})
+  const fetchTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const loadVirtualFolders = () => {
-      const savedFolders = localStorage.getItem("virtualFolders")
-      if (savedFolders) {
-        const parsed = JSON.parse(savedFolders)
-        setVirtualFolders(parsed)
-      } else {
-        setVirtualFolders([])
-      }
-    }
-
-    loadVirtualFolders()
+    const saved = localStorage.getItem("virtualFolders")
+    setVirtualFolders(saved ? JSON.parse(saved) : [])
   }, [])
 
   const saveVirtualFolders = useCallback((folders: string[]) => {
@@ -36,238 +30,165 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
   const getActualFileName = useCallback((displayName: string): string => {
     if (!displayName) return "Unknown File"
-    const pathParts = displayName.split("/")
-    const fileName = pathParts[pathParts.length - 1]
-    const timestampPattern = /^\d{13}-(.+)$/
-    const match = fileName.match(timestampPattern)
+    const fileName = displayName.split("/").pop() || displayName
+    const match = fileName.match(/^\d{13}-(.+)$/)
     return match ? match[1] : fileName
   }, [])
 
   const getFileTypeFromName = useCallback((fileName: string): string => {
     const extension = fileName.split(".").pop()?.toLowerCase()
-
     if (!extension) return "file"
 
-    const imageExtensions = ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"]
-    const documentExtensions = ["pdf", "doc", "docx", "txt", "rtf", "odt"]
-    const videoExtensions = ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv"]
-    const audioExtensions = ["mp3", "wav", "flac", "aac", "ogg", "wma"]
-    const archiveExtensions = ["zip", "rar", "7z", "tar", "gz", "bz2"]
+    const extGroups: Record<string, string[]> = {
+      image: ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"],
+      document: ["doc", "docx", "txt", "rtf", "odt"],
+      video: ["mp4", "avi", "mov", "wmv", "flv", "webm", "mkv"],
+      audio: ["mp3", "wav", "flac", "aac", "ogg", "wma"],
+      archive: ["zip", "rar", "7z", "tar", "gz", "bz2"],
+    }
 
-    if (imageExtensions.includes(extension)) return "image"
-    if (documentExtensions.includes(extension)) return "document"
     if (extension === "pdf") return "pdf"
-    if (videoExtensions.includes(extension)) return "video"
-    if (audioExtensions.includes(extension)) return "audio"
-    if (archiveExtensions.includes(extension)) return "archive"
-
+    for (const [, exts] of Object.entries(extGroups)) {
+      if (exts.includes(extension)) return Object.keys(extGroups).find(k => extGroups[k].includes(extension)) || "file"
+    }
     return "file"
   }, [])
 
+  const buildFolderItems = useCallback((folderPaths: string[]): FileItem[] => {
+    const base = Date.now()
+    return folderPaths.map((folderPath, index) => {
+      const parts = folderPath.split("/")
+      const folderName = parts.pop() || folderPath
+      const parentPath = parts.join("/")
+
+      return {
+        id: -(base + index),
+        name: folderName,
+        s3Key: "",
+        displayName: folderName,
+        type: "folder",
+        size: undefined, 
+        modified: String(Date.now()),
+        owner: "You",
+        path: parentPath,
+        isFolder: true,
+      } as FileItem
+    })
+  }, [])
+
   const fetchFiles = useCallback(
-    async (force = false) => {
-      const now = Date.now()
-      if (!force && now - lastFetchTime < 1000) {
+    async (force = false, isBackground = false) => {
+      if (!force && cacheRef.current[type]) {
+        setFiles(cacheRef.current[type])
+        setInitialLoading(false)
         return
       }
 
-      setLoading(true)
-      setLastFetchTime(now)
+      if (isBackground) {
+        setBackgroundLoading(true)
+      } else {
+        setInitialLoading(true)
+      }
 
       try {
-        const savedFolders = localStorage.getItem("virtualFolders")
-        const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
-        
-        let endpoint = "http://localhost:8080/file/list"
+        const endpoint = type === "trash" ? "http://localhost:8080/file/trash" : "http://localhost:8080/file/list"
+        const response = await makeAuthenticatedRequest(endpoint, { method: "GET" })
 
-        if (type === "trash") {
-          endpoint = "http://localhost:8080/file/trash"
+        if (!response.ok) {
+          if (response.status === 404) {
+            const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
+            cacheRef.current[type] = folderItems
+            setFiles(folderItems)
+            return
+          }
+          const errText = await response.text().catch(() => "")
+          throw new Error(errText || `Failed to fetch files: ${response.status}`)
         }
 
-        const response = await makeAuthenticatedRequest(endpoint, {
-          method: "GET",
+        const data = await response.json().catch(() => null)
+        if (!Array.isArray(data)) {
+          const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
+          cacheRef.current[type] = folderItems
+          setFiles(folderItems)
+          return
+        }
+
+        const transformedFiles: FileItem[] = data.map((file: any) => {
+          const rawId = file.id ?? file.fileId
+          let parsedId: number
+          if (typeof rawId === "number") {
+            parsedId = rawId
+          } else if (rawId != null) {
+            const n = Number(rawId)
+            parsedId = Number.isFinite(n) ? n : Date.now()
+          } else {
+            parsedId = Date.now()
+          }
+
+          let parsedSize: number | undefined = undefined
+          if (file.size != null) {
+            const s = typeof file.size === "number" ? file.size : Number(file.size)
+            parsedSize = Number.isFinite(s) ? s : undefined
+          }
+
+          let parsedModified = Date.now()
+          if (file.lastModified != null) {
+            if (typeof file.lastModified === "number") {
+              parsedModified = file.lastModified
+            } else {
+              const parsed = Date.parse(String(file.lastModified))
+              if (!isNaN(parsed)) parsedModified = parsed
+            }
+          }
+
+          const displayName = file.displayName || file.display_name || "Unknown File"
+          const s3Key = file.key || file.s3Key || ""
+          const actualFileName = getActualFileName(displayName)
+          const fileType = getFileTypeFromName(actualFileName)
+          const filePath = String(displayName).split("/").slice(0, -1).join("/")
+
+          return {
+            id: parsedId,
+            name: actualFileName,
+            s3Key,
+            displayName,
+            type: fileType,
+            size: parsedSize,
+            modified: String(parsedModified),
+            owner: file.sharedBy || "You",
+            path: filePath,
+            isFolder: false,
+          } as FileItem
         })
 
-        if (response.ok) {
-          const data = await response.json()
+        const folderItems: FileItem[] = type !== "trash" ? buildFolderItems(virtualFolders) : []
+        const allFiles = [...folderItems, ...transformedFiles]
 
-          if (!data || !Array.isArray(data)) {
-            let folderItems: any[] = []
-            if (type !== "trash") {
-              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
-                const pathParts = folderPath.split("/")
-                const folderName = pathParts.pop() || folderPath
-                const parentPath = pathParts.join("/")
-
-                return {
-                  id: `folder-${index}`,
-                  name: folderName,
-                  s3Key: "",
-                  displayName: folderName,
-                  type: "folder",
-                  size: null,
-                  modified: new Date().toISOString(),
-                  owner: "You",
-                  path: parentPath,
-                  isFolder: true,
-                }
-              })
-            }
-            setFiles(folderItems)
-            return
-          }
-
-          if (data.length === 0) {
-            let folderItems: any[] = []
-            if (type !== "trash") {
-              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
-                const pathParts = folderPath.split("/")
-                const folderName = pathParts.pop() || folderPath
-                const parentPath = pathParts.join("/")
-
-                return {
-                  id: `folder-${index}`,
-                  name: folderName,
-                  s3Key: "",
-                  displayName: folderName,
-                  type: "folder",
-                  size: null,
-                  modified: new Date().toISOString(),
-                  owner: "You",
-                  path: parentPath,
-                  isFolder: true,
-                }
-              })
-            }
-            setFiles(folderItems)
-            return
-          }
-
-          const transformedFiles = data.map((file: any, index: number) => {
-            const displayName = file.displayName || file.display_name || "Unknown File"
-            const s3Key = file.key || file.s3Key || ""
-            const actualFileName = getActualFileName(displayName)
-            const fileType = getFileTypeFromName(actualFileName)
-            const pathParts = displayName.split("/")
-            pathParts.pop()
-            const filePath = pathParts.join("/")
-
-            return {
-              id: file.id ?? file.fileId,
-              name: actualFileName,
-              s3Key: s3Key,
-              displayName: displayName,
-              type: fileType,
-              size: file.size || null,
-              modified: file.lastModified || new Date().toISOString(),
-              owner: file.sharedBy || "You", 
-              path: filePath,
-              isFolder: false,
-            }
-          })
-
-          let folderItems: any[] = []
-          if (type !== "trash") {
-            folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
-              const pathParts = folderPath.split("/")
-              const folderName = pathParts.pop() || folderPath
-              const parentPath = pathParts.join("/")
-
-              return {
-                id: `folder-${index}`,
-                name: folderName,
-                s3Key: "",
-                displayName: folderName,
-                type: "folder",
-                size: null,
-                modified: new Date().toISOString(),
-                owner: "You",
-                path: parentPath,
-                isFolder: true,
-              }
-            })
-          }
-
-          const allFiles = [...folderItems, ...transformedFiles]
-          setFiles(allFiles)
-          
-          if (JSON.stringify(currentVirtualFolders) !== JSON.stringify(virtualFolders)) {
-            setVirtualFolders(currentVirtualFolders)
-          }
-        } else {
-          if (response.status === 404) {
-            let folderItems: any[] = []
-            if (type !== "trash") {
-              const savedFolders = localStorage.getItem("virtualFolders")
-              const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
-              
-              folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
-                const pathParts = folderPath.split("/")
-                const folderName = pathParts.pop() || folderPath
-                const parentPath = pathParts.join("/")
-
-                return {
-                  id: `folder-${index}`,
-                  name: folderName,
-                  s3Key: "",
-                  displayName: folderName,
-                  type: "folder",
-                  size: null,
-                  modified: new Date().toISOString(),
-                  owner: "You",
-                  path: parentPath,
-                  isFolder: true,
-                }
-              })
-            }
-            setFiles(folderItems)
-            return
-          }
-
-          const errorText = await response.text()
-          throw new Error(errorText || `Failed to fetch files: ${response.status}`)
-        }
+        cacheRef.current[type] = allFiles
+        setFiles(allFiles)
       } catch (error: any) {
         console.error("Error fetching files:", error)
-
-        if (error.message && !error.message.includes("404")) {
+        if (!isBackground) {
           toast({
             variant: "destructive",
             title: "Failed to load files",
-            description: error.message || "Could not load files from server",
+            description: error?.message || "Could not load files from server",
           })
         }
-
-        let folderItems: any[] = []
-        if (type !== "trash") {
-          const savedFolders = localStorage.getItem("virtualFolders")
-          const currentVirtualFolders = savedFolders ? JSON.parse(savedFolders) : []
-          
-          folderItems = currentVirtualFolders.map((folderPath: string, index: number) => {
-            const pathParts = folderPath.split("/")
-            const folderName = pathParts.pop() || folderPath
-            const parentPath = pathParts.join("/")
-
-            return {
-              id: `folder-${index}`,
-              name: folderName,
-              s3Key: "",
-              displayName: folderName,
-              type: "folder",
-              size: null,
-              modified: new Date().toISOString(),
-              owner: "You",
-              path: parentPath,
-              isFolder: true,
-            }
-          })
+        if (!cacheRef.current[type]) {
+          const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
+          cacheRef.current[type] = folderItems
+          setFiles(folderItems)
         }
-        setFiles(folderItems)
       } finally {
-        setLoading(false)
+        if (isBackground) {
+          setBackgroundLoading(false)
+        } else {
+          setInitialLoading(false)
+        }
       }
     },
-    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, lastFetchTime, type, virtualFolders],
+    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, type, virtualFolders, buildFolderItems],
   )
 
   useEffect(() => {
@@ -275,52 +196,85 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   }, [type]) 
 
   useEffect(() => {
-    if (virtualFolders.length > 0 || localStorage.getItem("virtualFolders")) {
-      fetchFiles(true)
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current)
+      fetchTimeoutRef.current = null
     }
-  }, [virtualFolders])
+    fetchTimeoutRef.current = window.setTimeout(() => {
+      fetchFiles(true, true) 
+    }, 500)
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current)
+        fetchTimeoutRef.current = null
+      }
+    }
+  }, [virtualFolders]) 
+
+  const addFolder = useCallback(
+    (folderPath: string) => {
+      const parts = folderPath.split("/")
+      const folderName = parts.pop() || folderPath
+      const parentPath = parts.join("/")
+
+      const newFolder: FileItem = {
+        id: -Date.now(),
+        name: folderName,
+        s3Key: "",
+        displayName: folderName,
+        type: "folder",
+        size: undefined,
+        modified: String(Date.now()),
+        owner: "You",
+        path: parentPath,
+        isFolder: true,
+      }
+
+      setFiles(prev => {
+        const next = [...prev, newFolder]
+        cacheRef.current[type] = next
+        return next
+      })
+
+      fetchFiles(true, true)
+    },
+    [fetchFiles, type],
+  )
 
   const getFilteredFiles = useCallback(
     (currentPath: string) => {
-      
-      const filtered = files.filter((file) => {
+      return files.filter((file) => {
         let typeMatch = true
         if (type === "shared") typeMatch = file.owner !== "You"
         if (type === "recent") {
-          const oneWeekAgo = new Date()
-          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-          const modifiedDate = file.modified ? new Date(file.modified) : new Date(0)
+          const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+          const modifiedDate = Number(file.modified ?? 0)
           typeMatch = modifiedDate > oneWeekAgo
         }
-
-        const pathMatch = file.path === currentPath
-        return typeMatch && pathMatch
+        return typeMatch && file.path === currentPath
       })
-      
-      return filtered
     },
     [files, type],
   )
 
   const getFilesInFolder = useCallback(
-    (folderPath: string) => {
-      return files.filter((file) => {
-        if (file.isFolder) return false
-        return (file.displayName ?? "").startsWith(folderPath + "/")
-      })
-    },
+    (folderPath: string) =>
+      files.filter((file) => !file.isFolder && (file.displayName ?? "").startsWith(folderPath + "/")),
     [files],
   )
 
   const refreshFiles = useCallback(() => {
-    fetchFiles(true)
+    fetchFiles(true, false) 
   }, [fetchFiles])
 
   return {
     files,
-    loading,
+    initialLoading,
+    backgroundLoading,
     virtualFolders,
     saveVirtualFolders,
+    addFolder,
     getFilteredFiles,
     getFilesInFolder,
     refreshFiles,

@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,39 +9,57 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileIcon, Calendar, HardDrive, User, Share2, Download, Trash2, Edit3, Globe, Users } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { formatDate, formatFileSize } from "@/lib/file-utils"
-import { ShareModal } from "./share-modal"
-import { FileSharingManagement } from "./file-sharing-management"
-import { PublicLinkGenerator } from "./public-link-generator"
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  FileIcon,
+  Calendar,
+  HardDrive,
+  User,
+  Share2,
+  Download,
+  Trash2,
+  Edit3,
+  Globe,
+  Users,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { formatDate, formatFileSize } from "@/lib/file-utils";
+import { ShareModal } from "./share-modal";
+import { FileSharingManagement } from "./file-sharing-management";
+import { PublicLinkGenerator } from "./public-link-generator";
 
 interface FileDetailsModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   file: {
-    id?: string | number
-    name: string
-    displayName?: string
-    size?: number
-    uploadedAt?: string
-    s3Key?: string
-    owner?: string
-  } | null
-  onDelete?: (file: any) => void
-  onRename?: (file: any) => void
-  onDownload?: (file: any) => void
+    id?: string | number;
+    name: string;
+    displayName?: string;
+    size?: number;
+    uploadedAt?: string;
+    s3Key?: string;
+    owner?: string;
+  } | null;
+  onDelete?: (file: any) => void;
+  onRename?: (file: any) => void;
+  onDownload?: (file: any) => void;
 }
 
-export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename, onDownload }: FileDetailsModalProps) {
-  const [shareModalOpen, setShareModalOpen] = useState(false)
-  const [managementModalOpen, setManagementModalOpen] = useState(false)
-  const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false)
+export function FileDetailsModal({
+  open,
+  onOpenChange,
+  file,
+  onDelete,
+  onRename,
+  onDownload,
+}: FileDetailsModalProps) {
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [managementModalOpen, setManagementModalOpen] = useState(false);
+  const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false);
 
-  if (!file) return null
+  if (!file) return null;
 
   const handleDownload = async () => {
     if (!file.s3Key) {
@@ -49,57 +67,62 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
         variant: "destructive",
         title: "Cannot download",
         description: "File location not available",
-      })
-      return
+      });
+      return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/files/download/${encodeURIComponent(file.s3Key)}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        credentials: "include",
-      })
+      const response = await fetch(
+        `http://localhost:8080/files/download/${encodeURIComponent(
+          file.s3Key
+        )}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to download file")
+        throw new Error("Failed to download file");
       }
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = file.name
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
       toast({
         title: "Download started",
         description: `Downloading "${file.name}"`,
-      })
+      });
     } catch (error: any) {
-      console.error("Failed to download file:", error)
+      console.error("Failed to download file:", error);
       toast({
         variant: "destructive",
         title: "Download failed",
         description: error.message || "Could not download the file",
-      })
+      });
     }
-  }
+  };
 
   const handleShare = () => {
-    setShareModalOpen(true)
-  }
+    setShareModalOpen(true);
+  };
 
   const handleManageSharing = () => {
-    setManagementModalOpen(true)
-  }
+    setManagementModalOpen(true);
+  };
 
   const handlePublicLink = () => {
-    setPublicLinkModalOpen(true)
-  }
+    setPublicLinkModalOpen(true);
+  };
 
   return (
     <>
@@ -110,16 +133,20 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
               <FileIcon className="h-5 w-5" />
               File Details
             </DialogTitle>
-            <DialogDescription>View and manage file information and sharing settings.</DialogDescription>
+            <DialogDescription>
+              View and manage file information and sharing settings.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">{file.displayName || file.name}</CardTitle>
+                <CardTitle className="text-base">
+                  {file.displayName || file.name}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {file.size && (
+                {typeof file.size === "number" && (
                   <div className="flex items-center gap-2 text-sm">
                     <HardDrive className="h-4 w-4 text-muted-foreground" />
                     <span>{formatFileSize(file.size)}</span>
@@ -152,12 +179,21 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
                   Share
                 </Button>
 
-                <Button variant="outline" size="sm" onClick={handleManageSharing}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManageSharing}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Manage
                 </Button>
 
-                <Button variant="outline" size="sm" onClick={handlePublicLink} className="col-span-2 bg-transparent">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePublicLink}
+                  className="col-span-2 bg-transparent"
+                >
                   <Globe className="h-4 w-4 mr-2" />
                   Generate Public Link
                 </Button>
@@ -169,13 +205,21 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
             <div className="space-y-2">
               <h4 className="text-sm font-medium">File Actions</h4>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" onClick={onDownload ? () => onDownload(file) : handleDownload}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onDownload ? () => onDownload(file) : handleDownload}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Download
                 </Button>
 
                 {onRename && (
-                  <Button variant="outline" size="sm" onClick={() => onRename(file)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onRename(file)}
+                  >
                     <Edit3 className="h-4 w-4 mr-2" />
                     Rename
                   </Button>
@@ -204,9 +248,17 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
         </DialogContent>
       </Dialog>
 
-      <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} file={file} />
+      <ShareModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        file={file}
+      />
 
-      <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
+      <FileSharingManagement
+        open={managementModalOpen}
+        onOpenChange={setManagementModalOpen}
+        file={file}
+      />
       {file.id != null && (
         <PublicLinkGenerator
           open={publicLinkModalOpen}
@@ -218,5 +270,5 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
         />
       )}
     </>
-  )
+  );
 }

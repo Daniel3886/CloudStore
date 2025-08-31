@@ -141,7 +141,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
               {file.name}
             </h3>
             <div className="mt-1 text-xs text-muted-foreground">
-              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size ?? null)}</p>}
+              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size ?? 0)}</p>}
               {isTrashView && <p className="text-red-500">In Trash</p>}
             </div>
           </div>

@@ -41,7 +41,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
         toast({ variant: "destructive", title: "Invalid file ID" })
         return
       }
-      
 
       const shareRequest: ShareFileRequest = {
         fileId,

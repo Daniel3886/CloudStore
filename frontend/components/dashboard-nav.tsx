@@ -5,13 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-  SheetHeader,
-} from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/components/ui/sheet"
 import { Files, Clock, Users, Trash2, Activity, Menu } from "lucide-react"
 
 const navigation = [
@@ -40,7 +34,7 @@ const navigation = [
     href: "/trash",
     icon: Trash2,
   },
-];
+]
 
 export function NavigationContent() {
   const pathname = usePathname()
@@ -93,9 +87,7 @@ export function MobileNavTrigger() {
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0 pt-3">
         <SheetHeader className="px-4 pb-3 border-b">
-          <SheetTitle className="text-xl font-bold tracking-tight text-foreground">
-            Navigation Menu
-          </SheetTitle>
+          <SheetTitle className="text-xl font-bold tracking-tight text-foreground">Navigation Menu</SheetTitle>
         </SheetHeader>
         <div className="flex h-full flex-col">
           <NavigationContent />

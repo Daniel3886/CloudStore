@@ -34,52 +34,56 @@ public class AuthenticationService {
     private DomainValidationService domainValidationService;
 
     public String register(String username, String email, String password) {
-        String encodedPassword = passwordEncoder.encode(password);
-        String code = generateVerificationCode();
-
-        Optional<Users> existingUserByEmail = repo.findByEmail(email);
-        Optional<Users> existingUserByUsername = repo.findByUsername(username);
+        if (username == null || password == null || email == null) {
+            throw new RuntimeException("Username, email, and password are required.");
+        }
 
         if (!domainValidationService.isDomainValid(email)) {
             throw new IllegalArgumentException("Email domain is invalid.");
         }
 
-        if (existingUserByUsername.isPresent()) {
-            Users userWithThatUsername = existingUserByUsername.get();
-
-            if (existingUserByEmail.isEmpty() || !userWithThatUsername.getEmail().equals(existingUserByEmail.get().getEmail())) {
-                throw new RuntimeException("Username already in use");
-            }
-        }
-
         Optional<Users> existingUser = repo.findByEmail(email);
-        Users user = existingUser.orElseGet(Users::new);
-
         if (existingUser.isPresent()) {
-            if (user.isVerified()) throw new RuntimeException("Email already in use.");
-            validateEmailRateLimit(user);
+            if (existingUser.get().isVerified()) {
+                throw new RuntimeException("Email already in use.");
+            }
+            throw new RuntimeException("This email is pending verification. Please request a new code.");
         }
 
-        if (!existingUser.isPresent()) {
-            populateUserForRegistration(user, username, email, encodedPassword, code);
-        } else {
-            user.setVerificationCode(code);
-            user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));
-            user.setLastVerificationEmailSentAt(LocalDateTime.now());
-        }
+        String encodedPassword = passwordEncoder.encode(password);
+        String code = generateVerificationCode();
+
+        Users user = new Users();
+        populateUserForRegistration(user, username, email, encodedPassword, code);
         repo.save(user);
+
         emailService.sendVerificationEmail(email, code);
 
-        auditLogService.log(
-                "USER_REGISTER",
-                email,
-                null,
-                "User registered an account"
-        );
+        auditLogService.log("USER_REGISTER", email, null, "User registered an account");
 
-        return existingUser.isPresent()
-                ? "Verification code re-sent to your email."
-                : "User registered successfully. Verification code sent to email.";
+        return "User registered successfully. Verification code sent to email.";
+    }
+
+    public String resendVerificationCode(String email) {
+        Users user = repo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User with this email not found."));
+
+        if (user.isVerified()) {
+            throw new RuntimeException("User is already verified.");
+        }
+
+        validateEmailRateLimit(user);
+
+        String code = generateVerificationCode();
+        user.setVerificationCode(code);
+        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(1));
+        user.setLastVerificationEmailSentAt(LocalDateTime.now());
+
+        repo.save(user);
+
+        emailService.sendVerificationEmail(email, code);
+
+        return "Verification code re-sent to your email.";
     }
 
     public String verify(VerifyRequest request) {
@@ -257,4 +261,22 @@ public class AuthenticationService {
     public String generateRefreshToken(String email) {
         return jwtService.generateRefreshToken(email);
     }
+
+    public String deleteAccount(DeleteAccountRequest request) {
+        if (request.getEmail() == null || request.getPassword() == null) {
+            throw new RuntimeException("Email and password are required.");
+        }
+
+        Users user = repo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Invalid password.");
+        }
+
+        repo.delete(user);
+
+        return "Account deleted successfully.";
+    }
+
 }

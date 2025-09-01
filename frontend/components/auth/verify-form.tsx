@@ -91,7 +91,7 @@ export function VerifyForm() {
         verificationCode: formData.verificationCode,
       }
 
-      const response = await fetch("http://localhost:8080/verify", {
+      const response = await fetch("http://localhost:8080/auth/verify-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +135,7 @@ export function VerifyForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch("http://localhost:8080/resend-verification", {
+      const response = await fetch("http://localhost:8080/auth/resend-code", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

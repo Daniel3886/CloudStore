@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     @Autowired
-    private AuthenticationService userService;
+    private AuthenticationService authService;
 
     @Autowired
     private DomainValidationService dnsValidationService;
@@ -21,8 +21,19 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(
-                userService.register(
-                request.getUsername(), request.getEmail(), request.getPassword()));
+                authService.register(
+                        request.getUsername(),
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+    }
+
+    @PostMapping("/resend-code")
+    public ResponseEntity<String> resendCode(@RequestBody ResendCodeRequest request) {
+        return ResponseEntity.ok(
+                authService.resendVerificationCode(request.getEmail())
+        );
     }
 
     @GetMapping("/validate")
@@ -32,37 +43,42 @@ public class UserController {
 
     @PostMapping("/verify-token")
     public ResponseEntity<String> verify(@RequestBody VerifyRequest request) {
-        String token = userService.verify(request);
+        String token = authService.verify(request);
         return ResponseEntity.ok("Verification successful. Token: " + token);
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest request) {
-        TokenResponse response = userService.login(request);
+        TokenResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        return ResponseEntity.ok(userService.requestPasswordReset(request));
+        return ResponseEntity.ok(authService.requestPasswordReset(request));
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
-        return ResponseEntity.ok(userService.resetPassword(request));
+        return ResponseEntity.ok(authService.resetPassword(request));
     }
 
     @PostMapping("/verify-password")
     public ResponseEntity<String> verifyPasswordReset(@RequestBody VerifyRequest request) {
-        return ResponseEntity.ok(userService.verifyPasswordResetCode(request));
+        return ResponseEntity.ok(authService.verifyPasswordResetCode(request));
     }
 
     @PostMapping("/refresh-token")
     public ResponseEntity<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest request) {
-        String newAccessToken = userService.refreshAccessToken(request.getRefreshToken());
-        String email = userService.extractEmailFromRefreshToken(request.getRefreshToken());
-        String newRefreshToken = userService.generateRefreshToken(email);
+        String newAccessToken = authService.refreshAccessToken(request.getRefreshToken());
+        String email = authService.extractEmailFromRefreshToken(request.getRefreshToken());
+        String newRefreshToken = authService.generateRefreshToken(email);
         return ResponseEntity.ok(new TokenResponse(newAccessToken, newRefreshToken));
+    }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<String> deleteAccount(@RequestBody DeleteAccountRequest request) {
+        return ResponseEntity.ok(authService.deleteAccount(request));
     }
 
 }

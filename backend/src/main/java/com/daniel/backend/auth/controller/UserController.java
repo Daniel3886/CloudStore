@@ -104,4 +104,9 @@ public class UserController {
                 user.isVerified()
         ));
     }
+    @PostMapping("/change-password")
+    public ResponseEntity<ChangePasswordRequest> changePassword(@RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
+        return ResponseEntity.ok(new ChangePasswordRequest());
+    }
 }

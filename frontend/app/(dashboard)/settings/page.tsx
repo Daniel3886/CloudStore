@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,117 +15,172 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { toast } from "@/hooks/use-toast"
-import { User, Shield, Trash2, Loader2, Settings, AlertTriangle, Eye, EyeOff } from "lucide-react"
-import { useAuth } from "@/components/auth/auth-provider"
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
+import {
+  User,
+  Shield,
+  Trash2,
+  Loader2,
+  Settings,
+  AlertTriangle,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { useAuth } from "@/components/auth/auth-provider";
 
-
-async function makeAuthenticatedRequest(url: string, options: RequestInit = {}): Promise<Response> {
+async function makeAuthenticatedRequest(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
-  }
+  };
 
-  const accessToken = localStorage.getItem("accessToken")
-  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`
+  const accessToken = localStorage.getItem("accessToken");
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
-  return fetch(url, { ...options, headers, credentials: "include" })
+  return fetch(url, { ...options, headers });
 }
 
 export default function SettingsPage() {
-  const { user, loadUserProfile } = useAuth()
-  const [isLoading, setIsLoading] = useState(true)
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const { user, loadUserProfile } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
-  const [currentPassword, setCurrentPassword] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
 
-  const [deletePassword, setDeletePassword] = useState("")
-  const [showDeletePassword, setShowDeletePassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showDeletePassword, setShowDeletePassword] = useState(false);
 
   useEffect(() => {
     const init = async () => {
-      await loadUserProfile()
-      setIsLoading(false)
-    }
-    init()
-  }, [loadUserProfile])
+      await loadUserProfile();
+      setIsLoading(false);
+    };
+    init();
+  }, [loadUserProfile]);
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({ variant: "destructive", title: "Missing fields", description: "Please fill in all password fields" })
-      return
+      toast({
+        variant: "destructive",
+        title: "Missing fields",
+        description: "Fill in all password fields",
+      });
+      return;
     }
-
     if (newPassword !== confirmPassword) {
-      toast({ variant: "destructive", title: "Passwords don't match", description: "New password and confirmation must match" })
-      return
+      toast({
+        variant: "destructive",
+        title: "Passwords don't match",
+        description: "New password and confirmation must match",
+      });
+      return;
     }
-
     if (newPassword.length < 8) {
-      toast({ variant: "destructive", title: "Password too short", description: "Password must be at least 8 characters long" })
-      return
-    }
-
-    setIsChangingPassword(true)
-    try {
-      const response = await makeAuthenticatedRequest("http://localhost:8080/auth/change-password", {
-        method: "POST",
-        body: JSON.stringify({ currentPassword, newPassword }),
-      })
-
-      if (!response.ok) throw new Error(await response.text())
-
-      toast({ title: "Password changed", description: "Your password has been updated successfully" })
-      setCurrentPassword("")
-      setNewPassword("")
-      setConfirmPassword("")
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to change password", description: err.message || "Could not change your password" })
-    } finally {
-      setIsChangingPassword(false)
-    }
-  }
-
-  const handleDeleteAccount = async () => {
-    if (!deletePassword) {
-      toast({ variant: "destructive", title: "Password required", description: "Please enter your password to confirm account deletion" })
-      return
+      toast({
+        variant: "destructive",
+        title: "Password too short",
+        description: "Password must be at least 8 characters long",
+      });
+      return;
     }
 
     if (!user?.email) {
-      toast({ variant: "destructive", title: "Error", description: "Unable to determine user email" })
-      return
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "User email not found",
+      });
+      return;
     }
 
-    setIsDeletingAccount(true)
+    setIsChangingPassword(true);
     try {
-      const response = await makeAuthenticatedRequest("http://localhost:8080/auth/delete-account", {
-        method: "DELETE",
-        body: JSON.stringify({ email: user.email, password: deletePassword }),
-      })
+      const response = await makeAuthenticatedRequest(
+        "http://localhost:8080/auth/change-password",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            email: user.email,
+            currentPassword,
+            newPassword,
+          }),
+        }
+      );
 
-      if (!response.ok) throw new Error(await response.text())
+      if (!response.ok) throw new Error(await response.text());
 
-      toast({ title: "Account deleted", description: "Your account has been permanently deleted" })
-      localStorage.removeItem("accessToken")
-      localStorage.removeItem("refreshToken")
-      window.location.href = "/login"
+      toast({
+        title: "Password changed",
+        description: "Your password has been updated successfully",
+      });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Failed to delete account", description: err.message || "Could not delete your account" })
+      toast({
+        variant: "destructive",
+        title: "Failed to change password",
+        description: err.message || "Could not change your password",
+      });
     } finally {
-      setIsDeletingAccount(false)
-      setDeleteDialogOpen(false)
-      setDeletePassword("")
-      setShowDeletePassword(false)
+      setIsChangingPassword(false);
     }
-  }
+  };
 
-  if (isLoading) {
+  const handleDeleteAccount = async () => {
+    if (!deletePassword || !user?.email) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Enter your password to delete account",
+      });
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      const response = await makeAuthenticatedRequest(
+        "http://localhost:8080/auth/delete-account",
+        {
+          method: "DELETE",
+          body: JSON.stringify({ email: user.email, password: deletePassword }),
+        }
+      );
+      if (!response.ok) throw new Error(await response.text());
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted",
+      });
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      window.location.href = "/login";
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to delete account",
+        description: err.message || "Could not delete your account",
+      });
+    } finally {
+      setIsDeletingAccount(false);
+      setDeleteDialogOpen(false);
+      setDeletePassword("");
+      setShowDeletePassword(false);
+    }
+  };
+
+  if (isLoading)
     return (
       <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2">
@@ -133,8 +188,53 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Loading settings...</p>
         </div>
       </div>
-    )
-  }
+    );
+
+  const PasswordInput = ({
+    label,
+    value,
+    onChange,
+    show,
+    setShow,
+    id,
+  }: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    show: boolean;
+    setShow: (v: boolean) => void;
+    id: string;
+  }) => (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={label}
+          className="w-full pr-10"
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+          onClick={() => setShow(!show)}
+        >
+          {show ? (
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Eye className="h-4 w-4 text-muted-foreground" />
+          )}
+          <span className="sr-only">
+            {show ? "Hide password" : "Show password"}
+          </span>
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -151,15 +251,10 @@ export default function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Email Address</Label>
-            <Input value={user?.email || ""} disabled className="bg-muted" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Username</Label>
-            <Input value={user?.username || ""} disabled className="bg-muted" />
-          </div>
+          <Label>Email Address</Label>
+          <Input value={user?.email || ""} disabled className="bg-muted" />
+          <Label>Username</Label>
+          <Input value={user?.username || ""} disabled className="bg-muted" />
         </CardContent>
       </Card>
 
@@ -171,20 +266,48 @@ export default function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="current-password">Current Password</Label>
-            <Input id="current-password" type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Enter your current password" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-password">New Password</Label>
-            <Input id="new-password" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter your new password" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm New Password</Label>
-            <Input id="confirm-password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm your new password" />
-          </div>
-          <Button onClick={handlePasswordChange} disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}>
-            {isChangingPassword ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Changing Password...</> : "Change Password"}
+          <PasswordInput
+            id="current-password"
+            label="Current Password"
+            value={currentPassword}
+            onChange={setCurrentPassword}
+            show={showCurrentPassword}
+            setShow={setShowCurrentPassword}
+          />
+          <PasswordInput
+            id="new-password"
+            label="New Password"
+            value={newPassword}
+            onChange={setNewPassword}
+            show={showNewPassword}
+            setShow={setShowNewPassword}
+          />
+          <PasswordInput
+            id="confirm-password"
+            label="Confirm New Password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            show={showConfirmPassword}
+            setShow={setShowConfirmPassword}
+          />
+
+          <Button
+            onClick={handlePasswordChange}
+            disabled={
+              isChangingPassword ||
+              !currentPassword ||
+              !newPassword ||
+              !confirmPassword
+            }
+          >
+            {isChangingPassword ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Changing Password...
+              </>
+            ) : (
+              "Change Password"
+            )}
           </Button>
         </CardContent>
       </Card>
@@ -197,33 +320,53 @@ export default function SettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <h4 className="font-medium">Delete Account</h4>
-          <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data. This action cannot be undone.</p>
+          <p className="text-sm text-muted-foreground">
+            Permanently delete your account and all associated data. This action
+            cannot be undone.
+          </p>
           <Separator />
-          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="w-full">
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+            className="w-full"
+          >
             <Trash2 className="h-4 w-4 mr-2" /> Delete My Account
           </Button>
         </CardContent>
       </Card>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={open => { setDeleteDialogOpen(open); if (!open) { setDeletePassword(""); setShowDeletePassword(false); } }}>
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) {
+            setDeletePassword("");
+            setShowDeletePassword(false);
+          }
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-red-600"><AlertTriangle className="h-5 w-5" /> Delete Account</AlertDialogTitle>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" /> Delete Account
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              <p><strong>This action cannot be undone.</strong> Enter your password to confirm deletion:</p>
+              <p>
+                <strong>This action cannot be undone.</strong> Enter your
+                password to confirm deletion:
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="py-4">
-            <Label htmlFor="delete-password" className="sr-only">Password</Label>
-            <div className="relative">
-              <Input id="delete-password" type={showDeletePassword ? "text" : "password"} value={deletePassword} onChange={e => setDeletePassword(e.target.value)} placeholder="Enter your password to confirm" className="w-full pr-10" />
-              <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowDeletePassword(!showDeletePassword)}>
-                {showDeletePassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
-                <span className="sr-only">{showDeletePassword ? "Hide password" : "Show password"}</span>
-              </Button>
-            </div>
+            <PasswordInput
+              id="delete-password"
+              label="Password"
+              value={deletePassword}
+              onChange={setDeletePassword}
+              show={showDeletePassword}
+              setShow={setShowDeletePassword}
+            />
           </div>
 
           <AlertDialogFooter>

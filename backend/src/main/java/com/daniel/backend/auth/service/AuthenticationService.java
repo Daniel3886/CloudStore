@@ -279,4 +279,29 @@ public class AuthenticationService {
         return "Account deleted successfully.";
     }
 
+
+    public void changePassword(ChangePasswordRequest request) {
+        if (request.getEmail() == null || request.getCurrentPassword() == null || request.getNewPassword() == null) {
+            throw new RuntimeException("Email, current password, and new password are required.");
+        }
+
+        Users user = repo.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect.");
+        }
+
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("New password must be different from current password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        repo.save(user);
+
+        auditLogService.log("PASSWORD_CHANGE", user.getEmail(), null, "User changed password");
+
+    }
+
+
 }

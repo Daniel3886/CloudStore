@@ -1,10 +1,14 @@
 package com.daniel.backend.auth.controller;
 
 import com.daniel.backend.auth.dto.*;
+import com.daniel.backend.auth.entity.Users;
+import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.auth.service.AuthenticationService;
 import com.daniel.backend.auth.service.DomainValidationService;
+import com.daniel.backend.auth.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -17,6 +21,12 @@ public class UserController {
 
     @Autowired
     private DomainValidationService dnsValidationService;
+
+    @Autowired
+    private UserRepo repo;
+
+    @Autowired
+    private JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
@@ -81,4 +91,17 @@ public class UserController {
         return ResponseEntity.ok(authService.deleteAccount(request));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getProfile(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = jwtService.extractEmail(token); 
+        Users user = repo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(new UserProfileResponse(
+                user.getUsername(),
+                user.getEmail(),
+                user.isVerified()
+        ));
+    }
 }

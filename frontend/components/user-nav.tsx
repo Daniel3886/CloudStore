@@ -18,8 +18,8 @@ import { useAuth } from "@/components/auth/auth-provider"
 export function UserNav() {
   const { user, logout } = useAuth()
 
-  const getInitials = (email: string) => {
-    return email.substring(0, 2).toUpperCase()
+  const getInitials = (email: string, name: string) => {
+    return email.substring(0, 2).toUpperCase() + name.charAt(0).toUpperCase()
   }
 
   return (
@@ -28,7 +28,7 @@ export function UserNav() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
-            <AvatarFallback>{user ? getInitials(user.email) : "U"}</AvatarFallback>
+            <AvatarFallback>{user ? getInitials(user.username || "", user.email) : "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>

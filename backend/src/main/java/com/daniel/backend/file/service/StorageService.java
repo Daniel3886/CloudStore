@@ -236,24 +236,12 @@ public class StorageService {
         return convertedFile;
     }
 
-    public List<S3ObjectDto> listObjects() {
-        List<Files> dbFiles = fileRepo.findAll().stream()
-                .filter(file -> file.getDeletedAt() == null)
-                .toList();
+    public List<S3ObjectDto> listObjects(String ownerEmail) {
+        List<Files> dbFiles = fileRepo.findByOwnerEmailAndDeletedAtIsNull(ownerEmail);
 
-
-        ListObjectsV2Request request = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .build();
-        List<S3Object> s3Objects = s3Client.listObjectsV2(request).contents();
-
-        Map<String, S3Object> s3ObjectMap = s3Objects.stream()
-                .collect(Collectors.toMap(S3Object::key, obj -> obj));
-
-        List<S3ObjectDto> dtos = new ArrayList<>();
-
-        return mapDbFilesToDtos(dbFiles, s3ObjectMap, dtos);
+        return getS3ObjectDtos(dbFiles);
     }
+
 
     private List<S3ObjectDto> mapDbFilesToDtos(List<Files> dbFiles, Map<String, S3Object> s3ObjectMap, List<S3ObjectDto> dtos) {
         for (Files dbFile : dbFiles) {
@@ -359,22 +347,21 @@ public class StorageService {
         return "File permanently deleted: " + fileName;
     }
 
-    public List<S3ObjectDto> listTrashedFiles() {
-        List<Files> trashedFiles = fileRepo.findAll().stream()
-                .filter(file -> file.getDeletedAt() != null)
-                .toList();
+    public List<S3ObjectDto> listTrashedFiles(String ownerEmail) {
+        List<Files> trashedFiles = fileRepo.findByOwnerEmailAndDeletedAtIsNotNull(ownerEmail);
 
-        List<S3ObjectDto> dtos = new ArrayList<>();
+        return getS3ObjectDtos(trashedFiles);
+    }
 
+    private List<S3ObjectDto> getS3ObjectDtos(List<Files> trashedFiles) {
         ListObjectsV2Request request = ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
-
         List<S3Object> s3Objects = s3Client.listObjectsV2(request).contents();
         Map<String, S3Object> s3ObjectMap = s3Objects.stream()
                 .collect(Collectors.toMap(S3Object::key, obj -> obj));
 
-        return mapDbFilesToDtos(trashedFiles, s3ObjectMap, dtos);
+        return mapDbFilesToDtos(trashedFiles, s3ObjectMap, new ArrayList<>());
     }
 
 }

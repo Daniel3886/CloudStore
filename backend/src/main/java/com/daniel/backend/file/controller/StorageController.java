@@ -8,6 +8,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,9 +84,10 @@ public class StorageController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<S3ObjectDto>> listObjects() {
+    public ResponseEntity<List<S3ObjectDto>> listObjects(Authentication authentication) {
         try {
-            List<S3ObjectDto> files = service.listObjects();
+            String email = authentication.getName(); 
+            List<S3ObjectDto> files = service.listObjects(email);
             return ResponseEntity.ok(files);
         } catch (Exception e) {
             e.printStackTrace();
@@ -94,9 +96,10 @@ public class StorageController {
     }
 
     @GetMapping("/trash")
-    public ResponseEntity<List<S3ObjectDto>> listTrashFiles() {
+    public ResponseEntity<List<S3ObjectDto>> listTrashFiles(Authentication authentication) {
         try {
-            List<S3ObjectDto> trashFiles = service.listTrashedFiles();
+            String email = authentication.getName();
+            List<S3ObjectDto> trashFiles = service.listTrashedFiles(email);
             return ResponseEntity.ok(trashFiles);
         } catch (Exception e) {
             e.printStackTrace();

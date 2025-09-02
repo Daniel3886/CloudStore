@@ -8,7 +8,6 @@ import com.daniel.backend.auth.service.DomainValidationService;
 import com.daniel.backend.auth.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -104,6 +103,7 @@ public class UserController {
                 user.isVerified()
         ));
     }
+    
     @PostMapping("/change-password")
     public ResponseEntity<ChangePasswordRequest> changePassword(@RequestBody ChangePasswordRequest request) {
         authService.changePassword(request);

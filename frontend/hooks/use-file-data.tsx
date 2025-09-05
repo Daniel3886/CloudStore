@@ -14,19 +14,8 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   const [initialLoading, setInitialLoading] = useState(true) 
   const [backgroundLoading, setBackgroundLoading] = useState(false) 
 
-  const [virtualFolders, setVirtualFolders] = useState<string[]>([])
   const cacheRef = useRef<Record<string, FileItem[]>>({})
   const fetchTimeoutRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    const saved = localStorage.getItem("virtualFolders")
-    setVirtualFolders(saved ? JSON.parse(saved) : [])
-  }, [])
-
-  const saveVirtualFolders = useCallback((folders: string[]) => {
-    setVirtualFolders(folders)
-    localStorage.setItem("virtualFolders", JSON.stringify(folders))
-  }, [])
 
   const getActualFileName = useCallback((displayName: string): string => {
     if (!displayName) return "Unknown File"
@@ -38,7 +27,6 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   const getFileTypeFromName = useCallback((fileName: string): string => {
     const extension = fileName.split(".").pop()?.toLowerCase()
     if (!extension) return "file"
-
     const extGroups: Record<string, string[]> = {
       image: ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp"],
       document: ["doc", "docx", "txt", "rtf", "odt"],
@@ -46,7 +34,6 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       audio: ["mp3", "wav", "flac", "aac", "ogg", "wma"],
       archive: ["zip", "rar", "7z", "tar", "gz", "bz2"],
     }
-
     if (extension === "pdf") return "pdf"
     for (const [, exts] of Object.entries(extGroups)) {
       if (exts.includes(extension)) return Object.keys(extGroups).find(k => extGroups[k].includes(extension)) || "file"
@@ -60,14 +47,13 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       const parts = folderPath.split("/")
       const folderName = parts.pop() || folderPath
       const parentPath = parts.join("/")
-
       return {
         id: -(base + index),
         name: folderName,
         s3Key: "",
         displayName: folderName,
         type: "folder",
-        size: undefined, 
+        size: undefined,
         modified: String(Date.now()),
         owner: "You",
         path: parentPath,
@@ -84,63 +70,24 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
         return
       }
 
-      if (isBackground) {
-        setBackgroundLoading(true)
-      } else {
-        setInitialLoading(true)
-      }
+      if (isBackground) setBackgroundLoading(true)
+      else setInitialLoading(true)
 
       try {
         const endpoint = type === "trash" ? "http://localhost:8080/file/trash" : "http://localhost:8080/file/list"
         const response = await makeAuthenticatedRequest(endpoint, { method: "GET" })
 
         if (!response.ok) {
-          if (response.status === 404) {
-            const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
-            cacheRef.current[type] = folderItems
-            setFiles(folderItems)
-            return
-          }
           const errText = await response.text().catch(() => "")
           throw new Error(errText || `Failed to fetch files: ${response.status}`)
         }
 
-        const data = await response.json().catch(() => null)
-        if (!Array.isArray(data)) {
-          const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
-          cacheRef.current[type] = folderItems
-          setFiles(folderItems)
-          return
-        }
-
-        const transformedFiles: FileItem[] = data.map((file: any) => {
+        const data = await response.json().catch(() => [])
+        const transformedFiles: FileItem[] = (Array.isArray(data) ? data : []).map((file: any) => {
           const rawId = file.id ?? file.fileId
-          let parsedId: number
-          if (typeof rawId === "number") {
-            parsedId = rawId
-          } else if (rawId != null) {
-            const n = Number(rawId)
-            parsedId = Number.isFinite(n) ? n : Date.now()
-          } else {
-            parsedId = Date.now()
-          }
-
-          let parsedSize: number | undefined = undefined
-          if (file.size != null) {
-            const s = typeof file.size === "number" ? file.size : Number(file.size)
-            parsedSize = Number.isFinite(s) ? s : undefined
-          }
-
-          let parsedModified = Date.now()
-          if (file.lastModified != null) {
-            if (typeof file.lastModified === "number") {
-              parsedModified = file.lastModified
-            } else {
-              const parsed = Date.parse(String(file.lastModified))
-              if (!isNaN(parsed)) parsedModified = parsed
-            }
-          }
-
+          const parsedId = typeof rawId === "number" ? rawId : Number(rawId) || Date.now()
+          const parsedSize = Number(file.size) || undefined
+          const parsedModified = !isNaN(Date.parse(file.lastModified)) ? Date.parse(file.lastModified) : Date.now()
           const displayName = file.displayName || file.display_name || "Unknown File"
           const s3Key = file.key || file.s3Key || ""
           const actualFileName = getActualFileName(displayName)
@@ -161,63 +108,33 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
           } as FileItem
         })
 
-        const folderItems: FileItem[] = type !== "trash" ? buildFolderItems(virtualFolders) : []
-        const allFiles = [...folderItems, ...transformedFiles]
-
-        cacheRef.current[type] = allFiles
-        setFiles(allFiles)
+        cacheRef.current[type] = transformedFiles
+        setFiles(transformedFiles)
       } catch (error: any) {
         console.error("Error fetching files:", error)
-        if (!isBackground) {
-          toast({
-            variant: "destructive",
-            title: "Failed to load files",
-            description: error?.message || "Could not load files from server",
-          })
-        }
-        if (!cacheRef.current[type]) {
-          const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
-          cacheRef.current[type] = folderItems
-          setFiles(folderItems)
-        }
+        toast({
+          variant: "destructive",
+          title: "Failed to load files",
+          description: error?.message || "Could not load files from server",
+        })
+        if (!cacheRef.current[type]) setFiles([])
       } finally {
-        if (isBackground) {
-          setBackgroundLoading(false)
-        } else {
-          setInitialLoading(false)
-        }
+        if (isBackground) setBackgroundLoading(false)
+        else setInitialLoading(false)
       }
     },
-    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, type, virtualFolders, buildFolderItems],
+    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, type],
   )
 
   useEffect(() => {
     fetchFiles()
-  }, [type]) 
-
-  useEffect(() => {
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current)
-      fetchTimeoutRef.current = null
-    }
-    fetchTimeoutRef.current = window.setTimeout(() => {
-      fetchFiles(true, true) 
-    }, 500)
-
-    return () => {
-      if (fetchTimeoutRef.current) {
-        clearTimeout(fetchTimeoutRef.current)
-        fetchTimeoutRef.current = null
-      }
-    }
-  }, [virtualFolders]) 
+  }, [type])
 
   const addFolder = useCallback(
     (folderPath: string) => {
       const parts = folderPath.split("/")
       const folderName = parts.pop() || folderPath
       const parentPath = parts.join("/")
-
       const newFolder: FileItem = {
         id: -Date.now(),
         name: folderName,
@@ -230,50 +147,40 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
         path: parentPath,
         isFolder: true,
       }
-
       setFiles(prev => {
         const next = [...prev, newFolder]
         cacheRef.current[type] = next
         return next
       })
-
       fetchFiles(true, true)
     },
     [fetchFiles, type],
   )
 
   const getFilteredFiles = useCallback(
-    (currentPath: string) => {
-      return files.filter((file) => {
-        let typeMatch = true
-        if (type === "shared") typeMatch = file.owner !== "You"
-        if (type === "recent") {
-          const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
-          const modifiedDate = Number(file.modified ?? 0)
-          typeMatch = modifiedDate > oneWeekAgo
-        }
-        return typeMatch && file.path === currentPath
-      })
-    },
+    (currentPath: string) => files.filter(file => {
+      let typeMatch = true
+      if (type === "shared") typeMatch = file.owner !== "You"
+      if (type === "recent") {
+        const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+        typeMatch = Number(file.modified ?? 0) > oneWeekAgo
+      }
+      return typeMatch && file.path === currentPath
+    }),
     [files, type],
   )
 
   const getFilesInFolder = useCallback(
-    (folderPath: string) =>
-      files.filter((file) => !file.isFolder && (file.displayName ?? "").startsWith(folderPath + "/")),
+    (folderPath: string) => files.filter(file => !file.isFolder && (file.displayName ?? "").startsWith(folderPath + "/")),
     [files],
   )
 
-  const refreshFiles = useCallback(() => {
-    fetchFiles(true, false) 
-  }, [fetchFiles])
+  const refreshFiles = useCallback(() => fetchFiles(true, false), [fetchFiles])
 
   return {
     files,
     initialLoading,
     backgroundLoading,
-    virtualFolders,
-    saveVirtualFolders,
     addFolder,
     getFilteredFiles,
     getFilesInFolder,

@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -18,6 +17,7 @@ import software.amazon.awssdk.services.s3.model.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -93,8 +93,8 @@ public class StorageService {
         return "File uploaded successfully: " + s3Key;
     }
 
-    public byte[] downloadFile(String fileName) {
-        if(!doesFileExist(fileName)) {
+    public InputStream downloadFile(String fileName) {
+        if (!doesFileExist(fileName)) {
             throw new RuntimeException("File not found: " + fileName);
         }
 
@@ -103,104 +103,8 @@ public class StorageService {
                 .key(fileName)
                 .build();
 
-        ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(getObjectRequest);
-        return objectBytes.asByteArray();
+        return s3Client.getObject(getObjectRequest);
     }
-
-    public void renameFolder(String oldFolderPath, String newFolderPath) {
-        if (!oldFolderPath.endsWith("/")) {
-            oldFolderPath += "/";
-        }
-        if (!newFolderPath.endsWith("/")) {
-            newFolderPath += "/";
-        }
-
-        String finalOldFolderPath = oldFolderPath;
-        List<Files> filesInFolder = fileRepo.findAll().stream()
-                .filter(file -> file.getDisplayName().startsWith(finalOldFolderPath))
-                .toList();
-
-        for (Files file : filesInFolder) {
-            try {
-                String oldS3Key = file.getS3Key();
-                String oldDisplayName = file.getDisplayName();
-
-                String newDisplayName = oldDisplayName.replace(oldFolderPath, newFolderPath);
-                String newS3Key = oldS3Key.replace(oldFolderPath, newFolderPath);
-
-                CopyObjectRequest copyRequest = CopyObjectRequest.builder()
-                        .sourceBucket(bucketName)
-                        .sourceKey(oldS3Key)
-                        .destinationBucket(bucketName)
-                        .destinationKey(newS3Key)
-                        .build();
-
-                s3Client.copyObject(copyRequest);
-
-                DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(oldS3Key)
-                        .build();
-
-                s3Client.deleteObject(deleteRequest);
-
-                file.setS3Key(newS3Key);
-                file.setDisplayName(newDisplayName);
-                fileRepo.save(file);
-
-                auditLogService.log(
-                        "FILE_MOVE",
-                        file.getOwner().getEmail(),
-                        null,
-                        "Moved file from '" + oldS3Key + "' to '" + newS3Key + "'"
-                );
-
-            } catch (Exception e) {
-                System.err.println("Failed to move file: " + file.getS3Key() + " - " + e.getMessage());
-                throw new RuntimeException("Failed to rename folder: " + e.getMessage());
-            }
-        }
-    }
-
-    public void deleteFolder(String folderPath) {
-        if (!folderPath.endsWith("/")) {
-            folderPath += "/";
-        }
-
-        String finalFolderPath = folderPath;
-        List<Files> filesInFolder = fileRepo.findAll().stream()
-                .filter(file -> file.getDisplayName().startsWith(finalFolderPath))
-                .toList();
-
-        for (Files file : filesInFolder) {
-            try {
-                String s3Key = file.getS3Key();
-                String email = file.getOwner().getEmail();
-
-                if (doesFileExist(s3Key)) {
-                    DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(s3Key)
-                            .build();
-
-                    s3Client.deleteObject(deleteRequest);
-                }
-
-                auditLogService.log(
-                        "FILE_DELETE",
-                        email,
-                        null,
-                        "Deleted file as part of folder removal: " + s3Key
-                );
-
-                fileRepo.delete(file);
-
-            } catch (Exception e) {
-                System.err.println("Failed to delete file: " + file.getS3Key() + " - " + e.getMessage());
-            }
-        }
-    }
-
     private boolean doesFileExist(String fileName) {
         try {
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -237,7 +141,7 @@ public class StorageService {
     }
 
     public List<S3ObjectDto> listObjects(String ownerEmail) {
-        List<Files> dbFiles = fileRepo.findByOwnerEmailAndDeletedAtIsNull(ownerEmail);
+        List<Files> dbFiles = fileRepo.findByOwner_EmailAndDeletedAtIsNull(ownerEmail);
 
         return getS3ObjectDtos(dbFiles);
     }
@@ -348,7 +252,7 @@ public class StorageService {
     }
 
     public List<S3ObjectDto> listTrashedFiles(String ownerEmail) {
-        List<Files> trashedFiles = fileRepo.findByOwnerEmailAndDeletedAtIsNotNull(ownerEmail);
+        List<Files> trashedFiles = fileRepo.findByOwner_EmailAndDeletedAtIsNotNull(ownerEmail);
 
         return getS3ObjectDtos(trashedFiles);
     }

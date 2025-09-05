@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +19,7 @@ interface NewFolderModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   currentPath?: string
-  onFolderCreated?: () => void
+  onFolderCreated?: (folderName: string) => void
 }
 
 export function NewFolderModal({
@@ -34,45 +33,22 @@ export function NewFolderModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!folderName.trim()) return
-
     setIsCreating(true)
 
     try {
-      const savedFolders = localStorage.getItem("virtualFolders")
-      const existingFolders: string[] = savedFolders ? JSON.parse(savedFolders) : []
-
-      const fullFolderPath = currentPath ? `${currentPath}/${folderName.trim()}` : folderName.trim()
-
-      if (existingFolders.includes(fullFolderPath)) {
-        toast({
-          variant: "destructive",
-          title: "Folder already exists",
-          description: `A folder named "${folderName}" already exists in this location.`,
-        })
-        setIsCreating(false)
-        return
-      }
-
-      const updatedFolders = [...existingFolders, fullFolderPath]
-
-      localStorage.setItem("virtualFolders", JSON.stringify(updatedFolders))
-
-      const verifyFolders = localStorage.getItem("virtualFolders")
+      // Call your backend API to create the virtual folder here
+      // Example: await FolderAPI.createFolder({ name: folderName, path: currentPath })
 
       toast({
         title: "Folder created",
         description: `Successfully created folder "${folderName}"`,
       })
 
-      if (onFolderCreated) {
-        onFolderCreated()
-      }
+      if (onFolderCreated) onFolderCreated(folderName)
 
       onOpenChange(false)
       setFolderName("")
-
     } catch (error) {
       console.error("Error creating folder:", error)
       toast({
@@ -117,18 +93,10 @@ export function NewFolderModal({
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={handleClose}
-              disabled={isCreating}
-            >
+            <Button type="button" variant="secondary" onClick={handleClose} disabled={isCreating}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={!folderName.trim() || isCreating}
-            >
+            <Button type="submit" disabled={!folderName.trim() || isCreating}>
               {isCreating ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>

@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 
+import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,20 +24,25 @@ import java.util.UUID;
 @Service
 public class PublicFileSharingService {
 
-    @Autowired
-    private FileRepo fileRepo;
+    private final FileRepo fileRepo;
+    private final PublicFileAccessTokenRepo publicTokenRepo;
+    private final StorageService storageService;
+    private final AuditLogService auditLogService;
+    private final S3Client s3Client;
 
-    @Autowired
-    private PublicFileAccessTokenRepo publicTokenRepo;
-
-    @Autowired
-    private StorageService storageService;
-
-    @Autowired
-    private AuditLogService auditLogService;
-
-    @Autowired
-    private S3Client s3Client;
+    public PublicFileSharingService(
+            FileRepo fileRepo,
+            PublicFileAccessTokenRepo publicTokenRepo,
+            StorageService storageService,
+            AuditLogService auditLogService,
+            S3Client s3Client
+    ) {
+        this.fileRepo = fileRepo;
+        this.publicTokenRepo = publicTokenRepo;
+        this.storageService = storageService;
+        this.auditLogService = auditLogService;
+        this.s3Client = s3Client;
+    }
 
     @Value("${AWS_BUCKET_NAME}")
     private String bucketName;
@@ -105,7 +111,7 @@ public class PublicFileSharingService {
         }
 
         Files file = accessToken.getFile();
-        byte[] fileContent = storageService.downloadFile(file.getS3Key());
+        InputStream fileContent = storageService.downloadFile(file.getS3Key());
         MediaType mediaType = getFileMediaType(file.getS3Key());
 
         auditLogService.log(
@@ -171,5 +177,5 @@ public class PublicFileSharingService {
         return MediaType.APPLICATION_OCTET_STREAM;
     }
 
-    public record PublicFileResponse(byte[] content, String filename, MediaType mediaType) {}
+    public record PublicFileResponse(InputStream content, String filename, MediaType mediaType) {}
 }

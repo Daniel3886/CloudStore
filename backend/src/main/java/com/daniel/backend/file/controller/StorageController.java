@@ -3,6 +3,8 @@ package com.daniel.backend.file.controller;
 import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
@@ -12,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -28,9 +31,8 @@ public class StorageController {
     }
 
     @GetMapping("/download")
-    public ResponseEntity<ByteArrayResource> downloadFile(@RequestParam String s3Key) {
-        try {
-            byte[] data = service.downloadFile(s3Key);
+    public void downloadFile(@RequestParam String s3Key, HttpServletResponse response) {
+        try (InputStream inputStream = service.downloadFile(s3Key)) {
             String displayName = service.getDisplayName(s3Key);
 
             String downloadFileName = displayName;
@@ -38,17 +40,18 @@ public class StorageController {
                 downloadFileName = displayName.substring(displayName.lastIndexOf("/") + 1);
             }
 
-            return ResponseEntity
-                    .ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadFileName + "\"")
-                    .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
-                    .body(new ByteArrayResource(data));
+            response.setContentType("application/octet-stream");
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + downloadFileName + "\"");
+
+            IOUtils.copy(inputStream, response.getOutputStream());
+
+            response.flushBuffer();
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
+            throw new RuntimeException("Failed to download file: " + s3Key, e);
         }
     }
+
 
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteFile(@RequestParam String fileName) {
@@ -86,7 +89,7 @@ public class StorageController {
     @GetMapping("/list")
     public ResponseEntity<List<S3ObjectDto>> listObjects(Authentication authentication) {
         try {
-            String email = authentication.getName(); 
+            String email = authentication.getName();
             List<S3ObjectDto> files = service.listObjects(email);
             return ResponseEntity.ok(files);
         } catch (Exception e) {
@@ -119,33 +122,6 @@ public class StorageController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Rename failed: " + e.getMessage());
-        }
-    }
-
-    @PatchMapping("/rename-folder")
-    public ResponseEntity<String> renameFolder(
-            @RequestParam String oldFolderPath,
-            @RequestParam String newFolderPath
-    ) {
-        try {
-            service.renameFolder(oldFolderPath, newFolderPath);
-            return ResponseEntity.ok("Folder renamed successfully");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Folder rename failed: " + e.getMessage());
-        }
-    }
-
-    @DeleteMapping("/delete-folder")
-    public ResponseEntity<String> deleteFolder(@RequestParam String folderPath) {
-        try {
-            service.deleteFolder(folderPath);
-            return ResponseEntity.ok("Folder deleted successfully");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Folder delete failed: " + e.getMessage());
         }
     }
 }

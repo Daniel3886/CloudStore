@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class PublicFileSharingController {
 
 
     @GetMapping("/access/{token}")
-    public ResponseEntity<byte[]> downloadPublicFile(
+    public ResponseEntity<InputStream> downloadPublicFile(
             @PathVariable String token,
             @RequestParam(name = "preview", required = false) Boolean preview) {
         try {
@@ -57,7 +58,6 @@ public class PublicFileSharingController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-
 
     @DeleteMapping("/access/{token}")
     public ResponseEntity<?> revokePublicLink(

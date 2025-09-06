@@ -2,6 +2,8 @@ package com.daniel.backend.file.service;
 
 import com.daniel.backend.auth.entity.Users;
 import com.daniel.backend.auth.repository.UserRepo;
+import com.daniel.backend.file.dto.FileDto;
+import com.daniel.backend.file.dto.VirtualFolderDto;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.entity.VirtualFolder;
 import com.daniel.backend.file.repo.FileRepo;
@@ -47,9 +49,6 @@ public class VirtualFolderService {
     }
 
     public VirtualFolder renameFolder(Long id, String newName, String ownerEmail) {
-
-        Users owner = userRepo.findByEmail(ownerEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (newName.isBlank()) throw new IllegalArgumentException("New name cannot be empty");
         if (newName.length() > 100) throw new IllegalArgumentException("Folder name too long");
@@ -113,11 +112,27 @@ public class VirtualFolderService {
     }
 
 
-    public List<VirtualFolder> listUserFolders(String ownerEmail) {
+    public List<VirtualFolderDto> listUserFolders(String ownerEmail) {
         Users owner = userRepo.findByEmail(ownerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return virtualFolderRepo.findByOwner(owner);
+        return virtualFolderRepo.findByOwner(owner).stream()
+                .map(folder -> new VirtualFolderDto(
+                        folder.getFolderId(),
+                        folder.getName(),
+                        folder.getCreatedAt(),
+                        folder.getFiles() == null ? List.of() :
+                                folder.getFiles().stream()
+                                        .map(file -> new FileDto(
+                                                file.getId(),
+                                                file.getDisplayName(),
+                                                file.getS3Key(),
+                                                file.getSize()
+
+                                        ))
+                                        .toList()
+                ))
+                .toList();
     }
 
     public void downloadFolderAsZip(Long folderId, HttpServletResponse response) {

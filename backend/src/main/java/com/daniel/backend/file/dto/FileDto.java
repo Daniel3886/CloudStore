@@ -4,16 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class S3ObjectDto {
+public class FileDto {
     private Long id;
-    private String s3Key;
-    private Long size;
-    private Instant lastModified;
     private String displayName;
+    private String s3Key;
+    private long size;
 }
-

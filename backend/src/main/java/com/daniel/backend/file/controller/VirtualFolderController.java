@@ -1,5 +1,6 @@
 package com.daniel.backend.file.controller;
 
+import com.daniel.backend.file.dto.VirtualFolderDto;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.entity.VirtualFolder;
 import com.daniel.backend.file.service.VirtualFolderService;
@@ -49,9 +50,9 @@ public class VirtualFolderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<VirtualFolder>> listUserFolders(Authentication auth) {
+    public ResponseEntity<List<VirtualFolderDto>> listUserFolders(Authentication auth) {
         String email = auth.getName();
-        List<VirtualFolder> folders = virtualFolderService.listUserFolders(email);
+        List<VirtualFolderDto> folders = virtualFolderService.listUserFolders(email);
         return ResponseEntity.ok(folders);
     }
 

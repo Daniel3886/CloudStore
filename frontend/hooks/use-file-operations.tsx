@@ -332,12 +332,9 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        const response = await makeAuthenticatedRequest(
-          `http://localhost:8080/file/${encodeURIComponent(file.s3Key)}/restore`,
-          {
-            method: "POST",
-          },
-        )
+        const url = new URL("http://localhost:8080/file/restore")
+        url.searchParams.append("s3Key", file.s3Key as string)
+        const response = await makeAuthenticatedRequest(url.toString(), { method: "POST" })
 
         if (response.ok) {
           toast({
@@ -347,14 +344,14 @@ export function useFileOperations() {
           })
           onSuccess()
         } else {
-          const errorText = await response.text()
+          const errorText = await response.text().catch(() => "")
           throw new Error(errorText || `Restore failed: ${response.status}`)
         }
       } catch (error: any) {
         toast({
           variant: "destructive",
           title: "Restore failed",
-          description: error.message || "Failed to restore file.",
+          description: error?.message || "Failed to restore file.",
         })
       } finally {
         setFileLoading(file.id, false)

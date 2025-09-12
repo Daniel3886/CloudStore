@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "@/hooks/use-toast"
 import { FileItem } from "@/lib/file"
+import { getVirtualFolders, setVirtualFolders as saveVirtualFoldersToStorage } from "@/lib/auth"
 
 interface UseFileDataProps {
   type?: "all" | "shared" | "recent" | "trash"
@@ -19,13 +20,13 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
   const fetchTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
-    const saved = localStorage.getItem("virtualFolders")
-    setVirtualFolders(saved ? JSON.parse(saved) : [])
+    const saved = getVirtualFolders()
+    setVirtualFolders(saved)
   }, [])
 
   const saveVirtualFolders = useCallback((folders: string[]) => {
     setVirtualFolders(folders)
-    localStorage.setItem("virtualFolders", JSON.stringify(folders))
+    saveVirtualFoldersToStorage(folders)
   }, [])
 
   const getActualFileName = useCallback((displayName: string): string => {
@@ -252,6 +253,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
           const modifiedDate = Number(file.modified ?? 0)
           typeMatch = modifiedDate > oneWeekAgo
         }
+        if (type === "trash") return typeMatch
         return typeMatch && file.path === currentPath
       })
     },

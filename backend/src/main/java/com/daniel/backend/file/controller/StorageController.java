@@ -83,6 +83,17 @@ public class StorageController {
         }
     }
 
+    @PostMapping("/restore")
+    public ResponseEntity<String> restoreFileByQuery(@RequestParam String s3Key) {
+        try {
+            return new ResponseEntity<>(service.restoreFile(s3Key), HttpStatus.OK);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Restore failed: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/list")
     public ResponseEntity<List<S3ObjectDto>> listObjects(Authentication authentication) {
         try {

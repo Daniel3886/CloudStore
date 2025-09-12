@@ -34,6 +34,29 @@ export function clearTokens(): void {
   sessionStorage.removeItem("pendingVerificationEmail")
 }
 
+export function getUserEmail(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem("userEmail")
+}
+
+export function getVirtualFoldersKey(): string {
+  const userEmail = getUserEmail()
+  return userEmail ? `virtualFolders_${userEmail}` : "virtualFolders"
+}
+
+export function getVirtualFolders(): string[] {
+  if (typeof window === "undefined") return []
+  const key = getVirtualFoldersKey()
+  const saved = localStorage.getItem(key)
+  return saved ? JSON.parse(saved) : []
+}
+
+export function setVirtualFolders(folders: string[]): void {
+  if (typeof window === "undefined") return
+  const key = getVirtualFoldersKey()
+  localStorage.setItem(key, JSON.stringify(folders))
+}
+
 export function isAuthenticated(): boolean {
   return !!getAccessToken()
 }

@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import { getVirtualFolders, setVirtualFolders } from "@/lib/auth"
 
 interface NewFolderModalProps {
   open: boolean
@@ -35,21 +36,31 @@ export function NewFolderModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!folderName.trim()) return
+    const trimmedName = folderName.trim()
+    if (!trimmedName) return
+
+    const invalidChars = /[\/\\:\?\*"<>\|]/
+    if (invalidChars.test(trimmedName)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid folder name",
+        description: "Folder names cannot contain / \\ : ? * \" < > |",
+      })
+      return
+    }
 
     setIsCreating(true)
 
     try {
-      const savedFolders = localStorage.getItem("virtualFolders")
-      const existingFolders: string[] = savedFolders ? JSON.parse(savedFolders) : []
+      const existingFolders = getVirtualFolders()
 
-      const fullFolderPath = currentPath ? `${currentPath}/${folderName.trim()}` : folderName.trim()
+      const fullFolderPath = currentPath ? `${currentPath}/${trimmedName}` : trimmedName
 
       if (existingFolders.includes(fullFolderPath)) {
         toast({
           variant: "destructive",
           title: "Folder already exists",
-          description: `A folder named "${folderName}" already exists in this location.`,
+          description: `A folder named "${trimmedName}" already exists in this location.`,
         })
         setIsCreating(false)
         return
@@ -57,13 +68,11 @@ export function NewFolderModal({
 
       const updatedFolders = [...existingFolders, fullFolderPath]
 
-      localStorage.setItem("virtualFolders", JSON.stringify(updatedFolders))
-
-      const verifyFolders = localStorage.getItem("virtualFolders")
+      setVirtualFolders(updatedFolders)
 
       toast({
         title: "Folder created",
-        description: `Successfully created folder "${folderName}"`,
+        description: `Successfully created folder "${trimmedName}"`,
       })
 
       if (onFolderCreated) {

@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
+import { apiUrl } from "@/lib/config";
 import {
   User,
   Shield,
@@ -107,7 +108,7 @@ export default function SettingsPage() {
     setIsChangingPassword(true);
     try {
       const response = await makeAuthenticatedRequest(
-        "http://localhost:8080/auth/change-password",
+        apiUrl("/auth/change-password"),
         {
           method: "POST",
           body: JSON.stringify({
@@ -151,7 +152,7 @@ export default function SettingsPage() {
     setIsDeletingAccount(true);
     try {
       const response = await makeAuthenticatedRequest(
-        "http://localhost:8080/auth/delete-account",
+        apiUrl("/auth/delete-account"),
         {
           method: "DELETE",
           body: JSON.stringify({ email: user.email, password: deletePassword }),

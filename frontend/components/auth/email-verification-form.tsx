@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 import { Loader2, Mail } from "lucide-react"
 
 export function EmailVerificationForm() {
@@ -38,7 +39,7 @@ export function EmailVerificationForm() {
 
     try {
 
-      const response = await fetch("http://localhost:8080/auth/verify", {
+      const response = await fetch(apiUrl("/auth/verify"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -87,7 +88,7 @@ export function EmailVerificationForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/signup", {
+      const response = await fetch(apiUrl("/auth/signup"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

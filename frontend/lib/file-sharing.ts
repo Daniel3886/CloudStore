@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/config"
 export interface ShareFileRequest {
   fileId: number
   targetUserEmail: string
@@ -41,7 +42,7 @@ async function makeAuthenticatedRequest(url: string, options: RequestInit = {}):
 
 export class FileSharingAPI {
   static async shareFile(request: ShareFileRequest): Promise<void> {
-    const response = await makeAuthenticatedRequest("http://localhost:8080/share", {
+    const response = await makeAuthenticatedRequest(apiUrl("/share"), {
       method: "POST",
       body: JSON.stringify(request),
     })
@@ -55,7 +56,7 @@ export class FileSharingAPI {
   }
 
   static async getSharedFiles(): Promise<SharedFileDto[]> {
-    const response = await makeAuthenticatedRequest("http://localhost:8080/share/received")
+    const response = await makeAuthenticatedRequest(apiUrl("/share/received"))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -67,7 +68,7 @@ export class FileSharingAPI {
   }
 
   static async acceptShare(permissionId: number): Promise<void> {
-    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/accept/${permissionId}`, {
+    const response = await makeAuthenticatedRequest(apiUrl(`/share/accept/${permissionId}`), {
       method: "POST",
     })
 
@@ -78,7 +79,7 @@ export class FileSharingAPI {
   }
 
   static async declineShare(permissionId: number): Promise<void> {
-    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/decline/${permissionId}`, {
+    const response = await makeAuthenticatedRequest(apiUrl(`/share/decline/${permissionId}`), {
       method: "POST",
     })
 
@@ -89,7 +90,7 @@ export class FileSharingAPI {
   }
 
   static async getFileSharedUsers(fileId: number): Promise<string[]> {
-    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/${fileId}/users`)
+    const response = await makeAuthenticatedRequest(apiUrl(`/share/${fileId}/users`))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -106,7 +107,7 @@ export class FileSharingAPI {
 
   static async revokeAccess(fileId: number, email: string): Promise<void> {
     const response = await makeAuthenticatedRequest(
-      `http://localhost:8080/share/${fileId}/user/${encodeURIComponent(email)}`,
+      apiUrl(`/share/${fileId}/user/${encodeURIComponent(email)}`),
       {
         method: "DELETE",
       },
@@ -122,7 +123,7 @@ export class FileSharingAPI {
 
   static async updateMessage(fileId: number, targetUserId: number, message: string): Promise<void> {
     const response = await makeAuthenticatedRequest(
-      `http://localhost:8080/share/${fileId}/shared/${targetUserId}/message`,
+      apiUrl(`/share/${fileId}/shared/${targetUserId}/message`),
       {
         method: "PUT",
         body: JSON.stringify({ message }),
@@ -139,7 +140,7 @@ export class FileSharingAPI {
 
   static async removeMessage(fileId: number, email: string): Promise<void> {
     const response = await makeAuthenticatedRequest(
-      `http://localhost:8080/share/${fileId}/user/${encodeURIComponent(email)}/message`,
+      apiUrl(`/share/${fileId}/user/${encodeURIComponent(email)}/message`),
       {
         method: "DELETE",
       },
@@ -155,7 +156,7 @@ export class FileSharingAPI {
 
   static async getUserFiles(): Promise<any[]> {
     try {
-      const response = await makeAuthenticatedRequest("http://localhost:8080/file/list")
+      const response = await makeAuthenticatedRequest(apiUrl("/file/list"))
       if (!response.ok) {
         const errorText = await response.text()
         return []

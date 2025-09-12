@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { FileIcon, Download, Calendar, User, MessageSquare, Loader2, Check, X, Clock } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 import { FileSharingAPI, type SharedFileDto } from "@/lib/file-sharing"
 import { formatDate } from "@/lib/file-utils"
 
@@ -109,7 +110,7 @@ export function SharedFilesBrowser() {
     setDownloadingFiles((prev) => new Set(prev).add(file.fileId))
 
     try {
-      const response = await fetch(`http://localhost:8080/files/download/${encodeURIComponent(file.s3Key)}`, {
+      const response = await fetch(apiUrl(`/files/download/${encodeURIComponent(file.s3Key)}`), {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
         },

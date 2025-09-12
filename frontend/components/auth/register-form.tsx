@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 
 export function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -94,7 +95,7 @@ export function RegisterForm() {
         password: formData.password,
       }
 
-      const response = await fetch("http://localhost:8080/auth/register", {
+      const response = await fetch(apiUrl("/auth/register"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/config"
 
 export interface User {
   id: string
@@ -91,7 +92,7 @@ export async function refreshAccessToken(): Promise<boolean> {
       return false
     }
 
-    const response = await fetch("http://localhost:8080/auth/refresh-token", {
+    const response = await fetch(apiUrl("/auth/refresh-token"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

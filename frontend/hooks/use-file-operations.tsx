@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 import { FileItem } from "@/lib/file"
 
 export function useFileOperations() {
@@ -18,7 +19,7 @@ export function useFileOperations() {
         return false
       }
 
-      const response = await fetch("http://localhost:8080/auth/refresh-token", {
+      const response = await fetch(apiUrl("/auth/refresh-token"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -104,7 +105,7 @@ export function useFileOperations() {
 
       try {
         const response = await makeAuthenticatedRequest(
-          `http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key)}`,
+          `${apiUrl("/file/download")}?s3Key=${encodeURIComponent(file.s3Key)}`,
           {
             method: "GET",
           },
@@ -163,7 +164,7 @@ export function useFileOperations() {
         for (const file of filesInFolder) {
           try {
             const response = await makeAuthenticatedRequest(
-              `http://localhost:8080/file/download?s3Key=${encodeURIComponent(file.s3Key!)}`,
+              `${apiUrl("/file/download")}?s3Key=${encodeURIComponent(file.s3Key!)}`,
               {
                 method: "GET",
               },
@@ -227,14 +228,14 @@ export function useFileOperations() {
         if (file.isFolder) {
           const folderPath = file.path ? `${file.path}/${file.name}` : file.name
           response = await makeAuthenticatedRequest(
-            `http://localhost:8080/file/delete-folder?folderPath=${encodeURIComponent(folderPath)}`,
+            `${apiUrl("/file/delete-folder")}?folderPath=${encodeURIComponent(folderPath)}`,
             {
               method: "DELETE",
             },
           )
         } else {
           response = await makeAuthenticatedRequest(
-            `http://localhost:8080/file/delete?fileName=${encodeURIComponent(file.s3Key!)}`,
+            `${apiUrl("/file/delete")}?fileName=${encodeURIComponent(file.s3Key!)}`,
             {
               method: "DELETE",
             },
@@ -283,14 +284,14 @@ export function useFileOperations() {
           const newFolderPath = currentPath ? `${currentPath}/${newName}` : newName
 
           response = await makeAuthenticatedRequest(
-            `http://localhost:8080/file/rename-folder?oldFolderPath=${encodeURIComponent(oldFolderPath)}&newFolderPath=${encodeURIComponent(newFolderPath)}`,
+            `${apiUrl("/file/rename-folder")}?oldFolderPath=${encodeURIComponent(oldFolderPath)}&newFolderPath=${encodeURIComponent(newFolderPath)}`,
             {
               method: "PATCH",
             },
           )
         } else {
           const newDisplayName = currentPath ? `${currentPath}/${newName}` : newName
-          const url = new URL("http://localhost:8080/file/rename")
+          const url = new URL(apiUrl("/file/rename"))
           url.searchParams.append("s3Key", file.s3Key!)
           url.searchParams.append("newDisplayName", newDisplayName)
 
@@ -332,7 +333,7 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        const url = new URL("http://localhost:8080/file/restore")
+        const url = new URL(apiUrl("/file/restore"))
         url.searchParams.append("s3Key", file.s3Key as string)
         const response = await makeAuthenticatedRequest(url.toString(), { method: "POST" })
 
@@ -375,7 +376,7 @@ export function useFileOperations() {
 
       try {
         const response = await makeAuthenticatedRequest(
-          `http://localhost:8080/file/${encodeURIComponent(file.s3Key)}/permanent`,
+          apiUrl(`/file/${encodeURIComponent(file.s3Key)}/permanent`),
           {
             method: "DELETE",
           },

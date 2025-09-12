@@ -25,6 +25,7 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiUrl } from "@/lib/config";
 import { formatDate, formatFileSize } from "@/lib/file-utils";
 import { ShareModal } from "./share-modal";
 import { FileSharingManagement } from "./file-sharing-management";
@@ -72,10 +73,9 @@ export function FileDetailsModal({
     }
 
     try {
+      const downloadUrl = apiUrl(`/files/download/${encodeURIComponent(file.s3Key)}`);
       const response = await fetch(
-        `http://localhost:8080/files/download/${encodeURIComponent(
-          file.s3Key
-        )}`,
+        downloadUrl,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("accessToken")}`,

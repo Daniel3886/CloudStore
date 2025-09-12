@@ -10,6 +10,7 @@ import { Loader2, Mail, Shield, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 
 export function VerifyForm() {
   const [formData, setFormData] = useState({
@@ -91,7 +92,7 @@ export function VerifyForm() {
         verificationCode: formData.verificationCode,
       }
 
-      const response = await fetch("http://localhost:8080/auth/verify-token", {
+      const response = await fetch(apiUrl("/auth/verify-token"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +136,7 @@ export function VerifyForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/resend-code", {
+      const response = await fetch(apiUrl("/auth/resend-code"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

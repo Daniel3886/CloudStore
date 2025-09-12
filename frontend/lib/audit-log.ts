@@ -1,4 +1,5 @@
 import { getAccessToken } from "./auth"
+import { apiUrl } from "@/lib/config"
 
 export interface AuditLog {
   action: string
@@ -16,7 +17,7 @@ export async function fetchAllAuditLogs(): Promise<AuditLog[]> {
       throw new Error("Authentication required")
     }
 
-    const response = await fetch("http://localhost:8080/activity/all", {
+    const response = await fetch(apiUrl("/activity/all"), {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -43,7 +44,7 @@ export async function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
       throw new Error("Authentication required")
     }
 
-    const response = await fetch(`http://localhost:8080/activity?days=${days}`, {
+    const response = await fetch(apiUrl(`/activity?days=${days}`), {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,

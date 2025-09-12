@@ -1,6 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
+import { apiUrl } from "@/lib/config"
 import { useRouter } from "next/navigation"
 
 interface User {
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchProfileWithToken = async (accessToken: string): Promise<User | null> => {
     try {
-      const res = await fetch("http://localhost:8080/auth/me", {
+      const res = await fetch(apiUrl("/auth/me"), {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       if (!res.ok) return null
@@ -91,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const refreshToken = localStorage.getItem("refreshToken")
       if (!refreshToken) return false
 
-      const res = await fetch("http://localhost:8080/auth/refresh-token", {
+      const res = await fetch(apiUrl("/auth/refresh-token"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken }),

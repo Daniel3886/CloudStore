@@ -10,6 +10,7 @@ import { Loader2, Mail, Shield, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 
 export function VerifyPasswordForm() {
   const [formData, setFormData] = useState({
@@ -91,7 +92,7 @@ export function VerifyPasswordForm() {
         verificationCode: formData.verificationCode,
       }
 
-      const response = await fetch("http://localhost:8080/verify-password", {
+      const response = await fetch(apiUrl("/verify-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -135,7 +136,7 @@ export function VerifyPasswordForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/forgot-password", {
+      const response = await fetch(apiUrl("/auth/forgot-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

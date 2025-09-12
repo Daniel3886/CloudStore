@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react"
 import { useAuth } from "./auth-provider"
+import { apiUrl } from "@/lib/config"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
@@ -73,7 +74,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch(apiUrl("/auth/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

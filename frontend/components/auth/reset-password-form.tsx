@@ -10,6 +10,7 @@ import { Eye, EyeOff, Loader2, Lock, ArrowLeft, CheckCircle } from "lucide-react
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 
 export function ResetPasswordForm() {
   const [formData, setFormData] = useState({
@@ -99,7 +100,7 @@ export function ResetPasswordForm() {
         newPassword: formData.password,
       }
 
-      const response = await fetch("http://localhost:8080/reset-password", {
+      const response = await fetch(apiUrl("/reset-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -10,6 +10,7 @@ import { Loader2, Mail, CheckCircle, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("")
@@ -59,7 +60,7 @@ export function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:8080/auth/forgot-password", {
+      const response = await fetch(apiUrl("/auth/forgot-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

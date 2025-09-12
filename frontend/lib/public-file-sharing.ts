@@ -1,3 +1,4 @@
+import { apiUrl } from "@/lib/config"
 export interface PublicLinkResponse {
   previewLink?: string
   downloadLink: string
@@ -40,7 +41,7 @@ async function makeAuthenticatedRequest(url: string, options: RequestInit = {}):
 export class PublicFileSharingAPI {
   static async generatePublicLink(fileId: number): Promise<PublicLinkResponse> {
 
-    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/public/${fileId}`, {
+    const response = await makeAuthenticatedRequest(apiUrl(`/share/public/${fileId}`), {
       method: "POST",
     })
 
@@ -56,7 +57,7 @@ export class PublicFileSharingAPI {
 
   static async getActiveLinks(): Promise<PublicFileAccessToken[]> {
 
-    const response = await makeAuthenticatedRequest("http://localhost:8080/share/public/list")
+    const response = await makeAuthenticatedRequest(apiUrl("/share/public/list"))
 
     if (!response.ok) {
       const errorText = await response.text()
@@ -70,7 +71,7 @@ export class PublicFileSharingAPI {
 
   static async revokePublicLink(token: string): Promise<void> {
 
-    const response = await makeAuthenticatedRequest(`http://localhost:8080/share/public/access/${token}`, {
+    const response = await makeAuthenticatedRequest(apiUrl(`/share/public/access/${token}`), {
       method: "DELETE",
     })
 
@@ -84,7 +85,7 @@ export class PublicFileSharingAPI {
   }
 
   static getPublicFileUrl(token: string, preview = false): string {
-    const baseUrl = `http://localhost:8080/share/public/access/${token}`
+    const baseUrl = apiUrl(`/share/public/access/${token}`)
     return preview ? `${baseUrl}?preview=true` : baseUrl
   }
 }

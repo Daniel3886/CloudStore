@@ -21,6 +21,7 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { apiUrl } from "@/lib/config";
 
 interface UploadModalProps {
   open: boolean
@@ -218,7 +219,7 @@ export function UploadModal({
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
 
-      const response = await fetch("http://localhost:8080/file/upload", {
+      const response = await fetch(apiUrl("/file/upload"), {
         method: "POST",
         headers,
         body: formData,

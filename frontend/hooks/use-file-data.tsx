@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "@/hooks/use-toast"
+import { apiUrl } from "@/lib/config"
 import { FileItem } from "@/lib/file"
 import { getVirtualFolders, setVirtualFolders as saveVirtualFoldersToStorage } from "@/lib/auth"
 
@@ -92,7 +93,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       }
 
       try {
-        const endpoint = type === "trash" ? "http://localhost:8080/file/trash" : "http://localhost:8080/file/list"
+        const endpoint = type === "trash" ? apiUrl("/file/trash") : apiUrl("/file/list")
         const response = await makeAuthenticatedRequest(endpoint, { method: "GET" })
 
         if (!response.ok) {

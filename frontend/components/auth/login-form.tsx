@@ -91,7 +91,7 @@ export function LoginForm() {
         const data = await response.json()
 
         if (data.accessToken && data.refreshToken) {
-          login(data.accessToken, data.refreshToken, formData.email)
+          login(data.accessToken, data.refreshToken)
 
           toast({
             variant: "success",

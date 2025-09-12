@@ -93,7 +93,7 @@ public class StorageService {
                 "FILE_UPLOAD",
                 ownerEmail,
                 metadata,
-                "Uploaded file: " + originalFileName
+                "Uploaded file: " + actualFileName
         );
 
         return "File uploaded successfully: " + s3Key;
@@ -158,7 +158,7 @@ public class StorageService {
                         "FILE_MOVE",
                         file.getOwner().getEmail(),
                         null,
-                        "Moved file from '" + oldS3Key + "' to '" + newS3Key + "'"
+                        "Moved file from '" + getBaseName(oldDisplayName) + "' to '" + getBaseName(newDisplayName) + "'"
                 );
 
             } catch (Exception e) {
@@ -196,7 +196,7 @@ public class StorageService {
                         "FILE_DELETE",
                         email,
                         null,
-                        "Deleted file as part of folder removal: " + s3Key
+                        "Deleted file as part of folder removal: " + getBaseName(file.getDisplayName())
                 );
 
                 fileRepo.delete(file);
@@ -278,7 +278,7 @@ public class StorageService {
                 "FILE_RENAME",
                 metadata.getOwner().getEmail(),
                 null,
-                "Renamed file from '" + oldDisplayName + "' to '" + newDisplayName + "'"
+                "Renamed file from '" + getBaseName(oldDisplayName) + "' to '" + getBaseName(newDisplayName) + "'"
         );
 
         fileRepo.save(metadata);
@@ -288,6 +288,14 @@ public class StorageService {
         Files metadata = fileRepo.findByS3Key(s3Key)
                 .orElseThrow(() -> new RuntimeException("File not found in metadata"));
         return metadata.getDisplayName();
+    }
+
+    private String getBaseName(String displayName) {
+        if (displayName == null) return null;
+        if (displayName.contains("/")) {
+            return displayName.substring(displayName.lastIndexOf("/") + 1);
+        }
+        return displayName;
     }
 
     public String softDeleteFile(String fileName) {
@@ -301,7 +309,7 @@ public class StorageService {
                 "FILE_SOFT_DELETE",
                 metadata.getOwner().getEmail(),
                 metadata,
-                "Soft-deleted file: " + fileName
+                "Soft-deleted file: " + getBaseName(metadata.getDisplayName())
         );
 
         return "File moved to trash: " + fileName;
@@ -322,7 +330,7 @@ public class StorageService {
                 "FILE_RESTORE",
                 metadata.getOwner().getEmail(),
                 metadata,
-                "Restored file from trash: " + fileName
+                "Restored file from trash: " + getBaseName(metadata.getDisplayName())
         );
 
         return "File restored from trash: " + fileName;
@@ -354,7 +362,7 @@ public class StorageService {
                 "FILE_PERMANENT_DELETE",
                 metadata.getOwner().getEmail(),
                 metadata,
-                "Permanently deleted file: " + fileName
+                "Permanently deleted file: " + getBaseName(metadata.getDisplayName())
         );
 
         return "File permanently deleted: " + fileName;

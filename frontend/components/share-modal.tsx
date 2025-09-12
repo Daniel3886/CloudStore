@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+ 
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/hooks/use-toast"
@@ -26,7 +26,6 @@ interface ShareModalProps {
 
 export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
   const [email, setEmail] = useState("")
-  const [permission, setPermission] = useState<"VIEWER" | "EDITOR" | "MANAGER">("VIEWER")
   const [message, setMessage] = useState("")
   const [isSharing, setIsSharing] = useState(false)
   const [publicLinksOpen, setPublicLinksOpen] = useState(false)
@@ -57,7 +56,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
 
       setEmail("")
       setMessage("")
-      setPermission("VIEWER")
     } catch (error: any) {
       console.error("Failed to share file:", error)
       toast({
@@ -102,22 +100,7 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Permission level</Label>
-                  <Select
-                    value={permission}
-                    onValueChange={(value: "VIEWER" | "EDITOR" | "MANAGER") => setPermission(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="VIEWER">Viewer - Can view only</SelectItem>
-                      <SelectItem value="EDITOR">Editor - Can view and edit</SelectItem>
-                      <SelectItem value="MANAGER">Manager - Full access</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Message (optional)</Label>

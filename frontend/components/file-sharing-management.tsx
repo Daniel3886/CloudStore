@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+ 
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -28,7 +28,6 @@ interface FileSharingManagementProps {
 
 export function FileSharingManagement({ open, onOpenChange, file }: FileSharingManagementProps) {
   const [email, setEmail] = useState("")
-  const [permission, setPermission] = useState<"VIEWER" | "EDITOR" | "MANAGER">("VIEWER")
   const [message, setMessage] = useState("")
   const [isSharing, setIsSharing] = useState(false)
   const [sharedUsers, setSharedUsers] = useState<string[]>([])
@@ -47,7 +46,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
     setSharedUsers([])
     setEmail("")
     setMessage("")
-    setPermission("VIEWER")
     setActualFileId(null)
   }
 
@@ -154,7 +152,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
 
       setEmail("")
       setMessage("")
-      setPermission("VIEWER")
       await loadSharedUsers(actualFileId)
     } catch (error: any) {
       toast({
@@ -219,22 +216,7 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
                     disabled={isSharing || !actualFileId}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Permission level</Label>
-                  <Select
-                    value={permission}
-                    onValueChange={(value: "VIEWER" | "EDITOR" | "MANAGER") => setPermission(value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="VIEWER">Viewer - Can view only</SelectItem>
-                      <SelectItem value="EDITOR">Editor - Can view and edit</SelectItem>
-                      <SelectItem value="MANAGER">Manager - Full access</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              
               </div>
 
               <div className="space-y-2">

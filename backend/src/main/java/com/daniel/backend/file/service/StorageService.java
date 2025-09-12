@@ -6,7 +6,10 @@ import com.daniel.backend.auth.repository.UserRepo;
 import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
+import com.daniel.backend.publicsharing.repo.PublicFileAccessTokenRepo;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +45,9 @@ public class StorageService {
 
     @Autowired
     private AuditLogService auditLogService;
+
+    @Autowired
+    private PublicFileAccessTokenRepo publicFileAccessTokenRepo;
 
     public String uploadFile(MultipartFile file, String ownerEmail) {
         File fileObj = convertMultiPartFileToFile(file);
@@ -322,6 +328,7 @@ public class StorageService {
         return "File restored from trash: " + fileName;
     }
 
+    @Transactional
     public String permanentlyDeleteFile(String fileName) {
         Files metadata = fileRepo.findByS3Key(fileName)
                 .orElseThrow(() -> new RuntimeException("File not found"));
@@ -330,12 +337,18 @@ public class StorageService {
             throw new RuntimeException("File must be in trash before permanent deletion");
         }
 
-        s3Client.deleteObject(DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(metadata.getS3Key())
-                .build());
+        publicFileAccessTokenRepo.deleteAllByFile(metadata);
 
         fileRepo.delete(metadata);
+
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(metadata.getS3Key())
+                    .build());
+        } catch (Exception e) {
+            System.err.println("S3 delete failed for key " + metadata.getS3Key() + ": " + e.getMessage());
+        }
 
         auditLogService.log(
                 "FILE_PERMANENT_DELETE",

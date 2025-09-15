@@ -5,6 +5,7 @@ import type { ToastActionElement, ToastProps } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
+const DUPLICATE_WINDOW_MS = 2000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -124,6 +125,11 @@ const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
 
+const recentlyShown = new Map<string, number>()
+function makeToastSignature(props: ToasterToast | Toast): string {
+  return [props.variant, String(props.title ?? ""), String(props.description ?? "")].join("::")
+}
+
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
@@ -134,6 +140,18 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  const signature = makeToastSignature(props)
+  const now = Date.now()
+  const lastShown = recentlyShown.get(signature) ?? 0
+  if (now - lastShown < DUPLICATE_WINDOW_MS) {
+    return {
+      id: "-1",
+      dismiss: () => {},
+      update: () => {},
+    }
+  }
+  recentlyShown.set(signature, now)
+
   const id = genId()
 
   const update = (props: ToasterToast) =>
@@ -173,7 +191,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, [])
 
   return {
     ...state,

@@ -92,7 +92,7 @@ export function VerifyPasswordForm() {
         verificationCode: formData.verificationCode,
       }
 
-      const response = await fetch(apiUrl("/verify-password"), {
+      const response = await fetch(apiUrl("/auth/verify-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -100,7 +100,7 @@ export function ResetPasswordForm() {
         newPassword: formData.password,
       }
 
-      const response = await fetch(apiUrl("/reset-password"), {
+      const response = await fetch(apiUrl("/auth/reset-password"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

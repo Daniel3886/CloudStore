@@ -7,8 +7,6 @@ import com.daniel.backend.file.dto.S3ObjectDto;
 import com.daniel.backend.file.entity.Files;
 import com.daniel.backend.file.repo.FileRepo;
 import com.daniel.backend.publicsharing.repo.PublicFileAccessTokenRepo;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -34,20 +32,26 @@ public class StorageService {
     @Value("${AWS_BUCKET_NAME}")
     private String bucketName;
 
-    @Autowired
-    private S3Client s3Client;
+    private final S3Client s3Client;
+    private final FileRepo fileRepo;
+    private final UserRepo userRepo;
+    private final AuditLogService auditLogService;
+    private final PublicFileAccessTokenRepo publicFileAccessTokenRepo;
 
-    @Autowired
-    private FileRepo fileRepo;
+    public StorageService(
+        S3Client s3Client,
+        FileRepo fileRepo,
+        UserRepo userRepo,
+        AuditLogService auditLogService,
+        PublicFileAccessTokenRepo publicFileAccessTokenRepo
+    ){
 
-    @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
-    private AuditLogService auditLogService;
-
-    @Autowired
-    private PublicFileAccessTokenRepo publicFileAccessTokenRepo;
+        this.s3Client = s3Client;
+        this.fileRepo = fileRepo;
+        this.userRepo = userRepo;
+        this.auditLogService = auditLogService;
+        this.publicFileAccessTokenRepo = publicFileAccessTokenRepo;
+    }
 
     public String uploadFile(MultipartFile file, String ownerEmail) {
         File fileObj = convertMultiPartFileToFile(file);

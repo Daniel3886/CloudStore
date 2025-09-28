@@ -184,7 +184,7 @@ docker-compose up --build
 
 ### Files & Folders
 
-* Metadata in DB, objects in S3 (local dev: H2 + local storage)
+* Metadata in DB, objects in S3
 * Pre-signed URLs for upload/download
 
 ### Sharing & Permissions

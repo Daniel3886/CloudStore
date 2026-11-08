@@ -10,7 +10,8 @@ import { Eye, EyeOff, Loader2, Lock, ArrowLeft, CheckCircle } from "lucide-react
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
 
 export function ResetPasswordForm() {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ export function ResetPasswordForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
+  const [resetToken, setResetToken] = useState("")
   const [isValidSession, setIsValidSession] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
   const [formError, setFormError] = useState("")
@@ -30,9 +32,11 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     const verifiedEmail = sessionStorage.getItem("verifiedResetEmail")
+    const storedResetToken = sessionStorage.getItem("resetToken")
 
-    if (verifiedEmail) {
+    if (verifiedEmail && storedResetToken) {
       setEmail(verifiedEmail)
+      setResetToken(storedResetToken)
       setIsValidSession(true)
     } else {
       setFormError("Invalid session. Please start the password reset process from the beginning.")
@@ -77,15 +81,6 @@ export function ResetPasswordForm() {
     return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      return errorData.message || errorData.error || responseText
-    } catch {
-      return responseText.trim() || "An unexpected error occurred"
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
@@ -95,44 +90,24 @@ export function ResetPasswordForm() {
     setIsLoading(true)
 
     try {
-      const requestBody = {
-        email,
-        newPassword: formData.password,
-      }
+      await authApi.resetPassword({ email, resetToken, newPassword: formData.password })
 
-      const response = await fetch(apiUrl("/auth/reset-password"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestBody),
-        mode: "cors",
-        credentials: "include",
+      setResetSuccess(true)
+
+      sessionStorage.removeItem("verifiedResetEmail")
+      sessionStorage.removeItem("resetToken")
+
+      toast({
+        variant: "success",
+        title: "Password reset successful!",
+        description: "Your password has been updated. You can now sign in with your new password.",
       })
 
-      const responseText = await response.text()
-
-      if (response.ok) {
-        setResetSuccess(true)
-
-        sessionStorage.removeItem("verifiedResetEmail")
-
-        toast({
-          variant: "success",
-          title: "Password reset successful!",
-          description: "Your password has been updated. You can now sign in with your new password.",
-        })
-
-        setTimeout(() => {
-          router.push("/login")
-        }, 3000)
-      } else {
-        const errorMessage = parseBackendError(responseText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError("Unable to reset password. Please check your connection and try again.")
+      setTimeout(() => {
+        router.push("/login")
+      }, 3000)
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to reset password. Please check your connection and try again."))
     } finally {
       setIsLoading(false)
     }

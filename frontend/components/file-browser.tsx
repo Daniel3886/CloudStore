@@ -46,14 +46,10 @@ export function FileBrowser({ type = "all", onRefresh, searchQuery = "", current
     renameFile,
     restoreFile,
     permanentlyDeleteFile,
-    makeAuthenticatedRequest,
   } = useFileOperations()
 
   const { initialLoading, backgroundLoading, virtualFolders, saveVirtualFolders, getFilteredFiles, getFilesInFolder, refreshFiles } =
-    useFileData({
-      type,
-      makeAuthenticatedRequest,
-    })
+    useFileData({ type })
 
   const filteredFiles = getFilteredFiles(currentPath)
     .filter((file) =>

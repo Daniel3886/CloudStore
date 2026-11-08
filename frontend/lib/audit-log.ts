@@ -1,5 +1,4 @@
-import { getAccessToken } from "./auth"
-import { apiUrl } from "@/lib/config"
+import { api } from "@/lib/api/client"
 
 export interface AuditLog {
   action: string
@@ -9,58 +8,12 @@ export interface AuditLog {
   fileDisplayName?: string
 }
 
-export async function fetchAllAuditLogs(): Promise<AuditLog[]> {
-
-  try {
-    const token = getAccessToken()
-    if (!token) {
-      throw new Error("Authentication required")
-    }
-
-    const response = await fetch(apiUrl("/activity/all"), {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch audit logs: ${response.statusText}`)
-    }
-
-    const logs: AuditLog[] = await response.json()
-    return logs
-  } catch (error) {
-    throw error
-  }
+export function fetchAllAuditLogs(): Promise<AuditLog[]> {
+  return api.get<AuditLog[]>("/activity/all", { errorMessage: "Failed to fetch audit logs" })
 }
 
-export async function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
-
-  try {
-    const token = getAccessToken()
-    if (!token) {
-      throw new Error("Authentication required")
-    }
-
-    const response = await fetch(apiUrl(`/activity?days=${days}`), {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch audit logs: ${response.statusText}`)
-    }
-
-    const logs: AuditLog[] = await response.json()
-    return logs
-  } catch (error) {
-    throw error
-  }
+export function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
+  return api.get<AuditLog[]>("/activity", { query: { days }, errorMessage: "Failed to fetch audit logs" })
 }
 
 export const ACTIONS_WITH_FILE_DISPLAY = [

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye, EyeOff, Loader2, Mail, Lock } from "lucide-react"
 import { useAuth } from "./auth-provider"
-import { apiUrl } from "@/lib/config"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
@@ -56,15 +57,6 @@ export function LoginForm() {
     return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      return errorData.message || errorData.error || responseText
-    } catch {
-      return responseText.trim() || "An unexpected error occurred"
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
@@ -74,43 +66,23 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(apiUrl("/auth/login"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-        mode: "cors",
-        credentials: "include",
+      const data = await authApi.login(formData.email, formData.password)
+
+      if (!data.accessToken || !data.refreshToken) {
+        throw new Error("Invalid response format from server")
+      }
+
+      await login(data.accessToken, data.refreshToken)
+
+      toast({
+        variant: "success",
+        title: "Welcome back!",
+        description: "You've been successfully signed in.",
       })
 
-      if (response.ok) {
-        const data = await response.json()
-
-        if (data.accessToken && data.refreshToken) {
-          login(data.accessToken, data.refreshToken)
-
-          toast({
-            variant: "success",
-            title: "Welcome back!",
-            description: "You've been successfully signed in.",
-          })
-
-          router.push("/files")
-        } else {
-          throw new Error("Invalid response format from server")
-        }
-      } else {
-        const errorText = await response.text()
-        const errorMessage = parseBackendError(errorText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError(error.message || "Unable to sign in. Please try again.")
+      router.push("/files")
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to sign in. Please try again."))
     } finally {
       setIsLoading(false)
     }

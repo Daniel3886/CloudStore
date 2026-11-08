@@ -1,5 +1,8 @@
 "use client"
 
+import { getErrorMessage } from "@/lib/api/client"
+import { filesApi } from "@/lib/api/files"
+import { saveBlob } from "@/lib/download"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,7 +10,6 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { FileIcon, Download, Calendar, User, MessageSquare, Loader2, Check, X, Clock } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
 import { FileSharingAPI, type SharedFileDto } from "@/lib/file-sharing"
 import { formatDate } from "@/lib/file-utils"
 
@@ -110,37 +112,17 @@ export function SharedFilesBrowser() {
     setDownloadingFiles((prev) => new Set(prev).add(file.fileId))
 
     try {
-      const response = await fetch(apiUrl(`/files/download/${encodeURIComponent(file.s3Key)}`), {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        credentials: "include",
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error("Failed to download file")
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement("a")
-      link.href = url
-      link.download = file.displayName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      saveBlob(await filesApi.download(file.s3Key), file.displayName.split("/").pop() || file.displayName)
 
       toast({
         title: "Download started",
         description: `Downloading "${file.displayName}"`,
       })
-    } catch (error: any) {
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Download failed",
-        description: error.message || "Could not download the file",
+        description: getErrorMessage(error, "Could not download the file"),
       })
     } finally {
       setDownloadingFiles((prev) => {

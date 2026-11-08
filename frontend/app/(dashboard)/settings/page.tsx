@@ -17,7 +17,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
-import { apiUrl } from "@/lib/config";
+import { authApi } from "@/lib/api/auth";
+import { getErrorMessage } from "@/lib/api/client";
 import {
   User,
   Shield,
@@ -30,23 +31,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 
-async function makeAuthenticatedRequest(
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-
-  const accessToken = localStorage.getItem("accessToken");
-  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-
-  return fetch(url, { ...options, headers });
-}
-
 export default function SettingsPage() {
-  const { user, loadUserProfile } = useAuth();
+  const { user, loadUserProfile, logout } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -107,19 +93,7 @@ export default function SettingsPage() {
 
     setIsChangingPassword(true);
     try {
-      const response = await makeAuthenticatedRequest(
-        apiUrl("/auth/change-password"),
-        {
-          method: "POST",
-          body: JSON.stringify({
-            email: user.email,
-            currentPassword,
-            newPassword,
-          }),
-        }
-      );
-
-      if (!response.ok) throw new Error(await response.text());
+      await authApi.changePassword(user.email, currentPassword, newPassword);
 
       toast({
         title: "Password changed",
@@ -128,11 +102,11 @@ export default function SettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Failed to change password",
-        description: err.message || "Could not change your password",
+        description: getErrorMessage(err, "Could not change your password"),
       });
     } finally {
       setIsChangingPassword(false);
@@ -151,27 +125,18 @@ export default function SettingsPage() {
 
     setIsDeletingAccount(true);
     try {
-      const response = await makeAuthenticatedRequest(
-        apiUrl("/auth/delete-account"),
-        {
-          method: "DELETE",
-          body: JSON.stringify({ email: user.email, password: deletePassword }),
-        }
-      );
-      if (!response.ok) throw new Error(await response.text());
+      await authApi.deleteAccount(user.email, deletePassword);
 
       toast({
         title: "Account deleted",
         description: "Your account has been permanently deleted",
       });
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      window.location.href = "/login";
-    } catch (err: any) {
+      logout();
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Failed to delete account",
-        description: err.message || "Could not delete your account",
+        description: getErrorMessage(err, "Could not delete your account"),
       });
     } finally {
       setIsDeletingAccount(false);

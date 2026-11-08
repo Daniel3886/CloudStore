@@ -2,16 +2,16 @@
 
 import { useState, useCallback, useEffect, useRef } from "react"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { ApiError, getErrorMessage } from "@/lib/api/client"
+import { filesApi } from "@/lib/api/files"
 import { FileItem } from "@/lib/file"
 import { getVirtualFolders, setVirtualFolders as saveVirtualFoldersToStorage } from "@/lib/auth"
 
 interface UseFileDataProps {
   type?: "all" | "shared" | "recent" | "trash"
-  makeAuthenticatedRequest: (url: string, options?: RequestInit) => Promise<Response>
 }
 
-export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileDataProps) {
+export function useFileData({ type = "all" }: UseFileDataProps) {
   const [files, setFiles] = useState<FileItem[]>([])
   const [initialLoading, setInitialLoading] = useState(true) 
   const [backgroundLoading, setBackgroundLoading] = useState(false) 
@@ -93,21 +93,14 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
       }
 
       try {
-        const endpoint = type === "trash" ? apiUrl("/file/trash") : apiUrl("/file/list")
-        const response = await makeAuthenticatedRequest(endpoint, { method: "GET" })
-
-        if (!response.ok) {
-          if (response.status === 404) {
-            const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
-            cacheRef.current[type] = folderItems
-            setFiles(folderItems)
-            return
-          }
-          const errText = await response.text().catch(() => "")
-          throw new Error(errText || `Failed to fetch files: ${response.status}`)
+        let data: unknown
+        try {
+          data = type === "trash" ? await filesApi.listTrash() : await filesApi.list()
+        } catch (error) {
+          if (!(error instanceof ApiError && error.status === 404)) throw error
+          data = null
         }
 
-        const data = await response.json().catch(() => null)
         if (!Array.isArray(data)) {
           const folderItems = type !== "trash" ? buildFolderItems(virtualFolders) : []
           cacheRef.current[type] = folderItems
@@ -168,13 +161,13 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
 
         cacheRef.current[type] = allFiles
         setFiles(allFiles)
-      } catch (error: any) {
+      } catch (error) {
         console.error("Error fetching files:", error)
         if (!isBackground) {
           toast({
             variant: "destructive",
             title: "Failed to load files",
-            description: error?.message || "Could not load files from server",
+            description: getErrorMessage(error, "Could not load files from server"),
           })
         }
         if (!cacheRef.current[type]) {
@@ -190,7 +183,7 @@ export function useFileData({ type = "all", makeAuthenticatedRequest }: UseFileD
         }
       }
     },
-    [makeAuthenticatedRequest, getActualFileName, getFileTypeFromName, type, virtualFolders, buildFolderItems],
+    [getActualFileName, getFileTypeFromName, type, virtualFolders, buildFolderItems],
   )
 
   useEffect(() => {

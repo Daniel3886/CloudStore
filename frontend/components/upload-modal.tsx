@@ -1,5 +1,7 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/client"
+import { filesApi } from "@/lib/api/files"
 import type React from "react";
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +23,6 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiUrl } from "@/lib/config";
 
 interface UploadModalProps {
   open: boolean
@@ -208,40 +209,24 @@ export function UploadModal({
         )
       );
 
-      const formData = new FormData();
-
       const uploadFileName = currentPath
         ? `${currentPath}/${fileStatus.file.name}`
         : fileStatus.file.name;
-      formData.append("file", fileStatus.file, uploadFileName);
 
-      const headers: Record<string, string> = {};
-      const accessToken = localStorage.getItem("accessToken");
-      if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+      await filesApi.upload(fileStatus.file, uploadFileName);
 
-      const response = await fetch(apiUrl("/file/upload"), {
-        method: "POST",
-        headers,
-        body: formData,
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        setFiles((prev) =>
-          prev.map((f, i) =>
-            i === index ? { ...f, status: "completed", progress: 100 } : f
-          )
-        );
-        return true;
-      } else {
-        const errorText = await response.text();
-        throw new Error(errorText || `Upload failed: ${response.status}`);
-      }
-    } catch (error: any) {
+      setFiles((prev) =>
+        prev.map((f, i) =>
+          i === index ? { ...f, status: "completed", progress: 100 } : f
+        )
+      );
+      return true;
+    } catch (error) {
+      const message = getErrorMessage(error, "Upload failed");
       setFiles((prev) =>
         prev.map((f, i) =>
           i === index
-            ? { ...f, status: "error", progress: 0, error: error.message }
+            ? { ...f, status: "error", progress: 0, error: message }
             : f
         )
       );

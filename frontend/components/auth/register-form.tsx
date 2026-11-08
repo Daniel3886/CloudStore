@@ -10,7 +10,8 @@ import { Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
 
 export function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -71,15 +72,6 @@ export function RegisterForm() {
     return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      return errorData.message || errorData.error || responseText
-    } catch {
-      return responseText.trim() || "An unexpected error occurred"
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
@@ -95,35 +87,19 @@ export function RegisterForm() {
         password: formData.password,
       }
 
-      const response = await fetch(apiUrl("/auth/register"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestBody),
-        mode: "cors",
-        credentials: "include",
+      await authApi.register(requestBody)
+
+      toast({
+        variant: "success",
+        title: "Account created!",
+        description: "Please check your email for verification code.",
       })
 
-      const responseText = await response.text()
+      sessionStorage.setItem("pendingVerificationEmail", formData.email)
 
-      if (response.ok) {
-        toast({
-          variant: "success",
-          title: "Account created!",
-          description: "Please check your email for verification code.",
-        })
-
-        sessionStorage.setItem("pendingVerificationEmail", formData.email)
-
-        router.push("/verify")
-      } else {
-        const errorMessage = parseBackendError(responseText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError("Unable to create account. Please check your connection and try again.")
+      router.push("/verify")
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to create account. Please check your connection and try again."))
     } finally {
       setIsLoading(false)
     }

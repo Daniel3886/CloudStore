@@ -73,7 +73,7 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
           const userFiles = await FileSharingAPI.getUserFiles()
 
           if (file.s3Key) {
-            const matchByS3Key = userFiles.find((f) => f.s3Key === file.s3Key)
+            const matchByS3Key = userFiles.find((f) => f.key === file.s3Key)
             if (matchByS3Key) {
               fileId = matchByS3Key.id
             } else {

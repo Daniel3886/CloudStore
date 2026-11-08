@@ -2,7 +2,9 @@
 
 import { useState, useCallback } from "react"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { getErrorMessage } from "@/lib/api/client"
+import { filesApi } from "@/lib/api/files"
+import { saveBlob } from "@/lib/download"
 import { FileItem } from "@/lib/file"
 
 export function useFileOperations() {
@@ -11,84 +13,6 @@ export function useFileOperations() {
   const setFileLoading = useCallback((fileId: number, loading: boolean) => {
     setLoadingStates((prev) => ({ ...prev, [fileId]: loading }))
   }, [])
-
-  const refreshAccessToken = useCallback(async (): Promise<boolean> => {
-    try {
-      const refreshToken = localStorage.getItem("refreshToken")
-      if (!refreshToken) {
-        return false
-      }
-
-      const response = await fetch(apiUrl("/auth/refresh-token"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }),
-        credentials: "include",
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        localStorage.setItem("accessToken", data.accessToken)
-        if (data.refreshToken) {
-          localStorage.setItem("refreshToken", data.refreshToken)
-        }
-        return true
-      } else {
-        localStorage.removeItem("accessToken")
-        localStorage.removeItem("refreshToken")
-        localStorage.removeItem("userEmail")
-        return false
-      }
-    } catch (error) {
-      console.error("Token refresh failed:", error)
-      return false
-    }
-  }, [])
-
-  const makeAuthenticatedRequest = useCallback(
-    async (url: string, options: RequestInit = {}): Promise<Response> => {
-      
-    const headers: Record<string, string> = {
-      ...(options.headers instanceof Headers
-        ? Object.fromEntries(options.headers.entries())
-        : Array.isArray(options.headers)
-          ? Object.fromEntries(options.headers)
-          : (options.headers as Record<string, string> | undefined) ?? {}),
-    };
-
-      const accessToken = localStorage.getItem("accessToken")
-      if (accessToken) {
-        headers["Authorization"] = `Bearer ${accessToken}`
-      }
-
-      let response = await fetch(url, {
-        ...options,
-        headers,
-        credentials: "include",
-      })
-
-      if (response.status === 401) {
-        const refreshSuccess = await refreshAccessToken()
-        if (refreshSuccess) {
-          const newAccessToken = localStorage.getItem("accessToken")
-          if (newAccessToken) {
-            headers["Authorization"] = `Bearer ${newAccessToken}`
-          }
-
-          response = await fetch(url, {
-            ...options,
-            headers,
-            credentials: "include",
-          })
-        }
-      }
-
-      return response
-    },
-    [refreshAccessToken],
-  )
 
   const downloadFile = useCallback(
     async (file: FileItem): Promise<void> => {
@@ -104,44 +28,23 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        const response = await makeAuthenticatedRequest(
-          `${apiUrl("/file/download")}?s3Key=${encodeURIComponent(file.s3Key)}`,
-          {
-            method: "GET",
-          },
-        )
-
-        if (response.ok) {
-          const blob = await response.blob()
-          const url = window.URL.createObjectURL(blob)
-          const link = document.createElement("a")
-          link.href = url
-          link.download = file.name
-          document.body.appendChild(link)
-          link.click()
-          window.URL.revokeObjectURL(url)
-          document.body.removeChild(link)
-
-          toast({
-            variant: "success",
-            title: "Download started",
-            description: `${file.name} is being downloaded.`,
-          })
-        } else {
-          const errorText = await response.text()
-          throw new Error(errorText || `Download failed: ${response.status}`)
-        }
-      } catch (error: any) {
+        saveBlob(await filesApi.download(file.s3Key), file.name)
+        toast({
+          variant: "success",
+          title: "Download started",
+          description: `${file.name} is being downloaded.`,
+        })
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Download failed",
-          description: error.message || "Failed to download file.",
+          description: getErrorMessage(error, "Failed to download file."),
         })
       } finally {
         setFileLoading(file.id, false)
       }
     },
-    [makeAuthenticatedRequest, setFileLoading],
+    [setFileLoading],
   )
 
   const downloadFolder = useCallback(
@@ -162,51 +65,32 @@ export function useFileOperations() {
         const zip = new JSZip()
 
         for (const file of filesInFolder) {
+          if (!file.s3Key) continue
           try {
-            const response = await makeAuthenticatedRequest(
-              `${apiUrl("/file/download")}?s3Key=${encodeURIComponent(file.s3Key!)}`,
-              {
-                method: "GET",
-              },
-            )
-
-            if (response.ok) {
-              const blob = await response.blob()
-              zip.file(file.name, blob)
-            } else {
-              console.error(`Failed to download ${file.name}: ${response.status}`)
-            }
+            zip.file(file.name, await filesApi.download(file.s3Key))
           } catch (error) {
             console.error(`Failed to download file ${file.name}:`, error)
           }
         }
 
-        const zipBlob = await zip.generateAsync({ type: "blob" })
-        const url = window.URL.createObjectURL(zipBlob)
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `${folder.name}.zip`
-        document.body.appendChild(link)
-        link.click()
-        window.URL.revokeObjectURL(url)
-        document.body.removeChild(link)
+        saveBlob(await zip.generateAsync({ type: "blob" }), `${folder.name}.zip`)
 
         toast({
           variant: "success",
           title: "Download started",
           description: `Folder "${folder.name}" is being downloaded as a zip file.`,
         })
-      } catch (error: any) {
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Download failed",
-          description: error.message || "Failed to download folder.",
+          description: getErrorMessage(error, "Failed to download folder."),
         })
       } finally {
         setFileLoading(folder.id, false)
       }
     },
-    [makeAuthenticatedRequest, setFileLoading],
+    [setFileLoading],
   )
 
   const deleteFile = useCallback(
@@ -223,47 +107,29 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        let response: Response
-
         if (file.isFolder) {
-          const folderPath = file.path ? `${file.path}/${file.name}` : file.name
-          response = await makeAuthenticatedRequest(
-            `${apiUrl("/file/delete-folder")}?folderPath=${encodeURIComponent(folderPath)}`,
-            {
-              method: "DELETE",
-            },
-          )
-        } else {
-          response = await makeAuthenticatedRequest(
-            `${apiUrl("/file/delete")}?fileName=${encodeURIComponent(file.s3Key!)}`,
-            {
-              method: "DELETE",
-            },
-          )
+          await filesApi.deleteFolder(file.path ? `${file.path}/${file.name}` : file.name)
+        } else if (file.s3Key) {
+          await filesApi.moveToTrash(file.s3Key)
         }
 
-        if (response.ok) {
-          toast({
-            variant: "success",
-            title: `${file.isFolder ? "Folder" : "File"} deleted`,
-            description: `${file.name} has been deleted successfully.`,
-          })
-          onSuccess()
-        } else {
-          const errorText = await response.text()
-          throw new Error(errorText || `Delete failed: ${response.status}`)
-        }
-      } catch (error: any) {
+        toast({
+          variant: "success",
+          title: `${file.isFolder ? "Folder" : "File"} deleted`,
+          description: `${file.name} has been deleted successfully.`,
+        })
+        onSuccess()
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Delete failed",
-          description: error.message || `Failed to delete ${file.isFolder ? "folder" : "file"}.`,
+          description: getErrorMessage(error, `Failed to delete ${file.isFolder ? "folder" : "file"}.`),
         })
       } finally {
         setFileLoading(file.id, false)
       }
     },
-    [makeAuthenticatedRequest, setFileLoading],
+    [setFileLoading],
   )
 
   const renameFile = useCallback(
@@ -277,46 +143,26 @@ export function useFileOperations() {
       }
 
       try {
-        let response: Response
+        const withPath = (name: string) => (currentPath ? `${currentPath}/${name}` : name)
 
         if (file.isFolder) {
-          const oldFolderPath = currentPath ? `${currentPath}/${file.name}` : file.name
-          const newFolderPath = currentPath ? `${currentPath}/${newName}` : newName
-
-          response = await makeAuthenticatedRequest(
-            `${apiUrl("/file/rename-folder")}?oldFolderPath=${encodeURIComponent(oldFolderPath)}&newFolderPath=${encodeURIComponent(newFolderPath)}`,
-            {
-              method: "PATCH",
-            },
-          )
-        } else {
-          const newDisplayName = currentPath ? `${currentPath}/${newName}` : newName
-          const url = new URL(apiUrl("/file/rename"))
-          url.searchParams.append("s3Key", file.s3Key!)
-          url.searchParams.append("newDisplayName", newDisplayName)
-
-          response = await makeAuthenticatedRequest(url.toString(), {
-            method: "PATCH",
-          })
+          await filesApi.renameFolder(withPath(file.name), withPath(newName))
+        } else if (file.s3Key) {
+          await filesApi.rename(file.s3Key, withPath(newName))
         }
 
-        if (response.ok) {
-          toast({
-            variant: "success",
-            title: `${file.isFolder ? "Folder" : "File"} renamed`,
-            description: `${file.isFolder ? "Folder" : "File"} renamed to "${newName}" successfully.`,
-          })
-          onSuccess()
-          return ""
-        } else {
-          const errorText = await response.text()
-          throw new Error(errorText || `Rename failed: ${response.status}`)
-        }
-      } catch (error: any) {
-        return error.message || `Failed to rename ${file.isFolder ? "folder" : "file"}.`
+        toast({
+          variant: "success",
+          title: `${file.isFolder ? "Folder" : "File"} renamed`,
+          description: `${file.isFolder ? "Folder" : "File"} renamed to "${newName}" successfully.`,
+        })
+        onSuccess()
+        return ""
+      } catch (error) {
+        return getErrorMessage(error, `Failed to rename ${file.isFolder ? "folder" : "file"}.`)
       }
     },
-    [makeAuthenticatedRequest],
+    [],
   )
 
   const restoreFile = useCallback(
@@ -333,32 +179,24 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        const url = new URL(apiUrl("/file/restore"))
-        url.searchParams.append("s3Key", file.s3Key as string)
-        const response = await makeAuthenticatedRequest(url.toString(), { method: "POST" })
-
-        if (response.ok) {
-          toast({
-            variant: "success",
-            title: "File restored",
-            description: `${file.name} has been restored from trash.`,
-          })
-          onSuccess()
-        } else {
-          const errorText = await response.text().catch(() => "")
-          throw new Error(errorText || `Restore failed: ${response.status}`)
-        }
-      } catch (error: any) {
+        await filesApi.restore(file.s3Key)
+        toast({
+          variant: "success",
+          title: "File restored",
+          description: `${file.name} has been restored from trash.`,
+        })
+        onSuccess()
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Restore failed",
-          description: error?.message || "Failed to restore file.",
+          description: getErrorMessage(error, "Failed to restore file."),
         })
       } finally {
         setFileLoading(file.id, false)
       }
     },
-    [makeAuthenticatedRequest, setFileLoading],
+    [setFileLoading],
   )
 
   const permanentlyDeleteFile = useCallback(
@@ -375,35 +213,24 @@ export function useFileOperations() {
       setFileLoading(file.id, true)
 
       try {
-        const response = await makeAuthenticatedRequest(
-          apiUrl(`/file/${encodeURIComponent(file.s3Key)}/permanent`),
-          {
-            method: "DELETE",
-          },
-        )
-
-        if (response.ok) {
-          toast({
-            variant: "success",
-            title: "File permanently deleted",
-            description: `${file.name} has been permanently deleted.`,
-          })
-          onSuccess()
-        } else {
-          const errorText = await response.text()
-          throw new Error(errorText || `Permanent delete failed: ${response.status}`)
-        }
-      } catch (error: any) {
+        await filesApi.deletePermanently(file.s3Key)
+        toast({
+          variant: "success",
+          title: "File permanently deleted",
+          description: `${file.name} has been permanently deleted.`,
+        })
+        onSuccess()
+      } catch (error) {
         toast({
           variant: "destructive",
           title: "Permanent delete failed",
-          description: error.message || "Failed to permanently delete file.",
+          description: getErrorMessage(error, "Failed to permanently delete file."),
         })
       } finally {
         setFileLoading(file.id, false)
       }
     },
-    [makeAuthenticatedRequest, setFileLoading],
+    [setFileLoading],
   )
 
   return {
@@ -414,6 +241,5 @@ export function useFileOperations() {
     renameFile,
     restoreFile,
     permanentlyDeleteFile,
-    makeAuthenticatedRequest,
   }
 }

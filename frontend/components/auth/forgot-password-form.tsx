@@ -10,7 +10,8 @@ import { Loader2, Mail, CheckCircle, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState("")
@@ -42,15 +43,6 @@ export function ForgotPasswordForm() {
     return true
   }
 
-  const parseBackendError = (responseText: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      return errorData.message || errorData.error || responseText
-    } catch {
-      return responseText.trim() || "An unexpected error occurred"
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
@@ -60,40 +52,24 @@ export function ForgotPasswordForm() {
     setIsLoading(true)
 
     try {
-      const response = await fetch(apiUrl("/auth/forgot-password"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email }),
-        mode: "cors",
-        credentials: "include",
+      await authApi.requestPasswordReset(email)
+
+      setEmailSent(true)
+
+      sessionStorage.setItem("passwordResetEmail", email)
+      sessionStorage.setItem("resetFlowActive", "true")
+
+      toast({
+        variant: "success",
+        title: "Verification code sent!",
+        description: "Check your email for the 6-digit verification code.",
       })
 
-      const responseText = await response.text()
-
-      if (response.ok) {
-        setEmailSent(true)
-
-        sessionStorage.setItem("passwordResetEmail", email)
-        sessionStorage.setItem("resetFlowActive", "true")
-
-        toast({
-          variant: "success",
-          title: "Verification code sent!",
-          description: "Check your email for the 6-digit verification code.",
-        })
-
-        setTimeout(() => {
-          router.push("/verify-password")
-        }, 2000)
-      } else {
-        const errorMessage = parseBackendError(responseText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError("Unable to send verification code. Please check your connection and try again.")
+      setTimeout(() => {
+        router.push("/verify-password")
+      }, 2000)
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to send verification code. Please check your connection and try again."))
     } finally {
       setIsLoading(false)
     }

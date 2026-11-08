@@ -1,5 +1,8 @@
 "use client";
 
+import { getErrorMessage } from "@/lib/api/client"
+import { filesApi } from "@/lib/api/files"
+import { saveBlob } from "@/lib/download"
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +28,6 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiUrl } from "@/lib/config";
 import { formatDate, formatFileSize } from "@/lib/file-utils";
 import { ShareModal } from "./share-modal";
 import { FileSharingManagement } from "./file-sharing-management";
@@ -73,41 +75,18 @@ export function FileDetailsModal({
     }
 
     try {
-      const downloadUrl = apiUrl(`/files/download/${encodeURIComponent(file.s3Key)}`);
-      const response = await fetch(
-        downloadUrl,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to download file");
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = file.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      saveBlob(await filesApi.download(file.s3Key), file.name);
 
       toast({
         title: "Download started",
         description: `Downloading "${file.name}"`,
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to download file:", error);
       toast({
         variant: "destructive",
         title: "Download failed",
-        description: error.message || "Could not download the file",
+        description: getErrorMessage(error, "Could not download the file"),
       });
     }
   };

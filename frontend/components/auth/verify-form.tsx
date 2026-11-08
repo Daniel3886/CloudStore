@@ -10,9 +10,12 @@ import { Loader2, Mail, Shield, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
-import { apiUrl } from "@/lib/config"
+import { useAuth } from "@/components/auth/auth-provider"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
 
 export function VerifyForm() {
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: "",
     verificationCode: "",
@@ -69,15 +72,6 @@ export function VerifyForm() {
     return Object.keys(errors).length === 0
   }
 
-  const parseBackendError = (responseText: string) => {
-    try {
-      const errorData = JSON.parse(responseText)
-      return errorData.message || errorData.error || responseText
-    } catch {
-      return responseText.trim() || "An unexpected error occurred"
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setFormError("")
@@ -92,41 +86,21 @@ export function VerifyForm() {
         verificationCode: formData.verificationCode,
       }
 
-      const response = await fetch(apiUrl("/auth/verify-token"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(requestBody),
-        mode: "cors",
-        credentials: "include",
+      const token = await authApi.verifyAccount(requestBody.email, requestBody.verificationCode)
+
+      await login(token)
+
+      sessionStorage.removeItem("pendingVerificationEmail")
+
+      toast({
+        variant: "success",
+        title: "Email verified!",
+        description: "Your account has been successfully verified.",
       })
 
-      const responseText = await response.text()
-
-      if (response.ok) {
-        const tokenMatch = responseText.match(/Token:\s*(.+)/)
-        const token = tokenMatch ? tokenMatch[1].trim() : responseText.trim()
-
-        localStorage.setItem("accessToken", token)
-        localStorage.setItem("userEmail", formData.email)
-
-        sessionStorage.removeItem("pendingVerificationEmail")
-
-        toast({
-          variant: "success",
-          title: "Email verified!",
-          description: "Your account has been successfully verified.",
-        })
-
-        router.push("/files")
-      } else {
-        const errorMessage = parseBackendError(responseText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError("Unable to verify code. Please check your connection and try again.")
+      router.push("/files")
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to verify code. Please check your connection and try again."))
     } finally {
       setIsLoading(false)
     }
@@ -136,32 +110,16 @@ export function VerifyForm() {
     setIsResending(true)
 
     try {
-      const response = await fetch(apiUrl("/auth/resend-code"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email: formData.email }),
-        mode: "cors",
-        credentials: "include",
+      await authApi.resendVerificationCode(formData.email)
+
+      toast({
+        variant: "success",
+        title: "Code sent!",
+        description: "A new verification code has been sent to your email.",
       })
-
-      const responseText = await response.text()
-
-      if (response.ok) {
-        toast({
-          variant: "success",
-          title: "Code sent!",
-          description: "A new verification code has been sent to your email.",
-        })
-        setCountdown(60)
-      } else {
-        const errorMessage = parseBackendError(responseText)
-        setFormError(errorMessage)
-      }
-    } catch (error: any) {
-      setFormError("Unable to resend code. Please check your connection and try again.")
+      setCountdown(60)
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to resend code. Please check your connection and try again."))
     } finally {
       setIsResending(false)
     }

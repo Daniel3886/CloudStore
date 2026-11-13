@@ -17,10 +17,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/hooks/use-toast"
-import { authApi } from "@/lib/api/auth"
+import { authApi } from "@/features/auth/api"
 import { getErrorMessage } from "@/lib/api/client"
 import { User, Shield, Trash2, Loader2, Settings, AlertTriangle, Eye, EyeOff } from "lucide-react"
-import { useAuth } from "@/components/auth/auth-provider"
+import { useAuth } from "@/features/auth/components/auth-provider"
 
 export default function SettingsPage() {
   const { user, loadUserProfile, logout } = useAuth()

@@ -1,4 +1,4 @@
-import { RegisterForm } from "@/components/auth/register-form"
+import { RegisterForm } from "@/features/auth/components/register-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function RegisterPage() {

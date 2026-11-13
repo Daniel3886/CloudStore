@@ -1,4 +1,4 @@
-import { SharedFilesBrowser } from "@/components/shared-files-browser"
+import { SharedFilesBrowser } from "@/features/sharing/components/shared-files-browser"
 
 export default function SharedPage() {
   return (

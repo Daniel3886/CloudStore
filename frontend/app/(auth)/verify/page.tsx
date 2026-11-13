@@ -1,4 +1,4 @@
-import { VerifyForm } from "@/components/auth/verify-form"
+import { VerifyForm } from "@/features/auth/components/verify-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function VerifyPage() {

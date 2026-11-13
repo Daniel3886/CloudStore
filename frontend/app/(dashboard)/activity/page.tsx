@@ -1,6 +1,6 @@
 "use client"
 
-import { AuditLogBrowser } from "@/components/audit-log-browser"
+import { AuditLogBrowser } from "@/features/activity/components/audit-log-browser"
 
 export default function ActivityPage() {
   return (

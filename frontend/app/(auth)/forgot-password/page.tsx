@@ -1,4 +1,4 @@
-import { ForgotPasswordForm } from "@/components/auth/forgot-password-form"
+import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function ForgotPasswordPage() {

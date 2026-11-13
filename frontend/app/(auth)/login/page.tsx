@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/auth/login-form"
+import { LoginForm } from "@/features/auth/components/login-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 export default function LoginPage() {

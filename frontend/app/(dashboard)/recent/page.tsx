@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { FileHeader } from "@/components/file-header"
-import { FileBrowser } from "@/components/file-browser"
+import { FileHeader } from "@/features/files/components/file-header"
+import { FileBrowser } from "@/features/files/components/file-browser"
 
 export default function RecentPage() {
   const [refreshKey, setRefreshKey] = useState(0)

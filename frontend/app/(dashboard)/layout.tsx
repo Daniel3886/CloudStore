@@ -1,10 +1,10 @@
 import type React from "react"
-import { DashboardNav, MobileNavTrigger } from "@/components/dashboard-nav"
-import { UserNav } from "@/components/user-nav"
-import { ModeToggle } from "@/components/mode-toggle"
+import { DashboardNav, MobileNavTrigger } from "@/components/layout/dashboard-nav"
+import { UserNav } from "@/components/layout/user-nav"
+import { ModeToggle } from "@/components/layout/mode-toggle"
 import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "@/components/auth/auth-provider"
-import { ProtectedRoute } from "@/components/auth/protected-route"
+import { AuthProvider } from "@/features/auth/components/auth-provider"
+import { ProtectedRoute } from "@/features/auth/components/protected-route"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

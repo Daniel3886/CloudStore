@@ -1,0 +1,215 @@
+"use client"
+
+import type React from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Loader2, Mail, Shield, ArrowLeft } from "lucide-react"
+import { FormError } from "@/components/ui/form-error"
+import { FieldError } from "@/components/ui/field-error"
+import { toast } from "@/hooks/use-toast"
+import { authApi } from "@/features/auth/api"
+import { getErrorMessage } from "@/lib/api/client"
+
+export function VerifyPasswordForm() {
+  const [formData, setFormData] = useState({
+    email: "",
+    verificationCode: "",
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [formError, setFormError] = useState("")
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  const router = useRouter()
+
+  useEffect(() => {
+    const passwordResetEmail = sessionStorage.getItem("passwordResetEmail")
+    if (passwordResetEmail) {
+      setFormData((prev) => ({ ...prev, email: passwordResetEmail }))
+    }
+
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [countdown])
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: "" }))
+    }
+
+    if (formError) {
+      setFormError("")
+    }
+  }
+
+  const validateForm = () => {
+    const errors: Record<string, string> = {}
+
+    if (!formData.email) {
+      errors.email = "Email is required"
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = "Please enter a valid email address"
+    }
+
+    if (!formData.verificationCode) {
+      errors.verificationCode = "Verification code is required"
+    } else if (formData.verificationCode.length !== 6) {
+      errors.verificationCode = "Verification code must be 6 digits"
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setFormError("")
+
+    if (!validateForm()) return
+
+    setIsLoading(true)
+
+    try {
+      const requestBody = {
+        email: formData.email,
+        verificationCode: formData.verificationCode,
+      }
+
+      const resetToken = await authApi.verifyPasswordResetCode(requestBody.email, requestBody.verificationCode)
+
+      sessionStorage.removeItem("resetFlowActive")
+      sessionStorage.removeItem("passwordResetEmail")
+
+      sessionStorage.setItem("verifiedResetEmail", formData.email)
+      sessionStorage.setItem("resetToken", resetToken)
+
+      toast({
+        variant: "success",
+        title: "Code verified!",
+        description: "You can now set your new password.",
+      })
+
+      router.push("/reset-password")
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to verify code. Please check your connection and try again."))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleResendCode = async () => {
+    setIsResending(true)
+
+    try {
+      await authApi.requestPasswordReset(formData.email)
+
+      toast({
+        variant: "success",
+        title: "Code sent!",
+        description: "A new verification code has been sent to your email.",
+      })
+      setCountdown(60)
+    } catch (error) {
+      setFormError(getErrorMessage(error, "Unable to resend code. Please check your connection and try again."))
+    } finally {
+      setIsResending(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center space-y-3">
+        <div className="flex items-center justify-center">
+          <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Shield className="h-8 w-8 text-primary" />
+          </div>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            Enter the 6-digit verification code sent to your email to reset your password.
+          </p>
+          {formData.email && <p className="text-sm font-medium break-all">{formData.email}</p>}
+          <p className="text-xs text-muted-foreground">Password Reset Verification</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {formError && <FormError message={formError} />}
+
+        {!formData.email && (
+          <div className="space-y-1">
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                name="email"
+                type="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={handleInputChange}
+                className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
+                  fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
+                }`}
+                required
+              />
+            </div>
+            <FieldError message={fieldErrors.email} />
+          </div>
+        )}
+
+        <div className="space-y-1">
+          <div className="relative">
+            <Shield className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              name="verificationCode"
+              placeholder="Enter 6-digit code"
+              value={formData.verificationCode}
+              onChange={handleInputChange}
+              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary text-center tracking-widest ${
+                fieldErrors.verificationCode ? "border-red-500 focus:border-red-500" : ""
+              }`}
+              maxLength={6}
+              required
+            />
+          </div>
+          <FieldError message={fieldErrors.verificationCode} />
+        </div>
+
+        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
+          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Verify Code
+        </Button>
+      </form>
+
+      <div className="text-center space-y-3">
+        <p className="text-xs text-muted-foreground">Didn't receive the code?</p>
+        <Button
+          variant="outline"
+          onClick={handleResendCode}
+          disabled={isResending || countdown > 0}
+          className="w-full h-11"
+        >
+          {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {countdown > 0 ? `Resend in ${countdown}s` : "Resend code"}
+        </Button>
+      </div>
+
+      <div className="text-center">
+        <Button variant="ghost" asChild className="h-auto p-0">
+          <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+            <ArrowLeft className="mr-1 h-3 w-3" />
+            Back to forgot password
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+}

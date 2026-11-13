@@ -1,4 +1,4 @@
-import { EmailVerificationForm } from "@/components/auth/email-verification-form"
+import { EmailVerificationForm } from "@/features/auth/components/email-verification-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function VerifyEmailPage() {

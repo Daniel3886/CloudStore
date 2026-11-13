@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/lib/config"
-import { extractErrorMessage, type ApiErrorBody } from "@/lib/api-error"
-import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/lib/auth"
+import { extractErrorMessage, type ApiErrorBody } from "@/lib/api/errors"
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from "@/lib/session"
 
 export class ApiError extends Error {
   readonly status: number

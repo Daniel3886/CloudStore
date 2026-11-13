@@ -3,104 +3,72 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useTranslations } from "next-intl"
+import { CheckCircle, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Loader2, Mail, CheckCircle, ArrowLeft } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
-import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
-import { getErrorMessage } from "@/lib/api/client"
+import { AuthInput } from "@/features/auth/components/auth-input"
+import { BackLink } from "@/features/auth/components/back-link"
+import { SubmitButton } from "@/features/auth/components/loading-button"
+import { StatusIcon } from "@/features/auth/components/status-icon"
+import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
+import { useDelayedRedirect } from "@/features/auth/hooks/use-delayed-redirect"
+import { authFlowStorage } from "@/features/auth/lib/flow-storage"
+import { VALIDATION_LIMITS, validateEmail } from "@/features/auth/lib/validation"
+
+const VERIFY_PATH = "/verify-password"
+const REDIRECT_DELAY_MS = 2000
 
 export function ForgotPasswordForm() {
-  const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [emailSent, setEmailSent] = useState(false)
-  const [formError, setFormError] = useState("")
-  const [fieldError, setFieldError] = useState("")
-
+  const t = useTranslations("auth")
   const router = useRouter()
+  const redirect = useDelayedRedirect()
+  const form = useAuthForm({ email: "" })
+  const [emailSent, setEmailSent] = useState(false)
+  const { email } = form.values
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value)
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!form.validate({ email: validateEmail(email) })) return
 
-    if (fieldError) setFieldError("")
-    if (formError) setFormError("")
-  }
-
-  const validateForm = () => {
-    if (!email) {
-      setFieldError("Email is required")
-      return false
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldError("Please enter a valid email address")
-      return false
-    }
-
-    return true
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError("")
-
-    if (!validateForm()) return
-
-    setIsLoading(true)
-
-    try {
+    await form.run(async () => {
       await authApi.requestPasswordReset(email)
-
       setEmailSent(true)
-
-      sessionStorage.setItem("passwordResetEmail", email)
-      sessionStorage.setItem("resetFlowActive", "true")
-
+      authFlowStorage.startPasswordReset(email)
       toast({
         variant: "success",
-        title: "Verification code sent!",
-        description: "Check your email for the 6-digit verification code.",
+        title: t("forgotPassword.successTitle"),
+        description: t("forgotPassword.successDescription", VALIDATION_LIMITS),
       })
+      redirect.schedule(VERIFY_PATH, REDIRECT_DELAY_MS)
+    }, t("forgotPassword.error"))
+  }
 
-      setTimeout(() => {
-        router.push("/verify-password")
-      }, 2000)
-    } catch (error) {
-      setFormError(
-        getErrorMessage(error, "Unable to send verification code. Please check your connection and try again."),
-      )
-    } finally {
-      setIsLoading(false)
-    }
+  const handleTryAnotherEmail = () => {
+    redirect.cancel()
+    setEmailSent(false)
   }
 
   if (emailSent) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-center">
-          <div className="size-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-          </div>
-        </div>
+        <StatusIcon icon={CheckCircle} variant="success" />
 
         <div className="text-center space-y-2">
-          <h3 className="text-lg font-semibold">Check your email</h3>
-          <p className="text-sm text-muted-foreground">We've sent a 6-digit verification code to</p>
+          <h3 className="text-lg font-semibold">{t("forgotPassword.sentTitle")}</h3>
+          <p className="text-sm text-muted-foreground">{t("forgotPassword.sentDescription", VALIDATION_LIMITS)}</p>
           <p className="text-sm font-medium break-all">{email}</p>
-          <p className="text-xs text-muted-foreground mt-2">
-            You'll be redirected to enter the verification code shortly...
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">{t("forgotPassword.redirecting")}</p>
         </div>
 
         <div className="space-y-3">
-          <Button onClick={() => router.push("/verify-password")} className="w-full h-11">
-            Continue to verification
+          <Button onClick={() => router.push(VERIFY_PATH)} className="w-full h-11">
+            {t("forgotPassword.continue")}
           </Button>
-          <Button variant="outline" onClick={() => setEmailSent(false)} className="w-full h-11">
-            Try another email
+          <Button variant="outline" onClick={handleTryAnotherEmail} className="w-full h-11">
+            {t("forgotPassword.tryAnotherEmail")}
           </Button>
         </div>
       </div>
@@ -110,50 +78,31 @@ export function ForgotPasswordForm() {
   return (
     <div className="space-y-6">
       <div className="text-center space-y-3">
-        <div className="flex items-center justify-center">
-          <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Mail className="h-8 w-8 text-primary" />
-          </div>
-        </div>
+        <StatusIcon icon={Mail} />
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          Enter your email address and we'll send you a 6-digit verification code to reset your password.
+          {t("forgotPassword.description", VALIDATION_LIMITS)}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {formError && <FormError message={formError} />}
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <FormError message={form.formError} />
 
-        <div className="space-y-1">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="email"
-              placeholder="Email address"
-              value={email}
-              onChange={handleInputChange}
-              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
-                fieldError ? "border-red-500 focus:border-red-500" : ""
-              }`}
-              required
-            />
-          </div>
-          <FieldError message={fieldError} />
-        </div>
+        <AuthInput
+          icon={Mail}
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder={t("fields.email")}
+          value={email}
+          onChange={form.handleChange}
+          error={form.errorFor("email")}
+          required
+        />
 
-        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Send verification code
-        </Button>
+        <SubmitButton isLoading={form.isSubmitting}>{t("forgotPassword.submit")}</SubmitButton>
       </form>
 
-      <div className="text-center">
-        <Button variant="ghost" asChild className="h-auto p-0">
-          <Link href="/login" className="text-sm text-muted-foreground hover:text-primary">
-            <ArrowLeft className="mr-1 h-3 w-3" />
-            Back to login
-          </Link>
-        </Button>
-      </div>
+      <BackLink href="/login">{t("backToLogin")}</BackLink>
     </div>
   )
 }

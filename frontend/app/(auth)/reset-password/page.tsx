@@ -1,7 +1,10 @@
+import { getTranslations } from "next-intl/server"
 import { ResetPasswordForm } from "@/features/auth/components/reset-password-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function ResetPasswordPage() {
+export default async function ResetPasswordPage() {
+  const t = await getTranslations("auth.resetPassword")
+
   return (
     <Card className="border-muted-foreground/20 bg-card/50 backdrop-blur-sm max-w-md mx-auto mt-10 p-6">
       <CardHeader className="space-y-1">
@@ -10,8 +13,8 @@ export default function ResetPasswordPage() {
             CS
           </div>
         </div>
-        <CardTitle className="text-2xl text-center">Set new password</CardTitle>
-        <CardDescription className="text-center">Choose a strong password for your account</CardDescription>
+        <CardTitle className="text-2xl text-center">{t("title")}</CardTitle>
+        <CardDescription className="text-center">{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <ResetPasswordForm />

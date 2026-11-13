@@ -1,192 +1,91 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { Mail, User } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
-import { FieldError } from "@/components/ui/field-error"
 import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
-import { getErrorMessage } from "@/lib/api/client"
+import { AuthInput } from "@/features/auth/components/auth-input"
+import { SubmitButton } from "@/features/auth/components/loading-button"
+import { PasswordInput } from "@/features/auth/components/password-input"
+import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
+import { authFlowStorage } from "@/features/auth/lib/flow-storage"
+import { VALIDATION_LIMITS, validateEmail, validateNewPassword, validateUsername } from "@/features/auth/lib/validation"
 
 export function RegisterForm() {
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    password: "",
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [formError, setFormError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
-
+  const t = useTranslations("auth")
   const router = useRouter()
+  const form = useAuthForm({ username: "", email: "", password: "" })
+  const { values } = form
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+    const isValid = form.validate({
+      username: validateUsername(values.username),
+      email: validateEmail(values.email),
+      password: validateNewPassword(values.password),
+    })
+    if (!isValid) return
 
-    if (fieldErrors[name]) {
-      setFieldErrors((prev) => ({ ...prev, [name]: "" }))
-    }
-
-    if (formError) {
-      setFormError("")
-    }
-  }
-
-  const validateForm = () => {
-    const errors: Record<string, string> = {}
-
-    if (!formData.username) {
-      errors.username = "Username is required"
-    } else if (formData.username.length < 3) {
-      errors.username = "Username must be at least 3 characters long"
-    } else if (formData.username.length > 20) {
-      errors.username = "Username must be no more than 20 characters long"
-    }
-
-    if (!formData.email) {
-      errors.email = "Email is required"
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = "Please enter a valid email address"
-    }
-
-    if (!formData.password) {
-      errors.password = "Password is required"
-    } else if (formData.password.length < 8) {
-      errors.password = "Password must be at least 8 characters long"
-    } else if (formData.password.length > 128) {
-      errors.password = "Password must be no more than 128 characters long"
-    } else if (!/\d/.test(formData.password)) {
-      errors.password = "Password must contain at least one number"
-    } else if (!/[a-zA-Z]/.test(formData.password)) {
-      errors.password = "Password must contain at least one letter"
-    }
-
-    setFieldErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError("")
-
-    if (!validateForm()) return
-
-    setIsLoading(true)
-
-    try {
-      const requestBody = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      }
-
-      await authApi.register(requestBody)
-
-      toast({
-        variant: "success",
-        title: "Account created!",
-        description: "Please check your email for verification code.",
-      })
-
-      sessionStorage.setItem("pendingVerificationEmail", formData.email)
-
+    await form.run(async () => {
+      await authApi.register(values)
+      toast({ variant: "success", title: t("register.successTitle"), description: t("register.successDescription") })
+      authFlowStorage.setPendingVerificationEmail(values.email)
       router.push("/verify")
-    } catch (error) {
-      setFormError(getErrorMessage(error, "Unable to create account. Please check your connection and try again."))
-    } finally {
-      setIsLoading(false)
-    }
+    }, t("register.error"))
   }
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground text-center">
-        Create your CloudStore account to get started with secure file storage.
-      </p>
+      <p className="text-sm text-muted-foreground text-center">{t("register.description")}</p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {formError && <FormError message={formError} />}
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        <FormError message={form.formError} />
 
-        <div className="space-y-1">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="username"
-              type="text"
-              placeholder="Username (3-20 characters)"
-              value={formData.username}
-              onChange={handleInputChange}
-              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
-                fieldErrors.username ? "border-red-500 focus:border-red-500" : ""
-              }`}
-              required
-            />
-          </div>
-          <FieldError message={fieldErrors.username} />
-        </div>
+        <AuthInput
+          icon={User}
+          name="username"
+          type="text"
+          autoComplete="username"
+          placeholder={t("register.username", VALIDATION_LIMITS)}
+          value={values.username}
+          onChange={form.handleChange}
+          error={form.errorFor("username")}
+          required
+        />
 
-        <div className="space-y-1">
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="email"
-              type="email"
-              placeholder="Email address"
-              value={formData.email}
-              onChange={handleInputChange}
-              className={`pl-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
-                fieldErrors.email ? "border-red-500 focus:border-red-500" : ""
-              }`}
-              required
-            />
-          </div>
-          <FieldError message={fieldErrors.email} />
-        </div>
+        <AuthInput
+          icon={Mail}
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder={t("fields.email")}
+          value={values.email}
+          onChange={form.handleChange}
+          error={form.errorFor("email")}
+          required
+        />
 
-        <div className="space-y-1">
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password (8+ chars, include letters & numbers)"
-              value={formData.password}
-              onChange={handleInputChange}
-              className={`pl-10 pr-10 h-12 bg-muted/50 border-muted-foreground/20 focus:border-primary ${
-                fieldErrors.password ? "border-red-500 focus:border-red-500" : ""
-              }`}
-              required
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </Button>
-          </div>
-          <FieldError message={fieldErrors.password} />
-        </div>
+        <PasswordInput
+          name="password"
+          autoComplete="new-password"
+          placeholder={t("register.password", VALIDATION_LIMITS)}
+          value={values.password}
+          onChange={form.handleChange}
+          error={form.errorFor("password")}
+          required
+        />
 
-        <Button type="submit" className="w-full h-12 text-base font-medium" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create account
-        </Button>
+        <SubmitButton isLoading={form.isSubmitting}>{t("register.submit")}</SubmitButton>
 
         <div className="text-center pt-2">
           <span className="text-sm text-muted-foreground">
-            Already have an account?{" "}
+            {t("register.hasAccount")}{" "}
             <Link href="/login" className="text-primary hover:underline font-medium">
-              Sign in
+              {t("register.signIn")}
             </Link>
           </span>
         </div>

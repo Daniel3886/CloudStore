@@ -1,18 +1,15 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { Globe, Mail, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-
-import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
-import { toast } from "@/hooks/use-toast"
-import { Mail, Users, Globe, Loader2, Send } from "lucide-react"
-import { FileSharingAPI, type ShareFileRequest } from "@/features/sharing/api"
 import { PublicLinksManager } from "@/features/public-links/components/public-links-manager"
+import { ShareForm } from "@/features/sharing/components/share-form"
+import { toFileId } from "@/features/sharing/lib/share"
 
 interface ShareModalProps {
   open: boolean
@@ -25,57 +22,18 @@ interface ShareModalProps {
 }
 
 export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
-  const [email, setEmail] = useState("")
-  const [message, setMessage] = useState("")
-  const [isSharing, setIsSharing] = useState(false)
+  const t = useTranslations("sharing.shareModal")
   const [publicLinksOpen, setPublicLinksOpen] = useState(false)
-
-  const handleShare = async () => {
-    if (!email.trim() || !file.id) return
-
-    setIsSharing(true)
-    try {
-      const fileId = Number(file.id)
-      if (isNaN(fileId)) {
-        toast({ variant: "destructive", title: "Invalid file ID" })
-        return
-      }
-
-      const shareRequest: ShareFileRequest = {
-        fileId,
-        targetUserEmail: email.trim(),
-        message: message.trim() || undefined,
-      }
-
-      await FileSharingAPI.shareFile(shareRequest)
-
-      toast({
-        title: "File shared successfully",
-        description: `"${file.displayName || file.name}" has been shared with ${email}`,
-      })
-
-      setEmail("")
-      setMessage("")
-    } catch (error: any) {
-      console.error("Failed to share file:", error)
-      toast({
-        variant: "destructive",
-        title: "Failed to share file",
-        description: error.message || "Could not share the file",
-      })
-    } finally {
-      setIsSharing(false)
-    }
-  }
+  const fileName = file.displayName || file.name
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
-              Share "{file.displayName || file.name}"
+              {t("title", { name: fileName })}
             </DialogTitle>
           </DialogHeader>
 
@@ -84,57 +42,21 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Share with specific users
+                  {t("specificUsers")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    placeholder="Enter email address"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isSharing}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="message">Message (optional)</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Add a message for the recipient"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    disabled={isSharing}
-                    rows={2}
-                  />
-                </div>
-
-                <Button onClick={handleShare} disabled={!email.trim() || isSharing} className="w-full">
-                  {isSharing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Sharing...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4 mr-2" />
-                      Share File
-                    </>
-                  )}
-                </Button>
+              <CardContent>
+                <ShareForm key={String(file.id)} fileId={toFileId(file.id)} fileName={fileName} />
               </CardContent>
             </Card>
 
             <Separator />
 
             <div className="space-y-3">
-              <h4 className="text-sm font-medium">Public Sharing</h4>
+              <h4 className="text-sm font-medium">{t("publicSharing")}</h4>
               <Button variant="outline" onClick={() => setPublicLinksOpen(true)} className="w-full">
                 <Globe className="h-4 w-4 mr-2" />
-                Manage Public Links
+                {t("managePublicLinks")}
               </Button>
             </div>
           </div>

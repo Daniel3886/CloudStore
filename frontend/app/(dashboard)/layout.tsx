@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server"
 import type React from "react"
 import { DashboardNav, MobileNavTrigger } from "@/components/layout/dashboard-nav"
 import { UserNav } from "@/components/layout/user-nav"
@@ -6,7 +7,9 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/features/auth/components/auth-provider"
 import { ProtectedRoute } from "@/features/auth/components/protected-route"
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const t = await getTranslations("common")
+
   return (
     <AuthProvider>
       <ProtectedRoute>
@@ -14,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <header className="sticky top-0 z-50 flex h-16 items-center gap-1 border-b bg-background px-5">
             <div className="flex items-center gap-2 font-semibold">
               <div className="size-8 rounded-md bg-primary text-primary-foreground grid place-items-center">CS</div>
-              <span>CloudStore</span>
+              <span>{t("appName")}</span>
             </div>
 
             <div className="md:hidden">

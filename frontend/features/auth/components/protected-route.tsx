@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -11,8 +12,9 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading, isAuthenticated } = useAuth()
+  const { isLoading, isAuthenticated } = useAuth()
   const router = useRouter()
+  const t = useTranslations("common")
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -28,7 +30,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
             CS
           </div>
           <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Loading CloudStore...</p>
+          <p className="text-muted-foreground">{t("loadingApp")}</p>
         </div>
       </div>
     )

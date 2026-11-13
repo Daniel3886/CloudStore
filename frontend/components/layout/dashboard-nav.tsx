@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -9,35 +10,16 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from "@/co
 import { Files, Clock, Users, Trash2, Activity, Menu } from "lucide-react"
 
 const navigation = [
-  {
-    name: "My Files",
-    href: "/files",
-    icon: Files,
-  },
-  {
-    name: "Recent",
-    href: "/recent",
-    icon: Clock,
-  },
-  {
-    name: "Shared",
-    href: "/shared",
-    icon: Users,
-  },
-  {
-    name: "Activity",
-    href: "/activity",
-    icon: Activity,
-  },
-  {
-    name: "Trash",
-    href: "/trash",
-    icon: Trash2,
-  },
-]
+  { key: "files", href: "/files", icon: Files },
+  { key: "recent", href: "/recent", icon: Clock },
+  { key: "shared", href: "/shared", icon: Users },
+  { key: "activity", href: "/activity", icon: Activity },
+  { key: "trash", href: "/trash", icon: Trash2 },
+] as const
 
 export function NavigationContent() {
   const pathname = usePathname()
+  const t = useTranslations("common.nav")
 
   return (
     <div className="flex flex-col gap-2">
@@ -46,7 +28,7 @@ export function NavigationContent() {
           const isActive = pathname === item.href
           return (
             <Link
-              key={item.name}
+              key={item.key}
               href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
@@ -56,7 +38,7 @@ export function NavigationContent() {
               )}
             >
               <item.icon className="h-4 w-4" />
-              {item.name}
+              {t(item.key)}
             </Link>
           )
         })}
@@ -77,17 +59,18 @@ export function DashboardNav() {
 
 export function MobileNavTrigger() {
   const [open, setOpen] = useState(false)
+  const t = useTranslations("common.nav")
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Open navigation menu">
+        <Button variant="ghost" size="icon" aria-label={t("openMenu")}>
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0 pt-3">
         <SheetHeader className="px-4 pb-3 border-b">
-          <SheetTitle className="text-xl font-bold tracking-tight text-foreground">Navigation Menu</SheetTitle>
+          <SheetTitle className="text-xl font-bold tracking-tight text-foreground">{t("menuTitle")}</SheetTitle>
         </SheetHeader>
         <div className="flex h-full flex-col">
           <NavigationContent />

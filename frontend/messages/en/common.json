@@ -1,0 +1,34 @@
+{
+  "appName": "CloudStore",
+  "appTagline": "Secure File Storage",
+  "appDescription": "A secure, scalable file storage service",
+  "loading": "Loading...",
+  "loadingApp": "Loading CloudStore...",
+  "cancel": "Cancel",
+  "close": "Close",
+  "save": "Save",
+  "delete": "Delete",
+  "retry": "Try again",
+  "unexpectedError": "An unexpected error occurred",
+  "nav": {
+    "files": "My Files",
+    "recent": "Recent",
+    "shared": "Shared",
+    "activity": "Activity",
+    "trash": "Trash",
+    "openMenu": "Open navigation menu",
+    "menuTitle": "Navigation Menu"
+  },
+  "userMenu": {
+    "openMenu": "Open user menu",
+    "fallbackName": "User",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

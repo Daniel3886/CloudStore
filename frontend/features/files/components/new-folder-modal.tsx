@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import { joinPath, validateFileName } from "@/features/files/lib/file-utils"
 import { getVirtualFolders, setVirtualFolders } from "@/features/files/lib/virtual-folders"
 
 interface NewFolderModalProps {
@@ -25,106 +26,89 @@ interface NewFolderModalProps {
 }
 
 export function NewFolderModal({ open, onOpenChange, currentPath = "", onFolderCreated }: NewFolderModalProps) {
+  const t = useTranslations("files")
   const [folderName, setFolderName] = useState("")
-  const [isCreating, setIsCreating] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     const trimmedName = folderName.trim()
     if (!trimmedName) return
 
-    const invalidChars = /[\/\\:\?\*"<>\|]/
-    if (invalidChars.test(trimmedName)) {
+    const validationError = validateFileName(trimmedName, true)
+    if (validationError) {
       toast({
         variant: "destructive",
-        title: "Invalid folder name",
-        description: 'Folder names cannot contain / \\ : ? * " < > |',
+        title: t("toasts.invalidFolderName"),
+        description: t(`validation.${validationError.key}`, validationError.values),
       })
       return
     }
 
-    setIsCreating(true)
-
     try {
       const existingFolders = getVirtualFolders()
-
-      const fullFolderPath = currentPath ? `${currentPath}/${trimmedName}` : trimmedName
+      const fullFolderPath = joinPath(currentPath, trimmedName)
 
       if (existingFolders.includes(fullFolderPath)) {
         toast({
           variant: "destructive",
-          title: "Folder already exists",
-          description: `A folder named "${trimmedName}" already exists in this location.`,
+          title: t("toasts.folderExists"),
+          description: t("validation.folderExists", { name: trimmedName }),
         })
-        setIsCreating(false)
         return
       }
 
-      const updatedFolders = [...existingFolders, fullFolderPath]
-
-      setVirtualFolders(updatedFolders)
-
+      setVirtualFolders([...existingFolders, fullFolderPath])
       toast({
-        title: "Folder created",
-        description: `Successfully created folder "${trimmedName}"`,
+        title: t("toasts.folderCreated.title"),
+        description: t("toasts.folderCreated.description", { name: trimmedName }),
       })
-
-      if (onFolderCreated) {
-        onFolderCreated()
-      }
-
+      onFolderCreated?.()
       onOpenChange(false)
       setFolderName("")
-    } catch (error) {
-      console.error("Error creating folder:", error)
+    } catch {
       toast({
         variant: "destructive",
-        title: "Error creating folder",
-        description: "Failed to create the folder. Please try again.",
+        title: t("toasts.folderCreateFailed.title"),
+        description: t("toasts.folderCreateFailed.description"),
       })
-    } finally {
-      setIsCreating(false)
     }
   }
 
-  const handleClose = () => {
-    if (!isCreating) {
-      onOpenChange(false)
-      setFolderName("")
-    }
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen)
+    if (!nextOpen) setFolderName("")
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Create new folder</DialogTitle>
+          <DialogTitle>{t("newFolder.title")}</DialogTitle>
           <DialogDescription>
-            Enter a name for your new folder.
-            {currentPath && ` It will be created in: ${currentPath}`}
+            {t("newFolder.description")}
+            {currentPath && ` ${t("newFolder.location", { path: currentPath })}`}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="folder-name">Folder name</Label>
+              <Label htmlFor="folder-name">{t("newFolder.label")}</Label>
               <Input
                 id="folder-name"
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
-                placeholder="My new folder"
+                placeholder={t("newFolder.placeholder")}
                 autoFocus
-                disabled={isCreating}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="secondary" onClick={handleClose} disabled={isCreating}>
-              Cancel
+            <Button type="button" variant="secondary" onClick={() => handleOpenChange(false)}>
+              {t("newFolder.cancel")}
             </Button>
-            <Button type="submit" disabled={!folderName.trim() || isCreating}>
-              {isCreating ? "Creating..." : "Create"}
+            <Button type="submit" disabled={!folderName.trim()}>
+              {t("newFolder.submit")}
             </Button>
           </DialogFooter>
         </form>

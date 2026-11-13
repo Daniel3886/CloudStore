@@ -1,297 +1,139 @@
 "use client"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { RefreshCw, ArrowLeft, FileIcon } from "lucide-react"
+
+import { useMemo, useState } from "react"
 import { ShareModal } from "@/features/sharing/components/share-modal"
+import { DeleteFileDialog } from "@/features/files/components/delete-file-dialog"
+import { FileBrowserEmptyState, FileBrowserLoading } from "@/features/files/components/file-browser-states"
 import { FileDetailsModal } from "@/features/files/components/file-details-modal"
-import { FileCard } from "@/features/files/components/file-card"
+import { FileGrid } from "@/features/files/components/file-grid"
+import { FolderNavigation } from "@/features/files/components/folder-navigation"
 import { RenameDialog } from "@/features/files/components/rename-dialog"
-import { useFileOperations } from "@/features/files/hooks/use-file-operations"
 import { useFileData } from "@/features/files/hooks/use-file-data"
-import { getBreadcrumbs } from "@/features/files/lib/file-utils"
-import { FileItem } from "@/features/files/types"
+import { useFileOperations } from "@/features/files/hooks/use-file-operations"
+import { filterFilesForView, getFilesInFolder, getItemPath } from "@/features/files/lib/file-filters"
+import { joinPath, splitPath } from "@/features/files/lib/file-utils"
+import { removeFolderTree, renameFolderTree } from "@/features/files/lib/virtual-folders"
+import type { FileAction, FileItem, FileView } from "@/features/files/types"
+
+type OpenDialog = "share" | "details" | "delete" | "permanent-delete" | "rename" | null
 
 interface FileBrowserProps {
-  type?: "all" | "shared" | "recent" | "trash"
-  onRefresh?: () => void
+  type?: FileView
   searchQuery?: string
   currentPath?: string
-  onCurrentPathChange?: React.Dispatch<React.SetStateAction<string>>
+  onCurrentPathChange?: (path: string) => void
 }
 
 export function FileBrowser({
   type = "all",
-  onRefresh,
   searchQuery = "",
   currentPath = "",
   onCurrentPathChange,
 }: FileBrowserProps) {
-  const [shareOpen, setShareOpen] = useState(false)
-  const [detailsOpen, setDetailsOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [permanentDeleteDialogOpen, setPermanentDeleteDialogOpen] = useState(false)
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
-  const { loadingStates, downloadFile, downloadFolder, deleteFile, renameFile, restoreFile, permanentlyDeleteFile } =
-    useFileOperations()
+  const operations = useFileOperations()
+  const { files, loading, virtualFolders, saveVirtualFolders, refreshFiles } = useFileData(type)
 
-  const {
-    initialLoading,
-    backgroundLoading,
-    virtualFolders,
-    saveVirtualFolders,
-    getFilteredFiles,
-    getFilesInFolder,
-    refreshFiles,
-  } = useFileData({ type })
-
-  const filteredFiles = getFilteredFiles(currentPath).filter((file) =>
-    file.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
   const isTrashView = type === "trash"
+  const visibleFiles = useMemo(
+    () => filterFilesForView(files, { view: type, currentPath, searchQuery }),
+    [files, type, currentPath, searchQuery],
+  )
 
-  const handleFileAction = (action: string, file: FileItem) => {
+  const dialogProps = (name: Exclude<OpenDialog, null>) => ({
+    open: openDialog === name,
+    onOpenChange: (isOpen: boolean) => setOpenDialog(isOpen ? name : null),
+  })
+
+  const handleFileAction = async (action: FileAction, file: FileItem) => {
     setSelectedFile(file)
-
     switch (action) {
       case "download":
-        if (file.isFolder) {
-          const filesInFolder = getFilesInFolder(currentPath ? `${currentPath}/${file.name}` : file.name)
-          downloadFolder(file, filesInFolder)
-        } else {
-          downloadFile(file)
-        }
-        break
-      case "share":
-        setShareOpen(true)
-        break
-      case "details":
-        setDetailsOpen(true)
-        break
-      case "delete":
-        setDeleteDialogOpen(true)
-        break
-      case "permanent-delete":
-        setPermanentDeleteDialogOpen(true)
+        if (file.isFolder) await operations.downloadFolder(file, getFilesInFolder(files, getItemPath(file)))
+        else await operations.downloadFile(file)
         break
       case "restore":
-        restoreFile(file, () => {
-          refreshFiles()
-          if (onRefresh) {
-            onRefresh()
-          }
-        })
-        break
-      case "rename":
-        setRenameDialogOpen(true)
+        if (await operations.restoreFile(file)) await refreshFiles()
         break
       default:
-        console.warn(`Action ${action} not implemented`)
+        setOpenDialog(action)
     }
   }
 
   const handleFileClick = (file: FileItem) => {
-    if (isTrashView) return
+    if (!isTrashView && file.isFolder) onCurrentPathChange?.(getItemPath(file))
+  }
 
+  const handleDeleteConfirm = async () => {
+    if (!selectedFile) return
+    if (!(await operations.deleteFile(selectedFile))) return
+    if (selectedFile.isFolder) saveVirtualFolders(removeFolderTree(virtualFolders, getItemPath(selectedFile)))
+    await refreshFiles()
+  }
+
+  const handlePermanentDeleteConfirm = async () => {
+    if (!selectedFile) return
+    if (await operations.permanentlyDeleteFile(selectedFile)) await refreshFiles()
+  }
+
+  const handleRename = async (file: FileItem, newName: string): Promise<string | null> => {
+    const error = await operations.renameFile(file, newName)
+    if (error || newName === file.name) return error
     if (file.isFolder) {
-      const newPath = currentPath ? `${currentPath}/${file.name}` : file.name
-      onCurrentPathChange?.(newPath)
+      saveVirtualFolders(renameFolderTree(virtualFolders, getItemPath(file), joinPath(file.path, newName)))
     }
+    await refreshFiles()
+    return null
   }
 
-  const handleBackClick = () => {
-    const pathParts = currentPath.split("/")
-    pathParts.pop()
-    onCurrentPathChange?.(pathParts.join("/"))
-  }
-
-  const handleDeleteConfirm = () => {
-    if (!selectedFile) return
-
-    deleteFile(selectedFile, () => {
-      if (selectedFile.isFolder) {
-        const folderPath = currentPath ? `${currentPath}/${selectedFile.name}` : selectedFile.name
-        const updatedFolders = virtualFolders.filter((folder) => !folder.startsWith(folderPath))
-        saveVirtualFolders(updatedFolders)
-      }
-      refreshFiles()
-      if (onRefresh) {
-        onRefresh()
-      }
-      setDeleteDialogOpen(false)
-      setSelectedFile(null)
-    })
-  }
-
-  const handlePermanentDeleteConfirm = () => {
-    if (!selectedFile) return
-
-    permanentlyDeleteFile(selectedFile, () => {
-      refreshFiles()
-      if (onRefresh) {
-        onRefresh()
-      }
-      setPermanentDeleteDialogOpen(false)
-      setSelectedFile(null)
-    })
-  }
-
-  const handleRename = async (file: FileItem, newName: string): Promise<string> => {
-    const error = await renameFile(file, newName, currentPath, () => {
-      if (file.isFolder) {
-        const oldFolderPath = currentPath ? `${currentPath}/${file.name}` : file.name
-        const newFolderPath = currentPath ? `${currentPath}/${newName}` : newName
-
-        const updatedFolders = virtualFolders.map((folder) => {
-          if (folder === oldFolderPath) {
-            return newFolderPath
-          }
-          if (folder.startsWith(oldFolderPath + "/")) {
-            return folder.replace(oldFolderPath, newFolderPath)
-          }
-          return folder
-        })
-
-        saveVirtualFolders(updatedFolders)
-      }
-      refreshFiles()
-      if (onRefresh) {
-        onRefresh()
-      }
-    })
-
-    return error
-  }
-
-  if (initialLoading || backgroundLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading files...</p>
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <FileBrowserLoading />
 
   return (
     <>
       {currentPath && !isTrashView && (
-        <div className="flex items-center gap-2 mb-4">
-          <Button variant="ghost" size="sm" onClick={handleBackClick}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            {getBreadcrumbs(currentPath).map((crumb, index) => (
-              <span key={index}>
-                {index > 0 && " / "}
-                {crumb}
-              </span>
-            ))}
-          </div>
-        </div>
+        <FolderNavigation
+          currentPath={currentPath}
+          onBack={() => onCurrentPathChange?.(splitPath(currentPath).parent)}
+        />
       )}
 
-      {filteredFiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <FileIcon className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">{isTrashView ? "Trash is empty" : "No files found"}</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {isTrashView
-              ? "Files you delete will appear here for 30 days before being permanently removed."
-              : type === "all"
-                ? "Upload some files or create a folder to get started"
-                : `No ${type} files found`}
-          </p>
-        </div>
+      {visibleFiles.length === 0 ? (
+        <FileBrowserEmptyState view={type} />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredFiles.map((file) => (
-            <FileCard
-              key={file.id}
-              file={file}
-              isLoading={loadingStates[file.id] || false}
-              isTrashView={isTrashView}
-              onFileClick={handleFileClick}
-              onFileAction={handleFileAction}
-            />
-          ))}
-        </div>
+        <FileGrid
+          files={visibleFiles}
+          loadingStates={operations.loadingStates}
+          isTrashView={isTrashView}
+          onFileClick={handleFileClick}
+          onFileAction={handleFileAction}
+        />
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {selectedFile?.isFolder
-                ? "Permanently delete folder"
-                : `Move ${selectedFile?.isFolder ? "folder" : "file"} to trash`}
-            </AlertDialogTitle>
-            <AlertDialogDescription className={selectedFile?.isFolder ? "text-red-600 font-semibold" : ""}>
-              {selectedFile?.isFolder ? (
-                <>
-                  ⚠️ If folder "{selectedFile?.name}" contains files, they <b>will be permanently deleted</b>. This
-                  action cannot be undone.
-                </>
-              ) : (
-                `Are you sure you want to move "${selectedFile?.name}" to trash? You can restore it later from the trash.`
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className={selectedFile?.isFolder ? "bg-red-500 hover:bg-red-600" : "bg-orange-500 hover:bg-orange-600"}
-            >
-              {selectedFile?.isFolder ? "Delete Permanently" : "Move to Trash"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={permanentDeleteDialogOpen} onOpenChange={setPermanentDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Permanently delete {selectedFile?.isFolder ? "folder" : "file"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to permanently delete "{selectedFile?.name}"? This action cannot be undone and the
-              file will be lost forever.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setSelectedFile(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handlePermanentDeleteConfirm} className="bg-red-500 hover:bg-red-600">
-              Delete Permanently
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
+      <DeleteFileDialog
+        {...dialogProps("delete")}
+        file={selectedFile}
+        permanent={false}
+        onConfirm={handleDeleteConfirm}
+      />
+      <DeleteFileDialog
+        {...dialogProps("permanent-delete")}
+        file={selectedFile}
+        permanent
+        onConfirm={handlePermanentDeleteConfirm}
+      />
       <RenameDialog
-        open={renameDialogOpen}
-        onOpenChange={setRenameDialogOpen}
+        {...dialogProps("rename")}
         file={selectedFile}
         onRename={handleRename}
-        isLoading={loadingStates[selectedFile?.id || ""] || false}
+        isLoading={selectedFile ? (operations.loadingStates[selectedFile.id] ?? false) : false}
       />
 
       {selectedFile && (
         <>
-          <ShareModal open={shareOpen} onOpenChange={setShareOpen} file={selectedFile} />
-          <FileDetailsModal open={detailsOpen} onOpenChange={setDetailsOpen} file={selectedFile} />
+          <ShareModal {...dialogProps("share")} file={selectedFile} />
+          <FileDetailsModal {...dialogProps("details")} file={selectedFile} onDownload={operations.downloadFile} />
         </>
       )}
     </>

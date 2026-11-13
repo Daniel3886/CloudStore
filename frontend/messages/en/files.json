@@ -1,1 +1,203 @@
-{}
+{
+  "unknownFile": "Unknown File",
+  "size": "{size} {unit, select, KB {KB} MB {MB} GB {GB} TB {TB} other {Bytes}}",
+  "pages": {
+    "files": "My Files",
+    "recent": "Recent Files",
+    "trash": "Trash"
+  },
+  "header": {
+    "newFolder": "New Folder",
+    "upload": "Upload",
+    "searchPlaceholder": "Search files and folders...",
+    "searchLabel": "Search files and folders"
+  },
+  "browser": {
+    "loading": "Loading files...",
+    "back": "Back",
+    "root": "My Files",
+    "breadcrumbLabel": "Current folder",
+    "folder": "Folder",
+    "inTrash": "In Trash",
+    "empty": {
+      "trashTitle": "Trash is empty",
+      "trashDescription": "Files you delete will appear here for 30 days before being permanently removed.",
+      "title": "No files found",
+      "allDescription": "Upload some files or create a folder to get started",
+      "recentDescription": "No recent files found"
+    }
+  },
+  "card": {
+    "actionsLabel": "Actions for {name}",
+    "actions": "Actions",
+    "restore": "Restore",
+    "deletePermanently": "Delete Permanently",
+    "download": "Download",
+    "downloadZip": "Download as ZIP",
+    "share": "Share",
+    "rename": "Rename",
+    "details": "Details",
+    "moveToTrash": "Move to Trash"
+  },
+  "deleteDialog": {
+    "trashTitle": "Move file to trash",
+    "trashDescription": "Are you sure you want to move \"{name}\" to trash? You can restore it later from the trash.",
+    "folderTitle": "Permanently delete folder",
+    "folderDescription": "⚠️ If folder \"{name}\" contains files, they <b>will be permanently deleted</b>. This action cannot be undone.",
+    "permanentTitle": "Permanently delete {kind, select, folder {folder} other {file}}",
+    "permanentDescription": "Are you sure you want to permanently delete \"{name}\"? This action cannot be undone and the file will be lost forever.",
+    "cancel": "Cancel",
+    "moveToTrash": "Move to Trash",
+    "deletePermanently": "Delete Permanently"
+  },
+  "rename": {
+    "title": "Rename {kind, select, folder {folder} other {file}}",
+    "description": "Enter a new name for \"{name}\".",
+    "fileHint": "The file extension will be preserved.",
+    "folderHint": "All files in this folder will be updated accordingly.",
+    "label": "Name",
+    "filePlaceholder": "Enter file name",
+    "folderPlaceholder": "Enter folder name",
+    "cancel": "Cancel",
+    "submit": "Rename",
+    "submitting": "Renaming..."
+  },
+  "newFolder": {
+    "title": "Create new folder",
+    "description": "Enter a name for your new folder.",
+    "location": "It will be created in: {path}",
+    "label": "Folder name",
+    "placeholder": "My new folder",
+    "cancel": "Cancel",
+    "submit": "Create"
+  },
+  "upload": {
+    "title": "Upload files",
+    "description": "Upload files to your storage. You can upload multiple files at once.",
+    "dropzoneLabel": "Choose files to upload",
+    "dropHere": "Drop files here",
+    "dragOrBrowse": "Drag and drop files here or click to browse",
+    "dragMore": "Drag more files here or click to add more",
+    "supported": "Support for documents, images, videos, and more",
+    "selected": "{count, plural, one {# file} other {# files}} selected",
+    "pending": "({count} pending)",
+    "browse": "Browse Files",
+    "clearAll": "Clear All",
+    "remove": "Remove {name}",
+    "uploaded": "Uploaded",
+    "failed": "Failed",
+    "allDone": "All files uploaded successfully!",
+    "close": "Close",
+    "back": "Back",
+    "cancel": "Cancel",
+    "submit": "Upload {count, plural, one {# file} other {# files}}",
+    "uploading": "Uploading {current}/{total}...",
+    "status": {
+      "pending": "Waiting to upload",
+      "uploading": "Uploading",
+      "completed": "Uploaded",
+      "error": "Upload failed"
+    }
+  },
+  "details": {
+    "title": "File Details",
+    "description": "View and manage file information and sharing settings.",
+    "uploaded": "Uploaded {date}",
+    "ownedBy": "Owned by {owner}",
+    "ownedByYou": "Owned by you",
+    "sharingOptions": "Sharing Options",
+    "share": "Share",
+    "manage": "Manage",
+    "publicLink": "Generate Public Link",
+    "fileActions": "File Actions",
+    "download": "Download",
+    "close": "Close"
+  },
+  "validation": {
+    "empty": "{kind, select, folder {Folder} other {File}} name cannot be empty.",
+    "tooLong": "{kind, select, folder {Folder} other {File}} name must be at most {max} characters.",
+    "invalidChars": "{kind, select, folder {Folder} other {File}} name cannot contain any of these characters: {chars}",
+    "reserved": "\"{name}\" is a reserved name and cannot be used.",
+    "folderExists": "A folder named \"{name}\" already exists in this location."
+  },
+  "toasts": {
+    "loadFailed": {
+      "title": "Failed to load files",
+      "description": "Could not load files from server"
+    },
+    "missingKey": {
+      "title": "Missing key",
+      "download": "Cannot download file without S3 key.",
+      "delete": "Cannot delete file without S3 key.",
+      "rename": "Cannot rename file without S3 key.",
+      "restore": "Cannot restore file without S3 key.",
+      "permanentDelete": "Cannot permanently delete file without S3 key."
+    },
+    "downloadStarted": {
+      "title": "Download started",
+      "file": "{name} is being downloaded.",
+      "folder": "Folder \"{name}\" is being downloaded as a zip file."
+    },
+    "downloadFailed": {
+      "title": "Download failed",
+      "file": "Failed to download file.",
+      "folder": "Failed to download folder."
+    },
+    "emptyFolder": {
+      "title": "Empty folder",
+      "description": "This folder contains no files to download."
+    },
+    "partialFolderDownload": {
+      "title": "Some files were skipped",
+      "description": "{count, plural, one {# file} other {# files}} could not be added to the zip."
+    },
+    "deleted": {
+      "title": "{kind, select, folder {Folder} other {File}} deleted",
+      "description": "{name} has been deleted successfully."
+    },
+    "deleteFailed": {
+      "title": "Delete failed",
+      "description": "Failed to delete {kind, select, folder {folder} other {file}}."
+    },
+    "renamed": {
+      "title": "{kind, select, folder {Folder} other {File}} renamed",
+      "description": "{kind, select, folder {Folder} other {File}} renamed to \"{name}\" successfully."
+    },
+    "renameFailed": "Failed to rename {kind, select, folder {folder} other {file}}.",
+    "restored": {
+      "title": "File restored",
+      "description": "{name} has been restored from trash."
+    },
+    "restoreFailed": {
+      "title": "Restore failed",
+      "description": "Failed to restore file."
+    },
+    "permanentlyDeleted": {
+      "title": "File permanently deleted",
+      "description": "{name} has been permanently deleted."
+    },
+    "permanentDeleteFailed": {
+      "title": "Permanent delete failed",
+      "description": "Failed to permanently delete file."
+    },
+    "uploadComplete": {
+      "title": "Upload complete",
+      "description": "Successfully uploaded {success, plural, one {# file} other {# files}}{failed, plural, =0 {} other {, # failed}}"
+    },
+    "uploadFailed": {
+      "title": "Upload failed",
+      "description": "Failed to upload {count, plural, one {# file} other {# files}}",
+      "fallback": "Upload failed"
+    },
+    "folderCreated": {
+      "title": "Folder created",
+      "description": "Successfully created folder \"{name}\""
+    },
+    "folderCreateFailed": {
+      "title": "Error creating folder",
+      "description": "Failed to create the folder. Please try again."
+    },
+    "invalidFolderName": "Invalid folder name",
+    "folderExists": "Folder already exists"
+  }
+}

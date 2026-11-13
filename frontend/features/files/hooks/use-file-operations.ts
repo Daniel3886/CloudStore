@@ -1,236 +1,222 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
+import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
 import { getErrorMessage } from "@/lib/api/client"
-import { filesApi } from "@/features/files/api"
 import { saveBlob } from "@/lib/download"
-import { FileItem } from "@/features/files/types"
+import { filesApi } from "@/features/files/api"
+import { getItemPath } from "@/features/files/lib/file-filters"
+import { joinPath } from "@/features/files/lib/file-utils"
+import type { FileItem } from "@/features/files/types"
+
+type MissingKeyAction = "download" | "delete" | "restore" | "permanentDelete"
+
+const kindOf = (file: FileItem) => (file.isFolder ? "folder" : "file")
 
 export function useFileOperations() {
-  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({})
+  const t = useTranslations("files.toasts")
+  const [loadingStates, setLoadingStates] = useState<Record<number, boolean>>({})
 
-  const setFileLoading = useCallback((fileId: number, loading: boolean) => {
-    setLoadingStates((prev) => ({ ...prev, [fileId]: loading }))
+  const withLoading = useCallback(async <T>(fileId: number, task: () => Promise<T>): Promise<T> => {
+    setLoadingStates((prev) => ({ ...prev, [fileId]: true }))
+    try {
+      return await task()
+    } finally {
+      setLoadingStates((prev) => ({ ...prev, [fileId]: false }))
+    }
   }, [])
+
+  const requireKey = useCallback(
+    (file: FileItem, action: MissingKeyAction): file is FileItem & { s3Key: string } => {
+      if (file.s3Key) return true
+      toast({ variant: "destructive", title: t("missingKey.title"), description: t(`missingKey.${action}`) })
+      return false
+    },
+    [t],
+  )
 
   const downloadFile = useCallback(
     async (file: FileItem): Promise<void> => {
-      if (!file.s3Key) {
-        toast({
-          variant: "destructive",
-          title: "Missing key",
-          description: "Cannot download file without S3 key.",
-        })
-        return
-      }
-
-      setFileLoading(file.id, true)
-
-      try {
-        saveBlob(await filesApi.download(file.s3Key), file.name)
-        toast({
-          variant: "success",
-          title: "Download started",
-          description: `${file.name} is being downloaded.`,
-        })
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Download failed",
-          description: getErrorMessage(error, "Failed to download file."),
-        })
-      } finally {
-        setFileLoading(file.id, false)
-      }
+      if (!requireKey(file, "download")) return
+      await withLoading(file.id, async () => {
+        try {
+          saveBlob(await filesApi.download(file.s3Key), file.name)
+          toast({
+            variant: "success",
+            title: t("downloadStarted.title"),
+            description: t("downloadStarted.file", { name: file.name }),
+          })
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: t("downloadFailed.title"),
+            description: getErrorMessage(error, t("downloadFailed.file")),
+          })
+        }
+      })
     },
-    [setFileLoading],
+    [requireKey, withLoading, t],
   )
 
   const downloadFolder = useCallback(
     async (folder: FileItem, filesInFolder: FileItem[]): Promise<void> => {
-      setFileLoading(folder.id, true)
-
-      try {
-        if (filesInFolder.length === 0) {
-          toast({
-            variant: "destructive",
-            title: "Empty folder",
-            description: "This folder contains no files to download.",
-          })
-          return
-        }
-
-        const JSZip = (await import("jszip")).default
-        const zip = new JSZip()
-
-        for (const file of filesInFolder) {
-          if (!file.s3Key) continue
-          try {
-            zip.file(file.name, await filesApi.download(file.s3Key))
-          } catch (error) {
-            console.error(`Failed to download file ${file.name}:`, error)
-          }
-        }
-
-        saveBlob(await zip.generateAsync({ type: "blob" }), `${folder.name}.zip`)
-
-        toast({
-          variant: "success",
-          title: "Download started",
-          description: `Folder "${folder.name}" is being downloaded as a zip file.`,
-        })
-      } catch (error) {
+      const downloadable = filesInFolder.filter((file) => file.s3Key)
+      if (downloadable.length === 0) {
         toast({
           variant: "destructive",
-          title: "Download failed",
-          description: getErrorMessage(error, "Failed to download folder."),
+          title: t("emptyFolder.title"),
+          description: t("emptyFolder.description"),
         })
-      } finally {
-        setFileLoading(folder.id, false)
+        return
       }
+
+      await withLoading(folder.id, async () => {
+        try {
+          const folderPath = getItemPath(folder)
+          const JSZip = (await import("jszip")).default
+          const zip = new JSZip()
+          let failed = 0
+
+          for (const file of downloadable) {
+            try {
+              const relativeDir = file.path.slice(folderPath.length + 1)
+              zip.file(joinPath(relativeDir, file.name), await filesApi.download(file.s3Key as string))
+            } catch {
+              failed++
+            }
+          }
+
+          if (failed === downloadable.length) throw new Error(t("downloadFailed.folder"))
+
+          saveBlob(await zip.generateAsync({ type: "blob" }), `${folder.name}.zip`)
+          toast({
+            variant: "success",
+            title: t("downloadStarted.title"),
+            description: t("downloadStarted.folder", { name: folder.name }),
+          })
+          if (failed > 0) {
+            toast({
+              variant: "destructive",
+              title: t("partialFolderDownload.title"),
+              description: t("partialFolderDownload.description", { count: failed }),
+            })
+          }
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: t("downloadFailed.title"),
+            description: getErrorMessage(error, t("downloadFailed.folder")),
+          })
+        }
+      })
     },
-    [setFileLoading],
+    [withLoading, t],
   )
 
   const deleteFile = useCallback(
-    async (file: FileItem, onSuccess: () => void): Promise<void> => {
-      if (!file.s3Key && !file.isFolder) {
-        toast({
-          variant: "destructive",
-          title: "Missing key",
-          description: "Cannot delete file without S3 key.",
-        })
-        return
-      }
-
-      setFileLoading(file.id, true)
-
-      try {
-        if (file.isFolder) {
-          await filesApi.deleteFolder(file.path ? `${file.path}/${file.name}` : file.name)
-        } else if (file.s3Key) {
-          await filesApi.moveToTrash(file.s3Key)
+    async (file: FileItem): Promise<boolean> => {
+      if (!file.isFolder && !requireKey(file, "delete")) return false
+      return withLoading(file.id, async () => {
+        try {
+          if (file.isFolder) {
+            await filesApi.deleteFolder(getItemPath(file))
+          } else {
+            await filesApi.moveToTrash(file.s3Key as string)
+          }
+          toast({
+            variant: "success",
+            title: t("deleted.title", { kind: kindOf(file) }),
+            description: t("deleted.description", { name: file.name }),
+          })
+          return true
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: t("deleteFailed.title"),
+            description: getErrorMessage(error, t("deleteFailed.description", { kind: kindOf(file) })),
+          })
+          return false
         }
-
-        toast({
-          variant: "success",
-          title: `${file.isFolder ? "Folder" : "File"} deleted`,
-          description: `${file.name} has been deleted successfully.`,
-        })
-        onSuccess()
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Delete failed",
-          description: getErrorMessage(error, `Failed to delete ${file.isFolder ? "folder" : "file"}.`),
-        })
-      } finally {
-        setFileLoading(file.id, false)
-      }
+      })
     },
-    [setFileLoading],
+    [requireKey, withLoading, t],
   )
 
   const renameFile = useCallback(
-    async (file: FileItem, newName: string, currentPath: string, onSuccess: () => void): Promise<string> => {
-      if (!file.s3Key && !file.isFolder) {
-        return "Cannot rename file without S3 key."
-      }
+    async (file: FileItem, newName: string): Promise<string | null> => {
+      if (!file.isFolder && !file.s3Key) return t("missingKey.rename")
+      if (newName === file.name) return null
 
-      if (newName === file.name) {
-        return ""
-      }
-
-      try {
-        const withPath = (name: string) => (currentPath ? `${currentPath}/${name}` : name)
-
-        if (file.isFolder) {
-          await filesApi.renameFolder(withPath(file.name), withPath(newName))
-        } else if (file.s3Key) {
-          await filesApi.rename(file.s3Key, withPath(newName))
+      return withLoading(file.id, async () => {
+        try {
+          if (file.isFolder) {
+            await filesApi.renameFolder(getItemPath(file), joinPath(file.path, newName))
+          } else {
+            await filesApi.rename(file.s3Key as string, joinPath(file.path, newName))
+          }
+          toast({
+            variant: "success",
+            title: t("renamed.title", { kind: kindOf(file) }),
+            description: t("renamed.description", { kind: kindOf(file), name: newName }),
+          })
+          return null
+        } catch (error) {
+          return getErrorMessage(error, t("renameFailed", { kind: kindOf(file) }))
         }
-
-        toast({
-          variant: "success",
-          title: `${file.isFolder ? "Folder" : "File"} renamed`,
-          description: `${file.isFolder ? "Folder" : "File"} renamed to "${newName}" successfully.`,
-        })
-        onSuccess()
-        return ""
-      } catch (error) {
-        return getErrorMessage(error, `Failed to rename ${file.isFolder ? "folder" : "file"}.`)
-      }
+      })
     },
-    [],
+    [withLoading, t],
   )
 
   const restoreFile = useCallback(
-    async (file: FileItem, onSuccess: () => void): Promise<void> => {
-      if (!file.s3Key) {
-        toast({
-          variant: "destructive",
-          title: "Missing key",
-          description: "Cannot restore file without S3 key.",
-        })
-        return
-      }
-
-      setFileLoading(file.id, true)
-
-      try {
-        await filesApi.restore(file.s3Key)
-        toast({
-          variant: "success",
-          title: "File restored",
-          description: `${file.name} has been restored from trash.`,
-        })
-        onSuccess()
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Restore failed",
-          description: getErrorMessage(error, "Failed to restore file."),
-        })
-      } finally {
-        setFileLoading(file.id, false)
-      }
+    async (file: FileItem): Promise<boolean> => {
+      if (!requireKey(file, "restore")) return false
+      return withLoading(file.id, async () => {
+        try {
+          await filesApi.restore(file.s3Key)
+          toast({
+            variant: "success",
+            title: t("restored.title"),
+            description: t("restored.description", { name: file.name }),
+          })
+          return true
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: t("restoreFailed.title"),
+            description: getErrorMessage(error, t("restoreFailed.description")),
+          })
+          return false
+        }
+      })
     },
-    [setFileLoading],
+    [requireKey, withLoading, t],
   )
 
   const permanentlyDeleteFile = useCallback(
-    async (file: FileItem, onSuccess: () => void): Promise<void> => {
-      if (!file.s3Key) {
-        toast({
-          variant: "destructive",
-          title: "Missing key",
-          description: "Cannot permanently delete file without S3 key.",
-        })
-        return
-      }
-
-      setFileLoading(file.id, true)
-
-      try {
-        await filesApi.deletePermanently(file.s3Key)
-        toast({
-          variant: "success",
-          title: "File permanently deleted",
-          description: `${file.name} has been permanently deleted.`,
-        })
-        onSuccess()
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Permanent delete failed",
-          description: getErrorMessage(error, "Failed to permanently delete file."),
-        })
-      } finally {
-        setFileLoading(file.id, false)
-      }
+    async (file: FileItem): Promise<boolean> => {
+      if (!requireKey(file, "permanentDelete")) return false
+      return withLoading(file.id, async () => {
+        try {
+          await filesApi.deletePermanently(file.s3Key)
+          toast({
+            variant: "success",
+            title: t("permanentlyDeleted.title"),
+            description: t("permanentlyDeleted.description", { name: file.name }),
+          })
+          return true
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: t("permanentDeleteFailed.title"),
+            description: getErrorMessage(error, t("permanentDeleteFailed.description")),
+          })
+          return false
+        }
+      })
     },
-    [setFileLoading],
+    [requireKey, withLoading, t],
   )
 
   return {

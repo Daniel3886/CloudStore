@@ -1,3 +1,4 @@
+import type { FileType } from "@/features/files/types"
 import {
   FileIcon,
   FileTextIcon,
@@ -9,7 +10,7 @@ import {
 } from "lucide-react"
 
 interface FileIconProps {
-  fileType: string
+  fileType: FileType
   className?: string
 }
 

@@ -1,4 +1,8 @@
 "use client"
+
+import type React from "react"
+import { useTranslations } from "next-intl"
+import { Download, Edit, MoreVertical, Share2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -9,20 +13,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Download, Trash2, Share2, Edit, MoreVertical } from "lucide-react"
 import { FileIconComponent } from "@/features/files/components/file-icons"
-import { formatFileSize, formatDate } from "@/features/files/lib/file-utils"
-import { FileItem } from "@/features/files/types"
+import { useFileFormatters } from "@/features/files/hooks/use-file-formatters"
+import type { FileAction, FileItem } from "@/features/files/types"
 
 interface FileCardProps {
   file: FileItem
   isLoading: boolean
   isTrashView?: boolean
   onFileClick: (file: FileItem) => void
-  onFileAction: (action: string, file: FileItem) => void
+  onFileAction: (action: FileAction, file: FileItem) => void
 }
 
 export function FileCard({ file, isLoading, isTrashView = false, onFileClick, onFileAction }: FileCardProps) {
+  const t = useTranslations("files")
+  const { formatSize } = useFileFormatters()
+
+  const actionHandler = (action: FileAction) => (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onFileAction(action, file)
+  }
+
   return (
     <Card
       className="overflow-hidden cursor-pointer hover:shadow-md hover:bg-muted/30 transition-all duration-200"
@@ -32,7 +43,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
         <div className="p-6">
           <div className="flex items-start justify-between">
             <div className="pointer-events-none">
-              <FileIconComponent fileType={file.type ?? "file"} />
+              <FileIconComponent fileType={file.type} />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -41,6 +52,8 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
                   size="icon"
                   className="-mr-2 -mt-2 hover:bg-muted/60"
                   disabled={isLoading}
+                  aria-label={t("card.actionsLabel", { name: file.name })}
+                  aria-busy={isLoading}
                   onClick={(e) => {
                     e.stopPropagation()
                     e.preventDefault()
@@ -54,82 +67,47 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t("card.actions")}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
                 {isTrashView ? (
                   <>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("restore", file)
-                      }}
-                    >
+                    <DropdownMenuItem onClick={actionHandler("restore")}>
                       <Download className="mr-2 h-4 w-4" />
-                      Restore
+                      {t("card.restore")}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("permanent-delete", file)
-                      }}
-                      className="text-red-500"
-                    >
+                    <DropdownMenuItem onClick={actionHandler("permanent-delete")} className="text-red-500">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Permanently
+                      {t("card.deletePermanently")}
                     </DropdownMenuItem>
                   </>
                 ) : (
                   <>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("download", file)
-                      }}
-                    >
+                    <DropdownMenuItem onClick={actionHandler("download")}>
                       <Download className="mr-2 h-4 w-4" />
-                      Download {file.isFolder ? "as ZIP" : ""}
+                      {file.isFolder ? t("card.downloadZip") : t("card.download")}
                     </DropdownMenuItem>
                     {!file.isFolder && (
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onFileAction("share", file)
-                        }}
-                      >
+                      <DropdownMenuItem onClick={actionHandler("share")}>
                         <Share2 className="h-4 w-4 mr-2" />
-                        Share
+                        {t("card.share")}
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("rename", file)
-                      }}
-                    >
+                    <DropdownMenuItem onClick={actionHandler("rename")}>
                       <Edit className="mr-2 h-4 w-4" />
-                      Rename
+                      {t("card.rename")}
                     </DropdownMenuItem>
+                    {!file.isFolder && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={actionHandler("details")}>{t("card.details")}</DropdownMenuItem>
+                      </>
+                    )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("details", file)
-                      }}
-                    >
-                      Details
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onFileAction("delete", file)
-                      }}
-                      className="text-red-500"
-                    >
+                    <DropdownMenuItem onClick={actionHandler("delete")} className="text-red-500">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Move to Trash
+                      {t("card.moveToTrash")}
                     </DropdownMenuItem>
                   </>
                 )}
@@ -141,8 +119,8 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
               {file.name}
             </h3>
             <div className="mt-1 text-xs text-muted-foreground">
-              {file.isFolder ? <p>Folder</p> : <p>{formatFileSize(file.size ?? 0)}</p>}
-              {isTrashView && <p className="text-red-500">In Trash</p>}
+              {file.isFolder ? <p>{t("browser.folder")}</p> : <p>{formatSize(file.size ?? 0)}</p>}
+              {isTrashView && <p className="text-red-500">{t("browser.inTrash")}</p>}
             </div>
           </div>
         </div>

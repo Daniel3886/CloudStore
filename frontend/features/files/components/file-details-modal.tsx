@@ -1,9 +1,8 @@
 "use client"
 
-import { getErrorMessage } from "@/lib/api/client"
-import { filesApi } from "@/features/files/api"
-import { saveBlob } from "@/lib/download"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { Download, FileIcon, Globe, Share2, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -14,76 +13,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FileIcon, Calendar, HardDrive, User, Share2, Download, Trash2, Edit3, Globe, Users } from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { formatDate, formatFileSize } from "@/features/files/lib/file-utils"
 import { ShareModal } from "@/features/sharing/components/share-modal"
 import { FileSharingManagement } from "@/features/sharing/components/file-sharing-management"
 import { PublicLinkGenerator } from "@/features/public-links/components/public-link-generator"
+import { FileDetailsInfo } from "@/features/files/components/file-details-info"
+import type { FileItem } from "@/features/files/types"
+
+type SubModal = "share" | "manage" | "publicLink" | null
 
 interface FileDetailsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  file: {
-    id?: string | number
-    name: string
-    displayName?: string
-    size?: number
-    uploadedAt?: string
-    s3Key?: string
-    owner?: string
-  } | null
-  onDelete?: (file: any) => void
-  onRename?: (file: any) => void
-  onDownload?: (file: any) => void
+  file: FileItem
+  onDownload: (file: FileItem) => void
 }
 
-export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename, onDownload }: FileDetailsModalProps) {
-  const [shareModalOpen, setShareModalOpen] = useState(false)
-  const [managementModalOpen, setManagementModalOpen] = useState(false)
-  const [publicLinkModalOpen, setPublicLinkModalOpen] = useState(false)
+export function FileDetailsModal({ open, onOpenChange, file, onDownload }: FileDetailsModalProps) {
+  const t = useTranslations("files.details")
+  const [subModal, setSubModal] = useState<SubModal>(null)
 
-  if (!file) return null
-
-  const handleDownload = async () => {
-    if (!file.s3Key) {
-      toast({
-        variant: "destructive",
-        title: "Cannot download",
-        description: "File location not available",
-      })
-      return
-    }
-
-    try {
-      saveBlob(await filesApi.download(file.s3Key), file.name)
-
-      toast({
-        title: "Download started",
-        description: `Downloading "${file.name}"`,
-      })
-    } catch (error) {
-      console.error("Failed to download file:", error)
-      toast({
-        variant: "destructive",
-        title: "Download failed",
-        description: getErrorMessage(error, "Could not download the file"),
-      })
-    }
-  }
-
-  const handleShare = () => {
-    setShareModalOpen(true)
-  }
-
-  const handleManageSharing = () => {
-    setManagementModalOpen(true)
-  }
-
-  const handlePublicLink = () => {
-    setPublicLinkModalOpen(true)
-  }
+  const subModalProps = (name: Exclude<SubModal, null>) => ({
+    open: subModal === name,
+    onOpenChange: (isOpen: boolean) => setSubModal(isOpen ? name : null),
+  })
 
   return (
     <>
@@ -91,116 +43,64 @@ export function FileDetailsModal({ open, onOpenChange, file, onDelete, onRename,
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <FileIcon className="h-5 w-5" />
-              File Details
+              <FileIcon className="h-5 w-5" aria-hidden />
+              {t("title")}
             </DialogTitle>
-            <DialogDescription>View and manage file information and sharing settings.</DialogDescription>
+            <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">{file.displayName || file.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {typeof file.size === "number" && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <HardDrive className="h-4 w-4 text-muted-foreground" />
-                    <span>{formatFileSize(file.size)}</span>
-                  </div>
-                )}
-
-                {file.uploadedAt && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>Uploaded {formatDate(file.uploadedAt)}</span>
-                  </div>
-                )}
-
-                {file.owner && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>Owned by {file.owner}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <FileDetailsInfo file={file} />
 
             <Separator />
 
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Sharing Options</h4>
+            <section className="space-y-2">
+              <h4 className="text-sm font-medium">{t("sharingOptions")}</h4>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" onClick={handleShare}>
+                <Button variant="outline" size="sm" onClick={() => setSubModal("share")}>
                   <Share2 className="h-4 w-4 mr-2" />
-                  Share
+                  {t("share")}
                 </Button>
-
-                <Button variant="outline" size="sm" onClick={handleManageSharing}>
+                <Button variant="outline" size="sm" onClick={() => setSubModal("manage")}>
                   <Users className="h-4 w-4 mr-2" />
-                  Manage
+                  {t("manage")}
                 </Button>
-
-                <Button variant="outline" size="sm" onClick={handlePublicLink} className="col-span-2 bg-transparent">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSubModal("publicLink")}
+                  className="col-span-2 bg-transparent"
+                >
                   <Globe className="h-4 w-4 mr-2" />
-                  Generate Public Link
+                  {t("publicLink")}
                 </Button>
               </div>
-            </div>
+            </section>
 
             <Separator />
 
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">File Actions</h4>
+            <section className="space-y-2">
+              <h4 className="text-sm font-medium">{t("fileActions")}</h4>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" onClick={onDownload ? () => onDownload(file) : handleDownload}>
+                <Button variant="outline" size="sm" onClick={() => onDownload(file)}>
                   <Download className="h-4 w-4 mr-2" />
-                  Download
+                  {t("download")}
                 </Button>
-
-                {onRename && (
-                  <Button variant="outline" size="sm" onClick={() => onRename(file)}>
-                    <Edit3 className="h-4 w-4 mr-2" />
-                    Rename
-                  </Button>
-                )}
-
-                {onDelete && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDelete(file)}
-                    className="text-red-600 hover:text-red-700 col-span-2"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete File
-                  </Button>
-                )}
               </div>
-            </div>
+            </section>
           </div>
 
           <DialogFooter>
             <Button variant="secondary" onClick={() => onOpenChange(false)}>
-              Close
+              {t("close")}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <ShareModal open={shareModalOpen} onOpenChange={setShareModalOpen} file={file} />
-
-      <FileSharingManagement open={managementModalOpen} onOpenChange={setManagementModalOpen} file={file} />
-      {file.id != null && (
-        <PublicLinkGenerator
-          open={publicLinkModalOpen}
-          onOpenChange={setPublicLinkModalOpen}
-          file={{
-            ...file,
-            id: Number(file.id),
-          }}
-        />
-      )}
+      <ShareModal {...subModalProps("share")} file={file} />
+      <FileSharingManagement {...subModalProps("manage")} file={file} />
+      <PublicLinkGenerator {...subModalProps("publicLink")} file={file} />
     </>
   )
 }

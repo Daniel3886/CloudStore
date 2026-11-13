@@ -23,3 +23,15 @@ export function setVirtualFolders(folders: string[]): void {
   if (!isBrowser()) return
   localStorage.setItem(getVirtualFoldersKey(), JSON.stringify(folders))
 }
+
+function isWithin(folder: string, folderPath: string): boolean {
+  return folder === folderPath || folder.startsWith(`${folderPath}/`)
+}
+
+export function removeFolderTree(folders: string[], folderPath: string): string[] {
+  return folders.filter((folder) => !isWithin(folder, folderPath))
+}
+
+export function renameFolderTree(folders: string[], oldPath: string, newPath: string): string[] {
+  return folders.map((folder) => (isWithin(folder, oldPath) ? newPath + folder.slice(oldPath.length) : folder))
+}

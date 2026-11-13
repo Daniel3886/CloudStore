@@ -19,22 +19,22 @@ export interface PublicFileAccessToken {
   active: boolean
 }
 
-export class PublicFileSharingAPI {
-  static generatePublicLink(fileId: number): Promise<PublicLinkResponse> {
+export const publicLinksApi = {
+  generatePublicLink(fileId: number): Promise<PublicLinkResponse> {
     return api.post<PublicLinkResponse>(`/share/public/${fileId}`, { errorMessage: "Failed to generate public link" })
-  }
+  },
 
-  static getActiveLinks(): Promise<PublicFileAccessToken[]> {
+  getActiveLinks(): Promise<PublicFileAccessToken[]> {
     return api.get<PublicFileAccessToken[]>("/share/public/list", { errorMessage: "Failed to fetch active links" })
-  }
+  },
 
-  static async revokePublicLink(token: string): Promise<void> {
+  async revokePublicLink(token: string): Promise<void> {
     await api.delete(`/share/public/access/${encodeURIComponent(token)}`, {
       errorMessage: "Failed to revoke public link",
     })
-  }
+  },
 
-  static getPublicFileUrl(token: string, preview = false): string {
+  getPublicFileUrl(token: string, preview = false): string {
     return buildUrl(`/share/public/access/${encodeURIComponent(token)}`, preview ? { preview: true } : undefined)
-  }
+  },
 }

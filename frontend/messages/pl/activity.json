@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Aktywność",
+    "description": "Przeglądaj ostatnią aktywność na plikach i zdarzenia systemowe"
+  },
+  "browser": {
+    "title": "Dziennik aktywności",
+    "refresh": "Odśwież aktywność",
+    "loading": "Ładowanie aktywności..."
+  },
+  "period": {
+    "label": "Okres",
+    "days": "{days, plural, one {Ostatni dzień} few {Ostatnie # dni} many {Ostatnie # dni} other {Ostatnie # dnia}}",
+    "all": "Cały okres"
+  },
+  "empty": {
+    "title": "Brak aktywności",
+    "period": "{days, plural, one {Brak aktywności w ostatnim dniu.} few {Brak aktywności w ostatnich # dniach.} many {Brak aktywności w ostatnich # dniach.} other {Brak aktywności w ostatnich # dnia.}}",
+    "all": "Nie zarejestrowano jeszcze żadnej aktywności."
+  },
+  "error": {
+    "title": "Nie udało się wczytać aktywności",
+    "fallback": "Nie udało się wczytać dziennika aktywności. Spróbuj ponownie.",
+    "retry": "Spróbuj ponownie"
+  },
+  "log": {
+    "justNow": "Przed chwilą",
+    "file": "Plik: {name}"
+  },
+  "actions": {
+    "FILE_UPLOAD": "Przesłano plik",
+    "FILE_DELETE": "Usunięto plik",
+    "FILE_SOFT_DELETE": "Przeniesiono plik do kosza",
+    "FILE_PERMANENT_DELETE": "Trwale usunięto plik",
+    "FILE_RESTORE": "Przywrócono plik",
+    "FILE_RENAME": "Zmieniono nazwę pliku",
+    "FILE_MOVE": "Przeniesiono plik",
+    "SHARE_FILE": "Udostępniono plik",
+    "RESHARE_FILE": "Ponownie udostępniono plik",
+    "REVOKE_ACCESS": "Odebrano dostęp",
+    "ACCEPT_SHARE": "Zaakceptowano udostępnienie",
+    "DECLINE_SHARE": "Odrzucono udostępnienie",
+    "SHARE_ACCEPTED": "Udostępnienie zaakceptowane",
+    "SHARE_DECLINED": "Udostępnienie odrzucone",
+    "UPDATE_MESSAGE": "Zaktualizowano wiadomość udostępnienia",
+    "REMOVE_MESSAGE": "Usunięto wiadomość udostępnienia",
+    "PUBLIC_LINK_GENERATION": "Utworzono link publiczny",
+    "PUBLIC_LINK_REVOCATION": "Unieważniono link publiczny",
+    "PUBLIC_FILE_ACCESS": "Otwarto plik przez link publiczny",
+    "USER_REGISTER": "Zarejestrowano konto",
+    "PASSWORD_CHANGE": "Zmieniono hasło"
+  }
+}

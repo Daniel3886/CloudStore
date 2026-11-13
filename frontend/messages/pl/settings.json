@@ -1,0 +1,73 @@
+{
+  "title": "Ustawienia",
+  "loading": "Ładowanie ustawień...",
+  "passwordField": {
+    "show": "Pokaż hasło",
+    "hide": "Ukryj hasło"
+  },
+  "profile": {
+    "title": "Informacje o profilu",
+    "email": "Adres e-mail",
+    "username": "Nazwa użytkownika"
+  },
+  "changePassword": {
+    "title": "Bezpieczeństwo",
+    "currentPassword": "Obecne hasło",
+    "newPassword": "Nowe hasło",
+    "confirmPassword": "Potwierdź nowe hasło",
+    "submit": "Zmień hasło",
+    "submitting": "Zmienianie hasła...",
+    "validation": {
+      "missingFields": {
+        "title": "Brakujące pola",
+        "description": "Wypełnij wszystkie pola hasła"
+      },
+      "mismatch": {
+        "title": "Hasła nie są zgodne",
+        "description": "Nowe hasło i jego potwierdzenie muszą być takie same"
+      },
+      "tooShort": {
+        "title": "Hasło jest za krótkie",
+        "description": "Hasło musi mieć co najmniej {min, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
+      }
+    },
+    "success": {
+      "title": "Hasło zmienione",
+      "description": "Twoje hasło zostało zaktualizowane"
+    },
+    "error": {
+      "title": "Nie udało się zmienić hasła",
+      "fallback": "Nie można zmienić hasła"
+    }
+  },
+  "deleteAccount": {
+    "title": "Strefa niebezpieczna",
+    "description": "Trwale usuń swoje konto i wszystkie powiązane dane. Tej operacji nie można cofnąć.",
+    "open": "Usuń moje konto",
+    "dialog": {
+      "title": "Usuń konto",
+      "warning": "Tej operacji nie można cofnąć.",
+      "description": "Wpisz hasło, aby potwierdzić usunięcie:",
+      "password": "Hasło",
+      "cancel": "Anuluj",
+      "confirm": "Usuń konto",
+      "deleting": "Usuwanie..."
+    },
+    "passwordRequired": {
+      "title": "Błąd",
+      "description": "Wpisz hasło, aby usunąć konto"
+    },
+    "success": {
+      "title": "Konto usunięte",
+      "description": "Twoje konto zostało trwale usunięte"
+    },
+    "error": {
+      "title": "Nie udało się usunąć konta",
+      "fallback": "Nie można usunąć konta"
+    }
+  },
+  "missingEmail": {
+    "title": "Błąd",
+    "description": "Nie znaleziono adresu e-mail użytkownika"
+  }
+}

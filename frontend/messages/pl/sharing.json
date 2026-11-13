@@ -1,0 +1,101 @@
+{
+  "form": {
+    "emailLabel": "Adres e-mail",
+    "emailPlaceholder": "Wpisz adres e-mail",
+    "messageLabel": "Wiadomość (opcjonalnie)",
+    "messagePlaceholder": "Dodaj wiadomość dla odbiorcy",
+    "submit": "Udostępnij plik",
+    "submitting": "Udostępnianie...",
+    "invalidEmail": "Wpisz poprawny adres e-mail",
+    "missingFileId": "Nie można teraz udostępnić tego pliku. Odśwież stronę i spróbuj ponownie."
+  },
+  "shareModal": {
+    "title": "Udostępnij „{name}”",
+    "specificUsers": "Udostępnij wybranym osobom",
+    "publicSharing": "Udostępnianie publiczne",
+    "managePublicLinks": "Zarządzaj linkami publicznymi"
+  },
+  "management": {
+    "title": "Zarządzaj udostępnianiem – {name}",
+    "shareNew": "Udostępnij nowej osobie",
+    "peopleWithAccess": "Osoby z dostępem",
+    "ownerInitials": "Ty",
+    "ownerName": "Ty (właściciel)",
+    "ownerDescription": "Pełny dostęp do tego pliku",
+    "ownerBadge": "Właściciel",
+    "userDescription": "Ma dostęp do tego pliku",
+    "sharedBadge": "Udostępniono",
+    "revokeAccess": "Odbierz dostęp użytkownikowi {email}",
+    "loading": "Ładowanie osób z dostępem",
+    "empty": "Nikt inny nie ma dostępu do tego pliku"
+  },
+  "browser": {
+    "title": "Udostępnione dla mnie",
+    "count": "{count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}",
+    "loading": "Ładowanie udostępnionych plików...",
+    "emptyTitle": "Brak udostępnionych plików",
+    "emptyDescription": "Tutaj pojawią się pliki udostępnione Tobie.",
+    "sharedBy": "Udostępnia: {name}",
+    "sharedAt": "Udostępniono {date}",
+    "statusChangedAt": "{status, select, ACCEPTED {Zaakceptowano} DECLINED {Odrzucono} other {Zaktualizowano}} {date}",
+    "message": "Wiadomość",
+    "accept": "Zaakceptuj „{name}”",
+    "decline": "Odrzuć „{name}”",
+    "download": "Pobierz „{name}”"
+  },
+  "status": {
+    "PENDING": "Oczekuje",
+    "ACCEPTED": "Zaakceptowano",
+    "DECLINED": "Odrzucono"
+  },
+  "toast": {
+    "shared": {
+      "title": "Plik został udostępniony",
+      "description": "Udostępniono „{name}” użytkownikowi {email}"
+    },
+    "shareFailed": {
+      "title": "Nie udało się udostępnić pliku",
+      "fallback": "Nie można udostępnić pliku"
+    },
+    "revoked": {
+      "title": "Dostęp odebrany",
+      "description": "Odebrano dostęp użytkownikowi {email}"
+    },
+    "revokeFailed": {
+      "title": "Nie udało się odebrać dostępu",
+      "fallback": "Nie można odebrać dostępu"
+    },
+    "loadUsersFailed": {
+      "title": "Nie udało się wczytać osób z dostępem",
+      "fallback": "Nie można wczytać osób, którym udostępniono ten plik"
+    },
+    "loadFailed": {
+      "title": "Nie udało się wczytać udostępnionych plików",
+      "fallback": "Nie można wczytać plików udostępnionych Tobie"
+    },
+    "accepted": {
+      "title": "Udostępnienie zaakceptowane",
+      "description": "Masz teraz dostęp do „{name}”"
+    },
+    "acceptFailed": {
+      "title": "Nie udało się zaakceptować udostępnienia",
+      "fallback": "Nie można zaakceptować udostępnienia pliku"
+    },
+    "declined": {
+      "title": "Udostępnienie odrzucone",
+      "description": "Odrzucono dostęp do „{name}”"
+    },
+    "declineFailed": {
+      "title": "Nie udało się odrzucić udostępnienia",
+      "fallback": "Nie można odrzucić udostępnienia pliku"
+    },
+    "downloadStarted": {
+      "title": "Rozpoczęto pobieranie",
+      "description": "Pobieranie „{name}”"
+    },
+    "downloadFailed": {
+      "title": "Pobieranie nie powiodło się",
+      "fallback": "Nie można pobrać pliku"
+    }
+  }
+}

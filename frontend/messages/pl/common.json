@@ -1,0 +1,37 @@
+{
+  "appName": "CloudStore",
+  "appTagline": "Bezpieczne przechowywanie plików",
+  "appDescription": "Bezpieczna i skalowalna usługa przechowywania plików",
+  "loading": "Ładowanie...",
+  "loadingApp": "Ładowanie CloudStore...",
+  "cancel": "Anuluj",
+  "close": "Zamknij",
+  "save": "Zapisz",
+  "delete": "Usuń",
+  "retry": "Spróbuj ponownie",
+  "unexpectedError": "Wystąpił nieoczekiwany błąd",
+  "nav": {
+    "files": "Moje pliki",
+    "recent": "Ostatnie",
+    "shared": "Udostępnione",
+    "activity": "Aktywność",
+    "trash": "Kosz",
+    "openMenu": "Otwórz menu nawigacji",
+    "menuTitle": "Menu nawigacji"
+  },
+  "userMenu": {
+    "openMenu": "Otwórz menu użytkownika",
+    "fallbackName": "Użytkownik",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj się"
+  },
+  "theme": {
+    "toggle": "Zmień motyw",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "Systemowy"
+  },
+  "fileSize": {
+    "bytes": "{count, plural, one {# bajt} few {# bajty} many {# bajtów} other {# bajta}}"
+  }
+}

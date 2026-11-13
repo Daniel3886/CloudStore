@@ -1,0 +1,72 @@
+{
+  "manager": {
+    "title": "Zarządzaj linkami publicznymi",
+    "activeCount": "{count, plural, one {# aktywny link} few {# aktywne linki} many {# aktywnych linków} other {# aktywnego linku}}",
+    "refresh": "Odśwież",
+    "loading": "Ładowanie linków publicznych",
+    "emptyTitle": "Brak aktywnych linków publicznych",
+    "emptyDescription": "Nie utworzono jeszcze żadnych linków publicznych. Utwórz link w szczegółach pliku."
+  },
+  "actions": {
+    "copyPreview": "Kopiuj link do podglądu",
+    "openPreview": "Otwórz podgląd",
+    "preview": "Podgląd",
+    "copyDownload": "Kopiuj link do pobrania",
+    "openDownload": "Otwórz pobieranie",
+    "download": "Pobierz",
+    "revoke": "Unieważnij link"
+  },
+  "expiry": {
+    "expired": "Wygasł",
+    "hoursRemaining": "Pozostało {hours} godz. {minutes} min",
+    "minutesRemaining": "Pozostało {minutes} min"
+  },
+  "revokeDialog": {
+    "title": "Unieważnij link publiczny",
+    "description": "Czy na pewno chcesz unieważnić link publiczny do „{name}”? Plik od razu przestanie być dostępny przez ten link.",
+    "cancel": "Anuluj",
+    "confirm": "Unieważnij link"
+  },
+  "generator": {
+    "title": "Utwórz link publiczny",
+    "size": "Rozmiar: {size}",
+    "unknownSize": "Nieznany rozmiar",
+    "expiryBadge": "Ważny 24 godz.",
+    "createTitle": "Utwórz link publiczny",
+    "createDescription": "Utwórz link publiczny, dzięki któremu każdy będzie mieć dostęp do tego pliku przez 24 godziny.",
+    "generate": "Utwórz link publiczny",
+    "generating": "Tworzenie...",
+    "successTitle": "Link publiczny utworzony!",
+    "successDescription": "Twój plik jest teraz dostępny publicznie. Linki wygasają po 24 godzinach.",
+    "downloadLink": "Link do pobrania",
+    "previewLink": "Link do podglądu",
+    "generateAnother": "Utwórz kolejny link"
+  },
+  "toast": {
+    "copied": {
+      "title": "Link skopiowany",
+      "preview": "Link do podglądu skopiowano do schowka",
+      "download": "Link do pobrania skopiowano do schowka"
+    },
+    "copyFailed": {
+      "title": "Nie udało się skopiować linku",
+      "description": "Przeglądarka zablokowała dostęp do schowka. Skopiuj link ręcznie."
+    },
+    "loadFailed": {
+      "title": "Nie udało się wczytać linków",
+      "fallback": "Nie można wczytać aktywnych linków publicznych"
+    },
+    "revoked": {
+      "title": "Link unieważniony",
+      "description": "Publiczny dostęp do „{name}” został odebrany"
+    },
+    "revokeFailed": {
+      "title": "Nie udało się unieważnić linku",
+      "fallback": "Nie można unieważnić linku publicznego"
+    },
+    "generateFailed": {
+      "title": "Nie udało się utworzyć linku",
+      "fallback": "Nie można utworzyć linku publicznego"
+    }
+  }
+}

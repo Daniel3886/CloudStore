@@ -2,11 +2,11 @@
 
 import { useCallback } from "react"
 import { useFormatter, useTranslations } from "next-intl"
-import { toSizeUnit } from "@/features/public-links/lib/links"
+import { toSizeUnit } from "@/lib/file-size"
 
 export function useFormatFileSize() {
   const format = useFormatter()
-  const t = useTranslations("publicLinks.fileSize")
+  const t = useTranslations("common.fileSize")
 
   return useCallback(
     (bytes: number) => {

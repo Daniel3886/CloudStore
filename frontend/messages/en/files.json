@@ -1,6 +1,5 @@
 {
   "unknownFile": "Unknown File",
-  "size": "{size} {unit, select, KB {KB} MB {MB} GB {GB} TB {TB} other {Bytes}}",
   "pages": {
     "files": "My Files",
     "recent": "Recent Files",

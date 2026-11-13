@@ -42,9 +42,6 @@
     "previewLink": "Preview Link",
     "generateAnother": "Generate Another Link"
   },
-  "fileSize": {
-    "bytes": "{count, plural, one {# byte} other {# bytes}}"
-  },
   "toast": {
     "copied": {
       "title": "Link copied",

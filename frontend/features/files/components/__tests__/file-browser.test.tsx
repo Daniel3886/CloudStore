@@ -31,7 +31,7 @@ describe("FileBrowser", () => {
 
     expect(screen.getByText("Loading files...")).toBeInTheDocument()
     expect(await screen.findByText("report.pdf")).toBeInTheDocument()
-    expect(screen.getByText("1.5 KB")).toBeInTheDocument()
+    expect(screen.getByText("1.5 kB")).toBeInTheDocument()
     expect(screen.getByText("docs")).toBeInTheDocument()
     expect(screen.getByText("Folder")).toBeInTheDocument()
     expect(screen.queryByText("notes.txt")).not.toBeInTheDocument()

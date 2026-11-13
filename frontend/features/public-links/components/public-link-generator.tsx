@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import { PublicLinkField } from "@/features/public-links/components/public-link-field"
-import { useFormatFileSize } from "@/features/public-links/hooks/use-format-file-size"
+import { useFormatFileSize } from "@/hooks/use-format-file-size"
 import { useGeneratePublicLink } from "@/features/public-links/hooks/use-generate-public-link"
 
 interface PublicLinkGeneratorProps {

@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { publicLinksApi, type PublicFileAccessToken } from "@/features/public-links/api"
 import { CopyLinkButton } from "@/features/public-links/components/copy-link-button"
-import { useFormatFileSize } from "@/features/public-links/hooks/use-format-file-size"
+import { useFormatFileSize } from "@/hooks/use-format-file-size"
 import { canPreview, getExpiryInfo, openInNewTab } from "@/features/public-links/lib/links"
 
 interface PublicLinkRowProps {

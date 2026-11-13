@@ -7,6 +7,7 @@ import { useAuth } from "@/features/auth/components/auth-provider"
 import { ProfileCard } from "@/features/settings/components/profile-card"
 import { ChangePasswordCard } from "@/features/settings/components/change-password-card"
 import { DeleteAccountCard } from "@/features/settings/components/delete-account-card"
+import { LanguageCard } from "@/features/settings/components/language-card"
 
 export function SettingsPage() {
   const t = useTranslations("settings")
@@ -42,6 +43,7 @@ export function SettingsPage() {
       </div>
 
       <ProfileCard email={user?.email} username={user?.username} />
+      <LanguageCard />
       <ChangePasswordCard email={user?.email} />
       <DeleteAccountCard email={user?.email} onDeleted={logout} />
     </div>

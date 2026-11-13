@@ -69,5 +69,14 @@
   "missingEmail": {
     "title": "Błąd",
     "description": "Nie znaleziono adresu e-mail użytkownika"
+  },
+  "language": {
+    "title": "Język",
+    "description": "Wybierz język używany w CloudStore.",
+    "label": "Język interfejsu",
+    "error": {
+      "title": "Nie udało się zmienić języka",
+      "fallback": "Spróbuj ponownie."
+    }
   }
 }

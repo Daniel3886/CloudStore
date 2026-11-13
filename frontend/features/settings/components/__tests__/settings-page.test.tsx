@@ -23,6 +23,8 @@ vi.mock("@/features/auth/components/auth-provider", () => ({
 }))
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }) }))
+vi.mock("@/i18n/actions", () => ({ setUserLocale: vi.fn() }))
 
 async function renderPage() {
   const user = userEvent.setup()

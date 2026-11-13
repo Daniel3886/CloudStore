@@ -69,5 +69,14 @@
   "missingEmail": {
     "title": "Error",
     "description": "User email not found"
+  },
+  "language": {
+    "title": "Language",
+    "description": "Choose the language used across CloudStore.",
+    "label": "Display language",
+    "error": {
+      "title": "Couldn't change the language",
+      "fallback": "Please try again."
+    }
   }
 }

@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Plus, Search, Upload } from "lucide-react";
-import { UploadModal } from "./upload-modal";
-import { NewFolderModal } from "./new-folder-modal";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Plus, Search, Upload } from "lucide-react"
+import { UploadModal } from "./upload-modal"
+import { NewFolderModal } from "./new-folder-modal"
 
 interface FileHeaderProps {
-  title?: string;
-  type?: "all" | "shared" | "recent" | "starred" | "trash";
-  onRefresh?: () => void;
-  currentPath?: string;
-  onSearch?: (query: string) => void;
+  title?: string
+  type?: "all" | "shared" | "recent" | "starred" | "trash"
+  onRefresh?: () => void
+  currentPath?: string
+  onSearch?: (query: string) => void
 }
 
 export function FileHeader({
@@ -22,16 +22,16 @@ export function FileHeader({
   currentPath = "",
   onSearch,
 }: FileHeaderProps) {
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [newFolderOpen, setNewFolderOpen] = useState(false)
 
-  const showActionButtons = type === "all";
+  const showActionButtons = type === "all"
 
   const handleFolderCreated = () => {
     if (onRefresh) {
-      onRefresh();
+      onRefresh()
     }
-  };
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,7 +65,7 @@ export function FileHeader({
             open={uploadOpen}
             onOpenChange={setUploadOpen}
             onUploadComplete={onRefresh}
-            currentPath={currentPath} 
+            currentPath={currentPath}
           />
 
           <NewFolderModal
@@ -77,5 +77,5 @@ export function FileHeader({
         </>
       )}
     </div>
-  );
+  )
 }

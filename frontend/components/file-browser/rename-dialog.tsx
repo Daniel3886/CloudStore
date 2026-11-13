@@ -17,7 +17,6 @@ import { FormError } from "@/components/ui/form-error"
 import { getFileExtension, getFileNameWithoutExtension, validateFileName } from "@/lib/file-utils"
 import { FileItem } from "@/lib/file"
 
-
 interface RenameDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -39,7 +38,7 @@ export function RenameDialog({ open, onOpenChange, file, onRename, isLoading }: 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
-    setError("") 
+    setError("")
 
     if (file?.isFolder) {
       setNewFileName(value)

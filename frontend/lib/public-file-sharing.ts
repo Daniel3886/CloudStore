@@ -29,7 +29,9 @@ export class PublicFileSharingAPI {
   }
 
   static async revokePublicLink(token: string): Promise<void> {
-    await api.delete(`/share/public/access/${encodeURIComponent(token)}`, { errorMessage: "Failed to revoke public link" })
+    await api.delete(`/share/public/access/${encodeURIComponent(token)}`, {
+      errorMessage: "Failed to revoke public link",
+    })
   }
 
   static getPublicFileUrl(token: string, preview = false): string {

@@ -6,11 +6,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
       <ProtectedRoute>
@@ -20,11 +16,11 @@ export default function DashboardLayout({
               <div className="size-8 rounded-md bg-primary text-primary-foreground grid place-items-center">CS</div>
               <span>CloudStore</span>
             </div>
-            
+
             <div className="md:hidden">
               <MobileNavTrigger />
             </div>
-            
+
             <div className="ml-auto flex items-center gap-4">
               <ModeToggle />
               <UserNav />

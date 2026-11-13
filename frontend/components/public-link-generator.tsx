@@ -16,7 +16,7 @@ interface PublicLinkGeneratorProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   file: {
-    id: number 
+    id: number
     name: string
     displayName?: string
     size?: number
@@ -28,26 +28,24 @@ export function PublicLinkGenerator({ open, onOpenChange, file }: PublicLinkGene
   const [publicLinks, setPublicLinks] = useState<PublicLinkResponse | null>(null)
 
   const handleGenerateLink = async () => {
-  try {
-    const response = await PublicFileSharingAPI.generatePublicLink(file.id)
-    setPublicLinks(response)
+    try {
+      const response = await PublicFileSharingAPI.generatePublicLink(file.id)
+      setPublicLinks(response)
 
-    const normalizedId = Number(file.id)
-    if (isNaN(normalizedId)) {
-      console.error("Invalid file id:", file.id)
-      return
+      const normalizedId = Number(file.id)
+      if (isNaN(normalizedId)) {
+        console.error("Invalid file id:", file.id)
+        return
+      }
+    } catch (error: any) {
+      console.error("Failed to generate link:", error)
+      toast({
+        variant: "destructive",
+        title: "Failed to generate link",
+        description: error.message || "Could not generate public link",
+      })
     }
-
-  } catch (error: any) {
-    console.error("Failed to generate link:", error)
-    toast({
-      variant: "destructive",
-      title: "Failed to generate link",
-      description: error.message || "Could not generate public link",
-    })
   }
-}
-
 
   const handleCopyLink = (link: string, type: string) => {
     navigator.clipboard.writeText(link)

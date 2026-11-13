@@ -26,7 +26,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
   return (
     <Card
       className="overflow-hidden cursor-pointer hover:shadow-md hover:bg-muted/30 transition-all duration-200"
-      onClick={() => !isTrashView && onFileClick(file)} 
+      onClick={() => !isTrashView && onFileClick(file)}
     >
       <CardContent className="p-0">
         <div className="p-6">

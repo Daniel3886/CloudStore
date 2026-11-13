@@ -13,8 +13,8 @@ interface UseFileDataProps {
 
 export function useFileData({ type = "all" }: UseFileDataProps) {
   const [files, setFiles] = useState<FileItem[]>([])
-  const [initialLoading, setInitialLoading] = useState(true) 
-  const [backgroundLoading, setBackgroundLoading] = useState(false) 
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [backgroundLoading, setBackgroundLoading] = useState(false)
 
   const [virtualFolders, setVirtualFolders] = useState<string[]>([])
   const cacheRef = useRef<Record<string, FileItem[]>>({})
@@ -51,7 +51,8 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
 
     if (extension === "pdf") return "pdf"
     for (const [, exts] of Object.entries(extGroups)) {
-      if (exts.includes(extension)) return Object.keys(extGroups).find(k => extGroups[k].includes(extension)) || "file"
+      if (exts.includes(extension))
+        return Object.keys(extGroups).find((k) => extGroups[k].includes(extension)) || "file"
     }
     return "file"
   }, [])
@@ -69,7 +70,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
         s3Key: "",
         displayName: folderName,
         type: "folder",
-        size: undefined, 
+        size: undefined,
         modified: String(Date.now()),
         owner: "You",
         path: parentPath,
@@ -188,7 +189,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
 
   useEffect(() => {
     fetchFiles()
-  }, [type]) 
+  }, [type])
 
   useEffect(() => {
     if (fetchTimeoutRef.current) {
@@ -196,7 +197,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
       fetchTimeoutRef.current = null
     }
     fetchTimeoutRef.current = window.setTimeout(() => {
-      fetchFiles(true, true) 
+      fetchFiles(true, true)
     }, 500)
 
     return () => {
@@ -205,7 +206,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
         fetchTimeoutRef.current = null
       }
     }
-  }, [virtualFolders]) 
+  }, [virtualFolders])
 
   const addFolder = useCallback(
     (folderPath: string) => {
@@ -226,7 +227,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
         isFolder: true,
       }
 
-      setFiles(prev => {
+      setFiles((prev) => {
         const next = [...prev, newFolder]
         cacheRef.current[type] = next
         return next
@@ -261,7 +262,7 @@ export function useFileData({ type = "all" }: UseFileDataProps) {
   )
 
   const refreshFiles = useCallback(() => {
-    fetchFiles(true, false) 
+    fetchFiles(true, false)
   }, [fetchFiles])
 
   return {

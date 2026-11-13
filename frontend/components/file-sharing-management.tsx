@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
- 
+
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -50,7 +50,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
   }
 
   const initializeManagement = async () => {
-
     if (!file) {
       return
     }
@@ -68,7 +67,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
       }
 
       if (!fileId) {
-
         try {
           const userFiles = await FileSharingAPI.getUserFiles()
 
@@ -120,7 +118,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
   }
 
   const loadSharedUsers = async (fileId: number) => {
-    
     setIsLoadingUsers(true)
     try {
       const users = await FileSharingAPI.getFileSharedUsers(fileId)
@@ -216,7 +213,6 @@ export function FileSharingManagement({ open, onOpenChange, file }: FileSharingM
                     disabled={isSharing || !actualFileId}
                   />
                 </div>
-              
               </div>
 
               <div className="space-y-2">

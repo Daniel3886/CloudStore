@@ -12,7 +12,7 @@ export default function RecentPage() {
   }
 
   return (
-     <div className="space-y-6">
+    <div className="space-y-6">
       <FileHeader title="Recent Files" type="recent" onRefresh={handleRefresh} />
       <FileBrowser key={`recent-${refreshKey}`} type="recent" />
     </div>

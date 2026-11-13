@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { FileBrowser } from "@/components/file-browser";
-import { FileHeader } from "@/components/file-header";
+import { useState } from "react"
+import { FileBrowser } from "@/components/file-browser"
+import { FileHeader } from "@/components/file-header"
 
 export default function FilesPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPath, setCurrentPath] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [currentPath, setCurrentPath] = useState("")
 
   const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
+    setRefreshKey((prev) => prev + 1)
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,5 +30,5 @@ export default function FilesPage() {
         onCurrentPathChange={setCurrentPath}
       />
     </div>
-  );
+  )
 }

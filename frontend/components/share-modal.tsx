@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
- 
+
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/hooks/use-toast"
@@ -99,8 +99,6 @@ export function ShareModal({ open, onOpenChange, file }: ShareModalProps) {
                     disabled={isSharing}
                   />
                 </div>
-
-                
 
                 <div className="space-y-2">
                   <Label htmlFor="message">Message (optional)</Label>

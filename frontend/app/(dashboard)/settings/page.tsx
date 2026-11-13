@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,46 +15,37 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { toast } from "@/hooks/use-toast";
-import { authApi } from "@/lib/api/auth";
-import { getErrorMessage } from "@/lib/api/client";
-import {
-  User,
-  Shield,
-  Trash2,
-  Loader2,
-  Settings,
-  AlertTriangle,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { useAuth } from "@/components/auth/auth-provider";
+} from "@/components/ui/alert-dialog"
+import { toast } from "@/hooks/use-toast"
+import { authApi } from "@/lib/api/auth"
+import { getErrorMessage } from "@/lib/api/client"
+import { User, Shield, Trash2, Loader2, Settings, AlertTriangle, Eye, EyeOff } from "lucide-react"
+import { useAuth } from "@/components/auth/auth-provider"
 
 export default function SettingsPage() {
-  const { user, loadUserProfile, logout } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const { user, loadUserProfile, logout } = useAuth()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
 
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [deletePassword, setDeletePassword] = useState("")
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showDeletePassword, setShowDeletePassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showDeletePassword, setShowDeletePassword] = useState(false)
 
   useEffect(() => {
     const init = async () => {
-      await loadUserProfile();
-      setIsLoading(false);
-    };
-    init();
-  }, [loadUserProfile]);
+      await loadUserProfile()
+      setIsLoading(false)
+    }
+    init()
+  }, [loadUserProfile])
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -62,24 +53,24 @@ export default function SettingsPage() {
         variant: "destructive",
         title: "Missing fields",
         description: "Fill in all password fields",
-      });
-      return;
+      })
+      return
     }
     if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
         title: "Passwords don't match",
         description: "New password and confirmation must match",
-      });
-      return;
+      })
+      return
     }
     if (newPassword.length < 8) {
       toast({
         variant: "destructive",
         title: "Password too short",
         description: "Password must be at least 8 characters long",
-      });
-      return;
+      })
+      return
     }
 
     if (!user?.email) {
@@ -87,31 +78,31 @@ export default function SettingsPage() {
         variant: "destructive",
         title: "Error",
         description: "User email not found",
-      });
-      return;
+      })
+      return
     }
 
-    setIsChangingPassword(true);
+    setIsChangingPassword(true)
     try {
-      await authApi.changePassword(user.email, currentPassword, newPassword);
+      await authApi.changePassword(user.email, currentPassword, newPassword)
 
       toast({
         title: "Password changed",
         description: "Your password has been updated successfully",
-      });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
+      })
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
     } catch (err) {
       toast({
         variant: "destructive",
         title: "Failed to change password",
         description: getErrorMessage(err, "Could not change your password"),
-      });
+      })
     } finally {
-      setIsChangingPassword(false);
+      setIsChangingPassword(false)
     }
-  };
+  }
 
   const handleDeleteAccount = async () => {
     if (!deletePassword || !user?.email) {
@@ -119,32 +110,32 @@ export default function SettingsPage() {
         variant: "destructive",
         title: "Error",
         description: "Enter your password to delete account",
-      });
-      return;
+      })
+      return
     }
 
-    setIsDeletingAccount(true);
+    setIsDeletingAccount(true)
     try {
-      await authApi.deleteAccount(user.email, deletePassword);
+      await authApi.deleteAccount(user.email, deletePassword)
 
       toast({
         title: "Account deleted",
         description: "Your account has been permanently deleted",
-      });
-      logout();
+      })
+      logout()
     } catch (err) {
       toast({
         variant: "destructive",
         title: "Failed to delete account",
         description: getErrorMessage(err, "Could not delete your account"),
-      });
+      })
     } finally {
-      setIsDeletingAccount(false);
-      setDeleteDialogOpen(false);
-      setDeletePassword("");
-      setShowDeletePassword(false);
+      setIsDeletingAccount(false)
+      setDeleteDialogOpen(false)
+      setDeletePassword("")
+      setShowDeletePassword(false)
     }
-  };
+  }
 
   if (isLoading)
     return (
@@ -154,7 +145,7 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Loading settings...</p>
         </div>
       </div>
-    );
+    )
 
   const PasswordInput = ({
     label,
@@ -164,12 +155,12 @@ export default function SettingsPage() {
     setShow,
     id,
   }: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    show: boolean;
-    setShow: (v: boolean) => void;
-    id: string;
+    label: string
+    value: string
+    onChange: (v: string) => void
+    show: boolean
+    setShow: (v: boolean) => void
+    id: string
   }) => (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
@@ -194,13 +185,11 @@ export default function SettingsPage() {
           ) : (
             <Eye className="h-4 w-4 text-muted-foreground" />
           )}
-          <span className="sr-only">
-            {show ? "Hide password" : "Show password"}
-          </span>
+          <span className="sr-only">{show ? "Hide password" : "Show password"}</span>
         </Button>
       </div>
     </div>
-  );
+  )
 
   return (
     <div className="space-y-6">
@@ -259,12 +248,7 @@ export default function SettingsPage() {
 
           <Button
             onClick={handlePasswordChange}
-            disabled={
-              isChangingPassword ||
-              !currentPassword ||
-              !newPassword ||
-              !confirmPassword
-            }
+            disabled={isChangingPassword || !currentPassword || !newPassword || !confirmPassword}
           >
             {isChangingPassword ? (
               <>
@@ -287,15 +271,10 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Permanently delete your account and all associated data. This action
-            cannot be undone.
+            Permanently delete your account and all associated data. This action cannot be undone.
           </p>
           <Separator />
-          <Button
-            variant="destructive"
-            onClick={() => setDeleteDialogOpen(true)}
-            className="w-full"
-          >
+          <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)} className="w-full">
             <Trash2 className="h-4 w-4 mr-2" /> Delete My Account
           </Button>
         </CardContent>
@@ -304,10 +283,10 @@ export default function SettingsPage() {
       <AlertDialog
         open={deleteDialogOpen}
         onOpenChange={(open) => {
-          setDeleteDialogOpen(open);
+          setDeleteDialogOpen(open)
           if (!open) {
-            setDeletePassword("");
-            setShowDeletePassword(false);
+            setDeletePassword("")
+            setShowDeletePassword(false)
           }
         }}
       >
@@ -318,8 +297,7 @@ export default function SettingsPage() {
             </AlertDialogTitle>
             <AlertDialogDescription>
               <p>
-                <strong>This action cannot be undone.</strong> Enter your
-                password to confirm deletion:
+                <strong>This action cannot be undone.</strong> Enter your password to confirm deletion:
               </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -358,5 +336,5 @@ export default function SettingsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

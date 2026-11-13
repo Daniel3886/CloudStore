@@ -24,12 +24,7 @@ interface NewFolderModalProps {
   onFolderCreated?: () => void
 }
 
-export function NewFolderModal({
-  open,
-  onOpenChange,
-  currentPath = "",
-  onFolderCreated,
-}: NewFolderModalProps) {
+export function NewFolderModal({ open, onOpenChange, currentPath = "", onFolderCreated }: NewFolderModalProps) {
   const [folderName, setFolderName] = useState("")
   const [isCreating, setIsCreating] = useState(false)
 
@@ -44,7 +39,7 @@ export function NewFolderModal({
       toast({
         variant: "destructive",
         title: "Invalid folder name",
-        description: "Folder names cannot contain / \\ : ? * \" < > |",
+        description: 'Folder names cannot contain / \\ : ? * " < > |',
       })
       return
     }
@@ -81,7 +76,6 @@ export function NewFolderModal({
 
       onOpenChange(false)
       setFolderName("")
-
     } catch (error) {
       console.error("Error creating folder:", error)
       toast({
@@ -126,18 +120,10 @@ export function NewFolderModal({
             </div>
           </div>
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="secondary" 
-              onClick={handleClose}
-              disabled={isCreating}
-            >
+            <Button type="button" variant="secondary" onClick={handleClose} disabled={isCreating}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={!folderName.trim() || isCreating}
-            >
+            <Button type="submit" disabled={!folderName.trim() || isCreating}>
               {isCreating ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>

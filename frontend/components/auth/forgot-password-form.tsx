@@ -69,7 +69,9 @@ export function ForgotPasswordForm() {
         router.push("/verify-password")
       }, 2000)
     } catch (error) {
-      setFormError(getErrorMessage(error, "Unable to send verification code. Please check your connection and try again."))
+      setFormError(
+        getErrorMessage(error, "Unable to send verification code. Please check your connection and try again."),
+      )
     } finally {
       setIsLoading(false)
     }

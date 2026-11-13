@@ -29,8 +29,7 @@ export const authApi = {
   login: (email: string, password: string) =>
     api.post<TokenPair>("/auth/login", { ...publicRequest, json: { email, password } }),
 
-  register: (request: RegisterRequest) =>
-    api.post<string>("/auth/register", { ...publicRequest, json: request }),
+  register: (request: RegisterRequest) => api.post<string>("/auth/register", { ...publicRequest, json: request }),
 
   async verifyAccount(email: string, verificationCode: string): Promise<string> {
     const text = await api.post<string>("/auth/verify-token", { ...publicRequest, json: { email, verificationCode } })
@@ -45,7 +44,10 @@ export const authApi = {
     api.post<string>("/auth/forgot-password", { ...publicRequest, json: { email } }),
 
   async verifyPasswordResetCode(email: string, verificationCode: string): Promise<string> {
-    const text = await api.post<string>("/auth/verify-password", { ...publicRequest, json: { email, verificationCode } })
+    const text = await api.post<string>("/auth/verify-password", {
+      ...publicRequest,
+      json: { email, verificationCode },
+    })
     return String(text).trim()
   },
 

@@ -18,6 +18,7 @@ export default defineConfig({
       provider: "v8",
       include: ["app/**", "components/**", "features/**", "lib/**", "hooks/**"],
       exclude: ["components/ui/**", "**/*.test.{ts,tsx}"],
+      thresholds: { statements: 78, branches: 85, functions: 75, lines: 78 },
     },
   },
 })

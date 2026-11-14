@@ -4,7 +4,7 @@ import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 
 interface UseDeleteAccountOptions {
   email: string | undefined
@@ -13,6 +13,7 @@ interface UseDeleteAccountOptions {
 
 export function useDeleteAccount({ email, onDeleted }: UseDeleteAccountOptions) {
   const t = useTranslations("settings.deleteAccount")
+  const errorMessage = useErrorMessage()
   const [isOpen, setIsOpen] = useState(false)
   const [password, setPassword] = useState("")
   const [isDeleting, setIsDeleting] = useState(false)
@@ -43,12 +44,12 @@ export function useDeleteAccount({ email, onDeleted }: UseDeleteAccountOptions) 
       toast({
         variant: "destructive",
         title: t("error.title"),
-        description: getErrorMessage(err, t("error.fallback")),
+        description: errorMessage(err, t("error.fallback")),
       })
     } finally {
       setIsDeleting(false)
     }
-  }, [email, onDeleted, password, t])
+  }, [errorMessage, email, onDeleted, password, t])
 
   return {
     isOpen,

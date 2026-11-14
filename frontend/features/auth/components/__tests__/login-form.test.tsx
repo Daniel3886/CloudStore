@@ -59,13 +59,13 @@ describe("LoginForm", () => {
     expect(mocks.router.push).toHaveBeenCalledWith("/files")
   })
 
-  it("shows the backend error message", async () => {
-    vi.mocked(authApi.login).mockRejectedValue(new ApiError(401, "Invalid credentials"))
+  it("translates known backend errors", async () => {
+    vi.mocked(authApi.login).mockRejectedValue(new ApiError(401, "Invalid password."))
     renderWithIntl(<LoginForm />)
 
     await fillAndSubmit("user@example.com", "wrong")
 
-    expect(await screen.findByText("Invalid credentials")).toBeInTheDocument()
+    expect(await screen.findByText("The email or password is incorrect.")).toBeInTheDocument()
     expect(mocks.login).not.toHaveBeenCalled()
     expect(mocks.router.push).not.toHaveBeenCalled()
   })

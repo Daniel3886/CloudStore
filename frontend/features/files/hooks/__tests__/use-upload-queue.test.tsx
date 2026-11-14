@@ -51,7 +51,7 @@ describe("useUploadQueue", () => {
     expect(upload).toHaveBeenCalledWith(expect.any(File), "a.txt")
   })
 
-  it("marks failed uploads with the backend message or a fallback", async () => {
+  it("marks failed uploads with a translated message or a fallback", async () => {
     upload
       .mockResolvedValueOnce("ok")
       .mockRejectedValueOnce(new ApiError(413, "File too large"))
@@ -67,7 +67,7 @@ describe("useUploadQueue", () => {
     expect(outcome).toEqual({ succeeded: 1, failed: 2 })
     expect(result.current.items.map((item) => [item.status, item.error])).toEqual([
       ["completed", undefined],
-      ["error", "File too large"],
+      ["error", "The file is too large to upload."],
       ["error", "Upload failed"],
     ])
     expect(result.current.hasErrors).toBe(true)

@@ -77,8 +77,8 @@ describe("useFileOperations", () => {
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Folder deleted" }))
   })
 
-  it("reports delete failures with the backend message", async () => {
-    api.moveToTrash.mockRejectedValue(new ApiError(500, "Storage offline"))
+  it("reports delete failures without exposing raw backend text", async () => {
+    api.moveToTrash.mockRejectedValue(new ApiError(500, "Soft delete failed: S3 timeout"))
     const { result } = renderHookWithIntl(() => useFileOperations())
 
     let ok
@@ -88,7 +88,11 @@ describe("useFileOperations", () => {
 
     expect(ok).toBe(false)
     expect(toast).toHaveBeenCalledWith(
-      expect.objectContaining({ variant: "destructive", title: "Delete failed", description: "Storage offline" }),
+      expect.objectContaining({
+        variant: "destructive",
+        title: "Delete failed",
+        description: "Failed to delete file.",
+      }),
     )
   })
 

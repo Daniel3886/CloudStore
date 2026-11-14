@@ -143,10 +143,10 @@ describe("api client", () => {
     await expect(api.post("/auth/login", { auth: false })).rejects.toMatchObject({ message: "Invalid password." })
   })
 
-  it("falls back to the provided message for empty error bodies", async () => {
+  it("describes empty error bodies by status", async () => {
     mockFetch(() => new Response("", { status: 500 }))
 
-    await expect(api.get("/x", { errorMessage: "Failed to load" })).rejects.toMatchObject({ message: "Failed to load" })
+    await expect(api.get("/x")).rejects.toMatchObject({ status: 500, message: "Request failed (500)" })
   })
 
   it("turns network failures into a status 0 ApiError", async () => {

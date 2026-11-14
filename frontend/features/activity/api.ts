@@ -9,11 +9,11 @@ export interface AuditLog {
 }
 
 export function fetchAllAuditLogs(): Promise<AuditLog[]> {
-  return api.get<AuditLog[]>("/activity/all", { errorMessage: "Failed to fetch audit logs" })
+  return api.get<AuditLog[]>("/activity/all")
 }
 
 export function fetchAuditLogsByPeriod(days = 30): Promise<AuditLog[]> {
-  return api.get<AuditLog[]>("/activity", { query: { days }, errorMessage: "Failed to fetch audit logs" })
+  return api.get<AuditLog[]>("/activity", { query: { days } })
 }
 
 export const ACTIONS_WITH_FILE_DISPLAY = [

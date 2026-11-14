@@ -5,6 +5,7 @@ import { renderWithIntl } from "@/test/render"
 import { toast } from "@/hooks/use-toast"
 import { filesApi } from "@/features/files/api"
 import { UploadModal } from "@/features/files/components/upload-modal"
+import { ApiError } from "@/lib/api/client"
 
 vi.mock("@/features/files/api", () => ({ filesApi: { upload: vi.fn() } }))
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
@@ -63,14 +64,14 @@ describe("UploadModal", () => {
   })
 
   it("shows per-file errors when uploads fail", async () => {
-    upload.mockRejectedValue(new Error("Quota exceeded"))
+    upload.mockRejectedValue(new ApiError(413, "Payload Too Large"))
     const user = userEvent.setup()
     const { onUploadComplete } = renderModal()
 
     await user.upload(screen.getByTestId("upload-input"), makeFile("a.txt"))
     await user.click(screen.getByRole("button", { name: "Upload 1 file" }))
 
-    expect(await screen.findByText("Quota exceeded")).toBeInTheDocument()
+    expect(await screen.findByText("The file is too large to upload.")).toBeInTheDocument()
     expect(screen.getByText("Failed")).toBeInTheDocument()
     expect(onUploadComplete).not.toHaveBeenCalled()
     expect(toast).toHaveBeenCalledWith(

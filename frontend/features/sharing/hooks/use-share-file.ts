@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { toast } from "@/hooks/use-toast"
 import { sharingApi } from "@/features/sharing/api"
 import { isValidEmail } from "@/features/sharing/lib/share"
@@ -15,6 +15,7 @@ interface UseShareFileOptions {
 
 export function useShareFile({ fileId, fileName, onShared }: UseShareFileOptions) {
   const t = useTranslations("sharing")
+  const errorMessage = useErrorMessage()
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
   const [emailError, setEmailError] = useState<string | undefined>()
@@ -52,12 +53,12 @@ export function useShareFile({ fileId, fileName, onShared }: UseShareFileOptions
       toast({
         variant: "destructive",
         title: t("toast.shareFailed.title"),
-        description: getErrorMessage(error, t("toast.shareFailed.fallback")),
+        description: errorMessage(error, t("toast.shareFailed.fallback")),
       })
     } finally {
       setIsSharing(false)
     }
-  }, [email, message, fileId, fileName, onShared, reset, t])
+  }, [errorMessage, email, message, fileId, fileName, onShared, reset, t])
 
   return { email, message, emailError, isSharing, setEmail: changeEmail, setMessage, share, reset }
 }

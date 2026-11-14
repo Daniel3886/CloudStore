@@ -22,7 +22,6 @@ export interface RequestOptions {
   json?: unknown
   body?: BodyInit
   auth?: boolean
-  errorMessage?: string
   signal?: AbortSignal
 }
 
@@ -126,7 +125,7 @@ async function send(path: string, options: RequestOptions, accessToken: string |
   }
 }
 
-async function toApiError(response: Response, fallback?: string): Promise<ApiError> {
+async function toApiError(response: Response): Promise<ApiError> {
   const text = await response.text().catch(() => "")
   let body: ApiErrorBody | null = null
   try {
@@ -134,7 +133,7 @@ async function toApiError(response: Response, fallback?: string): Promise<ApiErr
   } catch {
     body = null
   }
-  const message = extractErrorMessage(text, fallback ?? `Request failed (${response.status})`)
+  const message = extractErrorMessage(text, `Request failed (${response.status})`)
   return new ApiError(response.status, message, body)
 }
 
@@ -154,7 +153,7 @@ export async function apiRequest(path: string, options: RequestOptions = {}): Pr
   }
 
   if (!response.ok) {
-    throw await toApiError(response, options.errorMessage)
+    throw await toApiError(response)
   }
   return response
 }
@@ -183,9 +182,4 @@ export const api = {
     apiRequest(path, { ...options, method: "DELETE" }).then((r) => parseBody<T>(r)),
   blob: (path: string, options?: MethodOptions) =>
     apiRequest(path, { ...options, method: "GET" }).then((r) => r.blob()),
-}
-
-export function getErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error && error.message) return error.message
-  return fallback
 }

@@ -99,11 +99,11 @@ describe("AuditLogBrowser", () => {
   })
 
   it("shows an error state and retries", async () => {
-    vi.mocked(fetchAuditLogsByPeriod).mockRejectedValueOnce(new ApiError(500, "Failed to fetch audit logs"))
+    vi.mocked(fetchAuditLogsByPeriod).mockRejectedValueOnce(new ApiError(500, "Internal Server Error"))
     const user = userEvent.setup()
     renderWithIntl(<AuditLogBrowser />)
 
-    expect(await screen.findByRole("alert")).toHaveTextContent("Failed to fetch audit logs")
+    expect(await screen.findByRole("alert")).toHaveTextContent("Failed to load activity logs. Please try again.")
     await user.click(screen.getByRole("button", { name: "Try again" }))
 
     expect(await screen.findByText("File uploaded")).toBeInTheDocument()

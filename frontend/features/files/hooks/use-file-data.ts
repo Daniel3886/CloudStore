@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
-import { ApiError, getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
+import { ApiError } from "@/lib/api/client"
 import { filesApi, type FileResponse } from "@/features/files/api"
 import { buildFolderItems, collectFolderPaths, mapFileResponses } from "@/features/files/lib/map-file"
 import { getVirtualFolders, setVirtualFolders } from "@/features/files/lib/virtual-folders"
@@ -21,6 +22,7 @@ async function fetchFileList(view: FileView): Promise<FileResponse[]> {
 
 export function useFileData(view: FileView = "all") {
   const t = useTranslations("files")
+  const errorMessage = useErrorMessage()
   const [remoteFiles, setRemoteFiles] = useState<FileItem[]>([])
   const [loading, setLoading] = useState(true)
   const [virtualFolders, setVirtualFoldersState] = useState<string[]>([])
@@ -39,13 +41,13 @@ export function useFileData(view: FileView = "all") {
         toast({
           variant: "destructive",
           title: t("toasts.loadFailed.title"),
-          description: getErrorMessage(error, t("toasts.loadFailed.description")),
+          description: errorMessage(error, t("toasts.loadFailed.description")),
         })
       } finally {
         if (!isStale()) setLoading(false)
       }
     },
-    [view, t],
+    [errorMessage, view, t],
   )
 
   useEffect(() => {

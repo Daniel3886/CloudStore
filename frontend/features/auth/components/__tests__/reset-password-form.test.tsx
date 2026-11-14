@@ -64,14 +64,16 @@ describe("ResetPasswordForm", () => {
     expect(mocks.router.push).toHaveBeenCalledWith("/login")
   })
 
-  it("shows the backend error and keeps the session", async () => {
+  it("shows a translated error and keeps the session", async () => {
     startVerifiedSession()
-    vi.mocked(authApi.resetPassword).mockRejectedValue(new ApiError(400, "Reset token expired"))
+    vi.mocked(authApi.resetPassword).mockRejectedValue(new ApiError(0, "offline"))
     renderWithIntl(<ResetPasswordForm />)
 
     await submitPasswords("secret123", "secret123")
 
-    expect(await screen.findByText("Reset token expired")).toBeInTheDocument()
+    expect(
+      await screen.findByText("Could not reach the server. Check your connection and try again."),
+    ).toBeInTheDocument()
     expect(sessionStorage.getItem("resetToken")).toBe("reset-token")
   })
 })

@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { toast } from "@/hooks/use-toast"
 import { sharingApi } from "@/features/sharing/api"
 
 export function useFileShares(fileId: number | null, enabled: boolean) {
   const t = useTranslations("sharing.toast")
+  const errorMessage = useErrorMessage()
   const [users, setUsers] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -21,12 +22,12 @@ export function useFileShares(fileId: number | null, enabled: boolean) {
       toast({
         variant: "destructive",
         title: t("loadUsersFailed.title"),
-        description: getErrorMessage(error, t("loadUsersFailed.fallback")),
+        description: errorMessage(error, t("loadUsersFailed.fallback")),
       })
     } finally {
       setIsLoading(false)
     }
-  }, [fileId, t])
+  }, [errorMessage, fileId, t])
 
   useEffect(() => {
     if (enabled) {
@@ -47,11 +48,11 @@ export function useFileShares(fileId: number | null, enabled: boolean) {
         toast({
           variant: "destructive",
           title: t("revokeFailed.title"),
-          description: getErrorMessage(error, t("revokeFailed.fallback")),
+          description: errorMessage(error, t("revokeFailed.fallback")),
         })
       }
     },
-    [fileId, t],
+    [errorMessage, fileId, t],
   )
 
   return { users, isLoading, reload, revoke }

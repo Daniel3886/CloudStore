@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { saveBlob } from "@/lib/download"
 import { toast } from "@/hooks/use-toast"
 import { filesApi } from "@/features/files/api"
@@ -13,6 +13,7 @@ export type SharedFileAction = "accept" | "decline" | "download"
 
 export function useSharedFiles() {
   const t = useTranslations("sharing.toast")
+  const errorMessage = useErrorMessage()
   const [files, setFiles] = useState<SharedFileDto[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [pending, setPending] = useState<Record<number, SharedFileAction>>({})
@@ -25,12 +26,12 @@ export function useSharedFiles() {
       toast({
         variant: "destructive",
         title: t("loadFailed.title"),
-        description: getErrorMessage(error, t("loadFailed.fallback")),
+        description: errorMessage(error, t("loadFailed.fallback")),
       })
     } finally {
       setIsLoading(false)
     }
-  }, [t])
+  }, [errorMessage, t])
 
   useEffect(() => {
     void load()
@@ -68,11 +69,11 @@ export function useSharedFiles() {
           toast({
             variant: "destructive",
             title: t(accept ? "acceptFailed.title" : "declineFailed.title"),
-            description: getErrorMessage(error, t(accept ? "acceptFailed.fallback" : "declineFailed.fallback")),
+            description: errorMessage(error, t(accept ? "acceptFailed.fallback" : "declineFailed.fallback")),
           })
         }
       }),
-    [t, track],
+    [errorMessage, t, track],
   )
 
   const accept = useCallback((file: SharedFileDto) => respond(file, "accept"), [respond])
@@ -91,11 +92,11 @@ export function useSharedFiles() {
           toast({
             variant: "destructive",
             title: t("downloadFailed.title"),
-            description: getErrorMessage(error, t("downloadFailed.fallback")),
+            description: errorMessage(error, t("downloadFailed.fallback")),
           })
         }
       }),
-    [t, track],
+    [errorMessage, t, track],
   )
 
   return { files, isLoading, pending, accept, decline, download, reload: load }

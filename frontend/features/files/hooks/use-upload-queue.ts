@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { filesApi } from "@/features/files/api"
 import { getUniqueFileName, joinPath } from "@/features/files/lib/file-utils"
 
@@ -26,6 +26,7 @@ function renameFile(file: File, name: string): File {
 
 export function useUploadQueue(currentPath: string) {
   const t = useTranslations("files.toasts.uploadFailed")
+  const errorMessage = useErrorMessage()
   const [items, setItems] = useState<UploadItem[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const nextIdRef = useRef(0)
@@ -67,13 +68,13 @@ export function useUploadQueue(currentPath: string) {
         updateItem(item.id, { status: "completed" })
         result.succeeded++
       } catch (error) {
-        updateItem(item.id, { status: "error", error: getErrorMessage(error, t("fallback")) })
+        updateItem(item.id, { status: "error", error: errorMessage(error, t("fallback")) })
         result.failed++
       }
     }
     setIsUploading(false)
     return result
-  }, [items, currentPath, updateItem, t])
+  }, [errorMessage, items, currentPath, updateItem, t])
 
   const summary = useMemo(() => {
     const done = items.filter((item) => item.status === "completed" || item.status === "error").length

@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { toast } from "@/hooks/use-toast"
 import { publicLinksApi, type PublicFileAccessToken } from "@/features/public-links/api"
 
 export function usePublicLinks(enabled: boolean) {
   const t = useTranslations("publicLinks.toast")
+  const errorMessage = useErrorMessage()
   const [links, setLinks] = useState<PublicFileAccessToken[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -19,12 +20,12 @@ export function usePublicLinks(enabled: boolean) {
       toast({
         variant: "destructive",
         title: t("loadFailed.title"),
-        description: getErrorMessage(error, t("loadFailed.fallback")),
+        description: errorMessage(error, t("loadFailed.fallback")),
       })
     } finally {
       setIsLoading(false)
     }
-  }, [t])
+  }, [errorMessage, t])
 
   useEffect(() => {
     if (enabled) void refresh()
@@ -40,11 +41,11 @@ export function usePublicLinks(enabled: boolean) {
         toast({
           variant: "destructive",
           title: t("revokeFailed.title"),
-          description: getErrorMessage(error, t("revokeFailed.fallback")),
+          description: errorMessage(error, t("revokeFailed.fallback")),
         })
       }
     },
-    [t],
+    [errorMessage, t],
   )
 
   return { links, isLoading, refresh, revoke }

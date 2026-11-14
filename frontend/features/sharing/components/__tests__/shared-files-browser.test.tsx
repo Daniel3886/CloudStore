@@ -6,6 +6,7 @@ import { toast } from "@/hooks/use-toast"
 import { filesApi } from "@/features/files/api"
 import { sharingApi, type SharedFileDto } from "@/features/sharing/api"
 import { SharedFilesBrowser } from "@/features/sharing/components/shared-files-browser"
+import { ApiError } from "@/lib/api/client"
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
 vi.mock("@/lib/download", () => ({ saveBlob: vi.fn() }))
@@ -98,7 +99,9 @@ describe("SharedFilesBrowser", () => {
   })
 
   it("keeps the share pending and shows the backend error when accepting fails", async () => {
-    vi.mocked(sharingApi.acceptShare).mockRejectedValue(new Error("Share no longer exists"))
+    vi.mocked(sharingApi.acceptShare).mockRejectedValue(
+      new ApiError(400, "Failed to accept file: constraint violation"),
+    )
     const user = userEvent.setup()
     renderWithIntl(<SharedFilesBrowser />)
 
@@ -108,7 +111,7 @@ describe("SharedFilesBrowser", () => {
       expect(toast).toHaveBeenCalledWith({
         variant: "destructive",
         title: "Failed to accept share",
-        description: "Share no longer exists",
+        description: "Could not accept the file share",
       }),
     )
     expect(card("report.pdf").getByText("Pending")).toBeInTheDocument()

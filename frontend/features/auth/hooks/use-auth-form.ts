@@ -1,7 +1,7 @@
 import type React from "react"
 import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { hasErrors, VALIDATION_LIMITS, type FieldErrors, type ValidationErrorKey } from "@/lib/validation"
 
 export function useAuthForm<Values extends Record<string, string>>(initialValues: Values) {
@@ -12,6 +12,7 @@ export function useAuthForm<Values extends Record<string, string>>(initialValues
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const tValidation = useTranslations("common.validation")
+  const errorMessage = useErrorMessage()
 
   const setValue = useCallback((field: Field, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -37,17 +38,20 @@ export function useAuthForm<Values extends Record<string, string>>(initialValues
     [errors, tValidation],
   )
 
-  const run = useCallback(async (action: () => Promise<void>, fallbackMessage: string) => {
-    setFormError("")
-    setIsSubmitting(true)
-    try {
-      await action()
-    } catch (error) {
-      setFormError(getErrorMessage(error, fallbackMessage))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [])
+  const run = useCallback(
+    async (action: () => Promise<void>, fallbackMessage: string) => {
+      setFormError("")
+      setIsSubmitting(true)
+      try {
+        await action()
+      } catch (error) {
+        setFormError(errorMessage(error, fallbackMessage))
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [errorMessage],
+  )
 
   return { values, setValue, handleChange, validate, errorFor, formError, setFormError, isSubmitting, run }
 }

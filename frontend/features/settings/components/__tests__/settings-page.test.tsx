@@ -119,7 +119,7 @@ describe("SettingsPage", () => {
   })
 
   it("shows the backend error when changing the password fails", async () => {
-    vi.mocked(authApi.changePassword).mockRejectedValue(new ApiError(400, "Current password is incorrect"))
+    vi.mocked(authApi.changePassword).mockRejectedValue(new ApiError(400, "Current password is incorrect."))
     const user = await renderPage()
     await fillPasswords(user, "wrongpassword", "newpassword1", "newpassword1")
     await user.click(screen.getByRole("button", { name: "Change Password" }))
@@ -128,7 +128,7 @@ describe("SettingsPage", () => {
       expect(toast).toHaveBeenCalledWith({
         variant: "destructive",
         title: "Failed to change password",
-        description: "Current password is incorrect",
+        description: "Your current password is incorrect.",
       }),
     )
     expect(screen.getByLabelText("Current Password")).toHaveValue("wrongpassword")
@@ -173,7 +173,7 @@ describe("SettingsPage", () => {
   })
 
   it("does not log out when deleting the account fails", async () => {
-    vi.mocked(authApi.deleteAccount).mockRejectedValue(new ApiError(401, "Invalid password"))
+    vi.mocked(authApi.deleteAccount).mockRejectedValue(new ApiError(401, "Invalid password."))
     const user = await renderPage()
     await user.click(screen.getByRole("button", { name: "Delete My Account" }))
     const dialog = await screen.findByRole("alertdialog")
@@ -185,7 +185,7 @@ describe("SettingsPage", () => {
       expect(toast).toHaveBeenCalledWith({
         variant: "destructive",
         title: "Failed to delete account",
-        description: "Invalid password",
+        description: "The email or password is incorrect.",
       }),
     )
     expect(logout).not.toHaveBeenCalled()

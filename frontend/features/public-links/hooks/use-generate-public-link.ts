@@ -2,12 +2,13 @@
 
 import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { toast } from "@/hooks/use-toast"
 import { publicLinksApi, type PublicLinkResponse } from "@/features/public-links/api"
 
 export function useGeneratePublicLink(fileId: number) {
   const t = useTranslations("publicLinks.toast")
+  const errorMessage = useErrorMessage()
   const [result, setResult] = useState<PublicLinkResponse | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
 
@@ -19,12 +20,12 @@ export function useGeneratePublicLink(fileId: number) {
       toast({
         variant: "destructive",
         title: t("generateFailed.title"),
-        description: getErrorMessage(error, t("generateFailed.fallback")),
+        description: errorMessage(error, t("generateFailed.fallback")),
       })
     } finally {
       setIsGenerating(false)
     }
-  }, [fileId, t])
+  }, [errorMessage, fileId, t])
 
   const reset = useCallback(() => setResult(null), [])
 

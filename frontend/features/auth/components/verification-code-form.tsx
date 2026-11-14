@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl"
 import { Mail, Shield } from "lucide-react"
 import { FormError } from "@/components/ui/form-error"
 import { toast } from "@/hooks/use-toast"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { AuthInput } from "@/features/auth/components/auth-input"
 import { BackLink } from "@/features/auth/components/back-link"
 import { LoadingButton, SubmitButton } from "@/features/auth/components/loading-button"
@@ -39,6 +39,7 @@ export function VerificationCodeForm({
   onResend,
 }: VerificationCodeFormProps) {
   const t = useTranslations("auth")
+  const errorMessage = useErrorMessage()
   const form = useAuthForm({ email: "", verificationCode: "" })
   const [hasStoredEmail, setHasStoredEmail] = useState(false)
   const { values, setValue, validate, setFormError } = form
@@ -76,7 +77,7 @@ export function VerificationCodeForm({
     try {
       await resend.resend()
     } catch (error) {
-      setFormError(getErrorMessage(error, t("resendCode.error")))
+      setFormError(errorMessage(error, t("resendCode.error")))
     }
   }
 

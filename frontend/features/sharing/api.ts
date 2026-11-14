@@ -27,24 +27,24 @@ export interface MessageUpdateRequest {
 
 export const sharingApi = {
   async shareFile(request: ShareFileRequest): Promise<void> {
-    await api.post("/share", { json: request, errorMessage: "Failed to share file" })
+    await api.post("/share", { json: request })
   },
 
   getSharedFiles(): Promise<SharedFileDto[]> {
-    return api.get<SharedFileDto[]>("/share/received", { errorMessage: "Failed to fetch shared files" })
+    return api.get<SharedFileDto[]>("/share/received")
   },
 
   async acceptShare(permissionId: number): Promise<void> {
-    await api.post(`/share/accept/${permissionId}`, { errorMessage: "Failed to accept share" })
+    await api.post(`/share/accept/${permissionId}`)
   },
 
   async declineShare(permissionId: number): Promise<void> {
-    await api.post(`/share/decline/${permissionId}`, { errorMessage: "Failed to decline share" })
+    await api.post(`/share/decline/${permissionId}`)
   },
 
   async getFileSharedUsers(fileId: number): Promise<string[]> {
     try {
-      return await api.get<string[]>(`/share/${fileId}/users`, { errorMessage: "Failed to fetch shared users" })
+      return await api.get<string[]>(`/share/${fileId}/users`)
     } catch (error) {
       if (error instanceof ApiError && (error.status === 403 || error.status === 404)) return []
       throw error
@@ -52,19 +52,16 @@ export const sharingApi = {
   },
 
   async revokeAccess(fileId: number, email: string): Promise<void> {
-    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}`, { errorMessage: "Failed to revoke access" })
+    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}`)
   },
 
   async updateMessage(fileId: number, targetUserId: number, message: string): Promise<void> {
     await api.put(`/share/${fileId}/shared/${targetUserId}/message`, {
       json: { message } satisfies MessageUpdateRequest,
-      errorMessage: "Failed to update message",
     })
   },
 
   async removeMessage(fileId: number, email: string): Promise<void> {
-    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}/message`, {
-      errorMessage: "Failed to remove message",
-    })
+    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}/message`)
   },
 }

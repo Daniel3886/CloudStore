@@ -5,6 +5,7 @@ import { renderWithIntl } from "@/test/render"
 import { toast } from "@/hooks/use-toast"
 import { sharingApi } from "@/features/sharing/api"
 import { ShareModal } from "@/features/sharing/components/share-modal"
+import { ApiError } from "@/lib/api/client"
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
 vi.mock("@/features/sharing/api", () => ({ sharingApi: { shareFile: vi.fn() } }))
@@ -52,7 +53,7 @@ describe("ShareModal", () => {
   })
 
   it("shows the backend error when sharing fails", async () => {
-    vi.mocked(sharingApi.shareFile).mockRejectedValue(new Error("User not found"))
+    vi.mocked(sharingApi.shareFile).mockRejectedValue(new ApiError(400, "Recipient not found"))
     const user = userEvent.setup()
     renderWithIntl(<ShareModal open onOpenChange={vi.fn()} file={file} />)
 
@@ -62,7 +63,7 @@ describe("ShareModal", () => {
       expect(toast).toHaveBeenCalledWith({
         variant: "destructive",
         title: "Failed to share file",
-        description: "User not found",
+        description: "No CloudStore user has this email address.",
       }),
     )
     expect(screen.getByLabelText("Email address")).toHaveValue("ana@example.com")

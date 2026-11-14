@@ -21,17 +21,15 @@ export interface PublicFileAccessToken {
 
 export const publicLinksApi = {
   generatePublicLink(fileId: number): Promise<PublicLinkResponse> {
-    return api.post<PublicLinkResponse>(`/share/public/${fileId}`, { errorMessage: "Failed to generate public link" })
+    return api.post<PublicLinkResponse>(`/share/public/${fileId}`)
   },
 
   getActiveLinks(): Promise<PublicFileAccessToken[]> {
-    return api.get<PublicFileAccessToken[]>("/share/public/list", { errorMessage: "Failed to fetch active links" })
+    return api.get<PublicFileAccessToken[]>("/share/public/list")
   },
 
   async revokePublicLink(token: string): Promise<void> {
-    await api.delete(`/share/public/access/${encodeURIComponent(token)}`, {
-      errorMessage: "Failed to revoke public link",
-    })
+    await api.delete(`/share/public/access/${encodeURIComponent(token)}`)
   },
 
   getPublicFileUrl(token: string, preview = false): string {

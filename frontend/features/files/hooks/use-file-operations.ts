@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { saveBlob } from "@/lib/download"
 import { filesApi } from "@/features/files/api"
 import { getItemPath } from "@/features/files/lib/file-filters"
@@ -16,6 +16,7 @@ const kindOf = (file: FileItem) => (file.isFolder ? "folder" : "file")
 
 export function useFileOperations() {
   const t = useTranslations("files.toasts")
+  const errorMessage = useErrorMessage()
   const [loadingStates, setLoadingStates] = useState<Record<number, boolean>>({})
 
   const withLoading = useCallback(async <T>(fileId: number, task: () => Promise<T>): Promise<T> => {
@@ -51,12 +52,12 @@ export function useFileOperations() {
           toast({
             variant: "destructive",
             title: t("downloadFailed.title"),
-            description: getErrorMessage(error, t("downloadFailed.file")),
+            description: errorMessage(error, t("downloadFailed.file")),
           })
         }
       })
     },
-    [requireKey, withLoading, t],
+    [errorMessage, requireKey, withLoading, t],
   )
 
   const downloadFolder = useCallback(
@@ -106,12 +107,12 @@ export function useFileOperations() {
           toast({
             variant: "destructive",
             title: t("downloadFailed.title"),
-            description: getErrorMessage(error, t("downloadFailed.folder")),
+            description: errorMessage(error, t("downloadFailed.folder")),
           })
         }
       })
     },
-    [withLoading, t],
+    [errorMessage, withLoading, t],
   )
 
   const deleteFile = useCallback(
@@ -134,13 +135,13 @@ export function useFileOperations() {
           toast({
             variant: "destructive",
             title: t("deleteFailed.title"),
-            description: getErrorMessage(error, t("deleteFailed.description", { kind: kindOf(file) })),
+            description: errorMessage(error, t("deleteFailed.description", { kind: kindOf(file) })),
           })
           return false
         }
       })
     },
-    [requireKey, withLoading, t],
+    [errorMessage, requireKey, withLoading, t],
   )
 
   const renameFile = useCallback(
@@ -162,11 +163,11 @@ export function useFileOperations() {
           })
           return null
         } catch (error) {
-          return getErrorMessage(error, t("renameFailed", { kind: kindOf(file) }))
+          return errorMessage(error, t("renameFailed", { kind: kindOf(file) }))
         }
       })
     },
-    [withLoading, t],
+    [errorMessage, withLoading, t],
   )
 
   const restoreFile = useCallback(
@@ -185,13 +186,13 @@ export function useFileOperations() {
           toast({
             variant: "destructive",
             title: t("restoreFailed.title"),
-            description: getErrorMessage(error, t("restoreFailed.description")),
+            description: errorMessage(error, t("restoreFailed.description")),
           })
           return false
         }
       })
     },
-    [requireKey, withLoading, t],
+    [errorMessage, requireKey, withLoading, t],
   )
 
   const permanentlyDeleteFile = useCallback(
@@ -210,13 +211,13 @@ export function useFileOperations() {
           toast({
             variant: "destructive",
             title: t("permanentDeleteFailed.title"),
-            description: getErrorMessage(error, t("permanentDeleteFailed.description")),
+            description: errorMessage(error, t("permanentDeleteFailed.description")),
           })
           return false
         }
       })
     },
-    [requireKey, withLoading, t],
+    [errorMessage, requireKey, withLoading, t],
   )
 
   return {

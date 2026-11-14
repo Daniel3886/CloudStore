@@ -4,7 +4,7 @@ import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 import { VALIDATION_LIMITS } from "@/lib/validation"
 import {
   EMPTY_PASSWORD_CHANGE,
@@ -15,6 +15,7 @@ import {
 
 export function useChangePassword(email: string | undefined) {
   const t = useTranslations("settings")
+  const errorMessage = useErrorMessage()
   const tValidation = useTranslations("common.validation")
   const [values, setValues] = useState<PasswordChangeValues>(EMPTY_PASSWORD_CHANGE)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -56,12 +57,12 @@ export function useChangePassword(email: string | undefined) {
       toast({
         variant: "destructive",
         title: t("changePassword.error.title"),
-        description: getErrorMessage(err, t("changePassword.error.fallback")),
+        description: errorMessage(err, t("changePassword.error.fallback")),
       })
     } finally {
       setIsSubmitting(false)
     }
-  }, [email, t, tValidation, values])
+  }, [errorMessage, email, t, tValidation, values])
 
   return {
     values,

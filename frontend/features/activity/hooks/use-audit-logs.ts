@@ -4,10 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { fetchAllAuditLogs, fetchAuditLogsByPeriod, type AuditLog } from "@/features/activity/api"
 import { DEFAULT_PERIOD, type AuditPeriod } from "@/features/activity/lib/period"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 
 export function useAuditLogs(initialPeriod: AuditPeriod = DEFAULT_PERIOD) {
   const t = useTranslations("activity.error")
+  const errorMessage = useErrorMessage()
   const fallbackMessage = t("fallback")
   const [period, setPeriod] = useState<AuditPeriod>(initialPeriod)
   const [logs, setLogs] = useState<AuditLog[]>([])
@@ -26,13 +27,13 @@ export function useAuditLogs(initialPeriod: AuditPeriod = DEFAULT_PERIOD) {
       } catch (err) {
         if (requestId === latestRequest.current) {
           setLogs([])
-          setError(getErrorMessage(err, fallbackMessage))
+          setError(errorMessage(err, fallbackMessage))
         }
       } finally {
         if (requestId === latestRequest.current) setIsLoading(false)
       }
     },
-    [fallbackMessage],
+    [errorMessage, fallbackMessage],
   )
 
   useEffect(() => {

@@ -33,7 +33,8 @@ export function LoginForm() {
     await form.run(async () => {
       const tokens = await authApi.login(values.email, values.password)
       if (!tokens.accessToken || !tokens.refreshToken) {
-        throw new Error(t("login.invalidResponse"))
+        form.setFormError(t("login.invalidResponse"))
+        return
       }
 
       const profile = await login(tokens.accessToken, tokens.refreshToken)

@@ -81,7 +81,7 @@ describe("PublicLinkGenerator", () => {
     expect(toast).toHaveBeenCalledWith({
       variant: "destructive",
       title: "Failed to generate link",
-      description: "Quota exceeded",
+      description: "Could not generate public link",
     })
   })
 })

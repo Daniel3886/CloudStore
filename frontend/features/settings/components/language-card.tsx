@@ -10,10 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/hooks/use-toast"
 import { setUserLocale } from "@/i18n/actions"
 import { isLocale, localeLabels, locales } from "@/i18n/config"
-import { getErrorMessage } from "@/lib/api/client"
+import { useErrorMessage } from "@/hooks/use-error-message"
 
 export function LanguageCard() {
   const t = useTranslations("settings.language")
+  const errorMessage = useErrorMessage()
   const locale = useLocale()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
@@ -28,7 +29,7 @@ export function LanguageCard() {
         toast({
           variant: "destructive",
           title: t("error.title"),
-          description: getErrorMessage(error, t("error.fallback")),
+          description: errorMessage(error, t("error.fallback")),
         })
       }
     })

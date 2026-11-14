@@ -53,5 +53,29 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "codeRequired": "Verification code is required",
     "codeInvalidLength": "Verification code must be {codeLength} digits"
+  },
+  "apiErrors": {
+    "network": "Could not reach the server. Check your connection and try again.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "fileTooLarge": "The file is too large to upload.",
+    "emailInUse": "An account with this email already exists.",
+    "emailDomainInvalid": "This email domain is not valid.",
+    "invalidCredentials": "The email or password is incorrect.",
+    "currentPasswordIncorrect": "Your current password is incorrect.",
+    "samePassword": "The new password must be different from your current password.",
+    "accountNotVerified": "Please verify your email before signing in.",
+    "pendingVerification": "This email is waiting for verification. Request a new code.",
+    "alreadyVerified": "This account is already verified.",
+    "invalidCode": "The verification code is incorrect.",
+    "codeExpired": "The verification code has expired. Request a new one.",
+    "emailSendFailed": "We couldn't send the email. Please try again later.",
+    "userNotFound": "No account was found for this email.",
+    "recipientNotFound": "No CloudStore user has this email address.",
+    "shareWithSelf": "You can't share a file with yourself.",
+    "sharePending": "This person already has a pending share request for this file.",
+    "linkExpired": "This link has expired.",
+    "linkInvalid": "This link is invalid or has been revoked.",
+    "fileNotFound": "The file could not be found. It may have been moved or deleted.",
+    "notAllowed": "You don't have permission to do that."
   }
 }

@@ -165,4 +165,23 @@ describe("useFileOperations", () => {
     expect(api.download).not.toHaveBeenCalled()
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Empty folder" }))
   })
+
+  it("shows one toast that reports skipped files when a folder download is partial", async () => {
+    api.download.mockResolvedValueOnce(new Blob(["a"])).mockRejectedValueOnce(new ApiError(500, "boom"))
+    const inside = (id: number, name: string): FileItem => ({
+      ...file,
+      id,
+      name,
+      displayName: `docs/2024/${name}`,
+      s3Key: `key-${id}`,
+      path: "docs/2024",
+    })
+    const { result } = renderHookWithIntl(() => useFileOperations())
+
+    await act(() => result.current.downloadFolder(folder, [inside(1, "a.txt"), inside(2, "b.txt")]))
+
+    expect(saveBlob).toHaveBeenCalledWith(expect.any(Blob), "2024.zip")
+    expect(toast).toHaveBeenCalledTimes(1)
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Some files were skipped" }))
+  })
 })

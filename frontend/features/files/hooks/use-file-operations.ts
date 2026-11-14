@@ -91,18 +91,19 @@ export function useFileOperations() {
           if (failed === downloadable.length) throw new Error(t("downloadFailed.folder"))
 
           saveBlob(await zip.generateAsync({ type: "blob" }), `${folder.name}.zip`)
-          toast({
-            variant: "success",
-            title: t("downloadStarted.title"),
-            description: t("downloadStarted.folder", { name: folder.name }),
-          })
-          if (failed > 0) {
-            toast({
-              variant: "destructive",
-              title: t("partialFolderDownload.title"),
-              description: t("partialFolderDownload.description", { count: failed }),
-            })
-          }
+          toast(
+            failed > 0
+              ? {
+                  variant: "destructive",
+                  title: t("partialFolderDownload.title"),
+                  description: t("partialFolderDownload.description", { count: failed }),
+                }
+              : {
+                  variant: "success",
+                  title: t("downloadStarted.title"),
+                  description: t("downloadStarted.folder", { name: folder.name }),
+                },
+          )
         } catch (error) {
           toast({
             variant: "destructive",

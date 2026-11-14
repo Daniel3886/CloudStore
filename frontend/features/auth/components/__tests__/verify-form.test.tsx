@@ -1,26 +1,21 @@
 import { screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { authApi } from "@/features/auth/api"
 import { VerifyForm } from "@/features/auth/components/verify-form"
 import { toast } from "@/hooks/use-toast"
 import { renderWithIntl } from "@/test/render"
 
-const mocks = vi.hoisted(() => ({ router: { push: vi.fn(), replace: vi.fn() }, login: vi.fn() }))
+const mocks = vi.hoisted(() => ({ router: { push: vi.fn(), replace: vi.fn() } }))
 
 vi.mock("next/navigation", () => ({ useRouter: () => mocks.router }))
-vi.mock("@/features/auth/components/auth-provider", () => ({ useAuth: () => ({ login: mocks.login }) }))
 vi.mock("@/features/auth/api", () => ({ authApi: { verifyAccount: vi.fn(), resendVerificationCode: vi.fn() } }))
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
 
 describe("VerifyForm", () => {
-  beforeEach(() => {
-    mocks.login.mockResolvedValue(undefined)
-  })
-
-  it("uses the stored registration email and logs in with the returned token", async () => {
+  it("uses the stored registration email and sends the user to sign in", async () => {
     sessionStorage.setItem("pendingVerificationEmail", "jane@example.com")
-    vi.mocked(authApi.verifyAccount).mockResolvedValue("access-token")
+    vi.mocked(authApi.verifyAccount).mockResolvedValue(undefined)
     const user = userEvent.setup()
     renderWithIntl(<VerifyForm />)
 
@@ -31,10 +26,9 @@ describe("VerifyForm", () => {
     await user.click(screen.getByRole("button", { name: "Verify Email" }))
 
     expect(authApi.verifyAccount).toHaveBeenCalledWith("jane@example.com", "123456")
-    expect(mocks.login).toHaveBeenCalledWith("access-token")
     expect(sessionStorage.getItem("pendingVerificationEmail")).toBeNull()
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: "Email verified!" }))
-    expect(mocks.router.push).toHaveBeenCalledWith("/files")
+    expect(mocks.router.push).toHaveBeenCalledWith("/login")
   })
 
   it("keeps the email field visible while typing when nothing is stored", async () => {
@@ -86,6 +80,6 @@ describe("VerifyForm", () => {
     expect(
       await screen.findByText("Unable to verify code. Please check your connection and try again."),
     ).toBeInTheDocument()
-    expect(mocks.login).not.toHaveBeenCalled()
+    expect(mocks.router.push).not.toHaveBeenCalled()
   })
 })

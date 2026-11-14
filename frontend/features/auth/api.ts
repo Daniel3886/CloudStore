@@ -31,10 +31,8 @@ export const authApi = {
 
   register: (request: RegisterRequest) => api.post<string>("/auth/register", { ...publicRequest, json: request }),
 
-  async verifyAccount(email: string, verificationCode: string): Promise<string> {
-    const text = await api.post<string>("/auth/verify-token", { ...publicRequest, json: { email, verificationCode } })
-    const match = String(text).match(/Token:\s*(.+)/)
-    return (match ? match[1] : String(text)).trim()
+  async verifyAccount(email: string, verificationCode: string): Promise<void> {
+    await api.post<string>("/auth/verify-token", { ...publicRequest, json: { email, verificationCode } })
   },
 
   resendVerificationCode: (email: string) =>

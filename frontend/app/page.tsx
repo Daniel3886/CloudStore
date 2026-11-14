@@ -7,19 +7,19 @@ import { useAuth } from "@/features/auth/components/auth-provider"
 import { Loader2 } from "lucide-react"
 
 export default function HomePage() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, profileUnavailable } = useAuth()
   const router = useRouter()
   const t = useTranslations("common")
 
   useEffect(() => {
     if (!isLoading) {
-      if (isAuthenticated) {
+      if (isAuthenticated || profileUnavailable) {
         router.replace("/files")
       } else {
         router.replace("/login")
       }
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, profileUnavailable, router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">

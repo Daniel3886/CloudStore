@@ -24,7 +24,7 @@ async function fillAndSubmit(email: string, password: string) {
 
 describe("LoginForm", () => {
   beforeEach(() => {
-    mocks.login.mockResolvedValue(undefined)
+    mocks.login.mockResolvedValue({ email: "user@example.com", username: "user", verified: true })
   })
 
   it("shows translated validation errors and does not call the API", async () => {
@@ -87,5 +87,17 @@ describe("LoginForm", () => {
 
     expect(await screen.findByText("Invalid response format from server")).toBeInTheDocument()
     expect(mocks.login).not.toHaveBeenCalled()
+  })
+
+  it("does not report success when the profile cannot be loaded after signing in", async () => {
+    vi.mocked(authApi.login).mockResolvedValue({ accessToken: "access", refreshToken: "refresh" })
+    mocks.login.mockResolvedValue(null)
+    renderWithIntl(<LoginForm />)
+
+    await fillAndSubmit("user@example.com", "secret")
+
+    expect(await screen.findByText("Unable to sign in. Please try again.")).toBeInTheDocument()
+    expect(toast).not.toHaveBeenCalled()
+    expect(mocks.router.push).not.toHaveBeenCalled()
   })
 })

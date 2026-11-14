@@ -10,6 +10,10 @@
   "delete": "Usuń",
   "retry": "Spróbuj ponownie",
   "unexpectedError": "Wystąpił nieoczekiwany błąd",
+  "sessionUnavailable": {
+    "title": "Brak połączenia z CloudStore",
+    "description": "Nie udało się wczytać Twojego konta. Sprawdź połączenie i spróbuj ponownie."
+  },
   "nav": {
     "files": "Moje pliki",
     "recent": "Ostatnie",

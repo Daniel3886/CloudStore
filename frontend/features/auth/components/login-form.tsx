@@ -36,7 +36,8 @@ export function LoginForm() {
         throw new Error(t("login.invalidResponse"))
       }
 
-      await login(tokens.accessToken, tokens.refreshToken)
+      const profile = await login(tokens.accessToken, tokens.refreshToken)
+      if (!profile) throw new Error(t("login.error"))
       toast({ variant: "success", title: t("login.successTitle"), description: t("login.successDescription") })
       router.push("/files")
     }, t("login.error"))

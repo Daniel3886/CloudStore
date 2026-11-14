@@ -10,6 +10,10 @@
   "delete": "Delete",
   "retry": "Try again",
   "unexpectedError": "An unexpected error occurred",
+  "sessionUnavailable": {
+    "title": "Can't reach CloudStore",
+    "description": "We couldn't load your account. Check your connection and try again."
+  },
   "nav": {
     "files": "My Files",
     "recent": "Recent",

@@ -48,6 +48,24 @@ describe("FileBrowser", () => {
     expect(onCurrentPathChange).toHaveBeenCalledWith("docs")
   })
 
+  it("reloads files and saved folders when the refresh signal changes without remounting", async () => {
+    api.list.mockResolvedValue(backendFiles)
+    const { rerender } = renderWithIntl(<FileBrowser />)
+    expect(await screen.findByText("report.pdf")).toBeInTheDocument()
+
+    setVirtualFolders(["new-folder"])
+    api.list.mockResolvedValue([
+      ...backendFiles,
+      { id: 3, key: "k3", size: 1, lastModified: "2024-01-01T00:00:00Z", displayName: "uploaded.txt" },
+    ])
+    rerender(<FileBrowser refreshSignal={1} />)
+
+    expect(screen.getByText("report.pdf")).toBeInTheDocument()
+    expect(await screen.findByText("uploaded.txt")).toBeInTheDocument()
+    expect(screen.getByText("new-folder")).toBeInTheDocument()
+    expect(api.list).toHaveBeenCalledTimes(2)
+  })
+
   it("opens folders from the keyboard", async () => {
     api.list.mockResolvedValue(backendFiles)
     setVirtualFolders(["docs"])

@@ -67,7 +67,10 @@ export function useFileData(view: FileView = "all") {
     setVirtualFolders(folders)
   }, [])
 
-  const refreshFiles = useCallback(() => loadFiles(), [loadFiles])
+  const refreshFiles = useCallback(() => {
+    setVirtualFoldersState(getVirtualFolders())
+    return loadFiles()
+  }, [loadFiles])
 
   const files = useMemo(
     () =>

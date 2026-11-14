@@ -7,7 +7,7 @@ import { FileHeader } from "@/features/files/components/file-header"
 
 export default function FilesPage() {
   const t = useTranslations("files.pages")
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshSignal, setRefreshSignal] = useState(0)
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPath, setCurrentPath] = useState("")
 
@@ -16,12 +16,12 @@ export default function FilesPage() {
       <FileHeader
         title={t("files")}
         type="all"
-        onRefresh={() => setRefreshKey((prev) => prev + 1)}
+        onRefresh={() => setRefreshSignal((prev) => prev + 1)}
         onSearch={setSearchQuery}
         currentPath={currentPath}
       />
       <FileBrowser
-        key={refreshKey}
+        refreshSignal={refreshSignal}
         searchQuery={searchQuery}
         currentPath={currentPath}
         onCurrentPathChange={setCurrentPath}

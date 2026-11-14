@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { ShareModal } from "@/features/sharing/components/share-modal"
 import { DeleteFileDialog } from "@/features/files/components/delete-file-dialog"
 import { FileBrowserEmptyState, FileBrowserLoading } from "@/features/files/components/file-browser-states"
@@ -22,6 +22,7 @@ interface FileBrowserProps {
   searchQuery?: string
   currentPath?: string
   onCurrentPathChange?: (path: string) => void
+  refreshSignal?: number
 }
 
 export function FileBrowser({
@@ -29,12 +30,20 @@ export function FileBrowser({
   searchQuery = "",
   currentPath = "",
   onCurrentPathChange,
+  refreshSignal = 0,
 }: FileBrowserProps) {
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
 
   const operations = useFileOperations()
   const { files, loading, virtualFolders, saveVirtualFolders, refreshFiles } = useFileData(type)
+  const handledRefreshSignal = useRef(refreshSignal)
+
+  useEffect(() => {
+    if (refreshSignal === handledRefreshSignal.current) return
+    handledRefreshSignal.current = refreshSignal
+    void refreshFiles()
+  }, [refreshSignal, refreshFiles])
 
   const isTrashView = type === "trash"
   const visibleFiles = useMemo(

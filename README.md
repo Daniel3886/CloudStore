@@ -10,7 +10,7 @@ Run the full app without installing Java, Maven, or Node locally.
 
 1. Make sure you have **Docker** and **Docker Compose** installed.
 2. Create a `.env` file in `backend/` with all required backend variables (DB URL, JWT secret, AWS credentials, etc.).
-3. Create a `.env.local` file in `frontend/` with frontend environment variables (`NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`).
+3. Create a `.env.local` file in `frontend/` with frontend environment variables (`NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`). The API URL is baked into the frontend at build time, so Docker Compose also passes `NEXT_PUBLIC_API_BASE_URL` from your shell or a root `.env` as a build argument (default `http://localhost:8080`).
 [See Environment Variables setup](#environment-variables)
 4. At the project root, create a `docker-compose.yml` file:
 
@@ -24,7 +24,10 @@ services:
       - ./backend/.env
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
     ports:
       - "3000:3000"
     env_file:
@@ -141,7 +144,7 @@ docker build -t backend .
 
 ```bash
 cd frontend
-docker build -t frontend .
+docker build --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 -t frontend .
 ```
 
 ### Run Containers Individually

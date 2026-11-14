@@ -13,7 +13,7 @@ import { SubmitButton } from "@/features/auth/components/loading-button"
 import { PasswordInput } from "@/features/auth/components/password-input"
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
 import { authFlowStorage } from "@/features/auth/lib/flow-storage"
-import { VALIDATION_LIMITS, validateEmail, validateNewPassword, validateUsername } from "@/features/auth/lib/validation"
+import { VALIDATION_LIMITS, validateEmail, validateNewPassword, validateUsername } from "@/lib/validation"
 
 export function RegisterForm() {
   const t = useTranslations("auth")

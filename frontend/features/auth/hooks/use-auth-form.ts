@@ -2,7 +2,7 @@ import type React from "react"
 import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 import { getErrorMessage } from "@/lib/api/client"
-import { hasErrors, VALIDATION_LIMITS, type FieldErrors, type ValidationErrorKey } from "@/features/auth/lib/validation"
+import { hasErrors, VALIDATION_LIMITS, type FieldErrors, type ValidationErrorKey } from "@/lib/validation"
 
 export function useAuthForm<Values extends Record<string, string>>(initialValues: Values) {
   type Field = keyof Values & string
@@ -11,7 +11,7 @@ export function useAuthForm<Values extends Record<string, string>>(initialValues
   const [errors, setErrors] = useState<FieldErrors<Field>>({})
   const [formError, setFormError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const tValidation = useTranslations("auth.validation")
+  const tValidation = useTranslations("common.validation")
 
   const setValue = useCallback((field: Field, value: string) => {
     setValues((prev) => ({ ...prev, [field]: value }))

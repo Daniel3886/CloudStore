@@ -37,5 +37,21 @@
   },
   "fileSize": {
     "bytes": "{count, plural, one {# bajt} few {# bajty} many {# bajtów} other {# bajta}}"
+  },
+  "validation": {
+    "emailRequired": "Adres e-mail jest wymagany",
+    "emailInvalid": "Wpisz poprawny adres e-mail",
+    "usernameRequired": "Nazwa użytkownika jest wymagana",
+    "usernameTooShort": "Nazwa użytkownika musi mieć co najmniej {usernameMin, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "usernameTooLong": "Nazwa użytkownika może mieć najwyżej {usernameMax, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordRequired": "Hasło jest wymagane",
+    "passwordTooShort": "Hasło musi mieć co najmniej {passwordMin, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordTooLong": "Hasło może mieć najwyżej {passwordMax, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordMissingNumber": "Hasło musi zawierać co najmniej jedną cyfrę",
+    "passwordMissingLetter": "Hasło musi zawierać co najmniej jedną literę",
+    "confirmPasswordRequired": "Potwierdź hasło",
+    "passwordsDoNotMatch": "Hasła nie są zgodne",
+    "codeRequired": "Kod weryfikacyjny jest wymagany",
+    "codeInvalidLength": "Kod weryfikacyjny musi mieć {codeLength, plural, one {# cyfrę} few {# cyfry} many {# cyfr} other {# cyfry}}"
   }
 }

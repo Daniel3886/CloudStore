@@ -13,7 +13,7 @@ import { useAuth } from "@/features/auth/components/auth-provider"
 import { SubmitButton } from "@/features/auth/components/loading-button"
 import { PasswordInput } from "@/features/auth/components/password-input"
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
-import { validateEmail, validateRequiredPassword } from "@/features/auth/lib/validation"
+import { validateEmail, validateRequiredPassword } from "@/lib/validation"
 
 export function LoginForm() {
   const t = useTranslations("auth")

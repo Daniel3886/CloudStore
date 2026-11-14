@@ -37,5 +37,21 @@
   },
   "fileSize": {
     "bytes": "{count, plural, one {# byte} other {# bytes}}"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "usernameRequired": "Username is required",
+    "usernameTooShort": "Username must be at least {usernameMin} characters long",
+    "usernameTooLong": "Username must be no more than {usernameMax} characters long",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least {passwordMin} characters long",
+    "passwordTooLong": "Password must be no more than {passwordMax} characters long",
+    "passwordMissingNumber": "Password must contain at least one number",
+    "passwordMissingLetter": "Password must contain at least one letter",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "codeRequired": "Verification code is required",
+    "codeInvalidLength": "Verification code must be {codeLength} digits"
   }
 }

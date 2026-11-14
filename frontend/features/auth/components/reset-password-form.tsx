@@ -17,7 +17,7 @@ import { StatusIcon } from "@/features/auth/components/status-icon"
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
 import { useDelayedRedirect } from "@/features/auth/hooks/use-delayed-redirect"
 import { authFlowStorage, type ResetSession } from "@/features/auth/lib/flow-storage"
-import { VALIDATION_LIMITS, validateNewPassword, validatePasswordConfirmation } from "@/features/auth/lib/validation"
+import { VALIDATION_LIMITS, validateNewPassword, validatePasswordConfirmation } from "@/lib/validation"
 
 const LOGIN_PATH = "/login"
 const REDIRECT_DELAY_MS = 3000

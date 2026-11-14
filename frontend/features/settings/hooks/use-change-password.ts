@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
 import { getErrorMessage } from "@/lib/api/client"
+import { VALIDATION_LIMITS } from "@/lib/validation"
 import {
   EMPTY_PASSWORD_CHANGE,
-  MIN_PASSWORD_LENGTH,
   isPasswordChangeComplete,
   validatePasswordChange,
   type PasswordChangeValues,
@@ -15,6 +15,7 @@ import {
 
 export function useChangePassword(email: string | undefined) {
   const t = useTranslations("settings")
+  const tValidation = useTranslations("common.validation")
   const [values, setValues] = useState<PasswordChangeValues>(EMPTY_PASSWORD_CHANGE)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -24,11 +25,19 @@ export function useChangePassword(email: string | undefined) {
 
   const submit = useCallback(async () => {
     const validationError = validatePasswordChange(values)
+    if (validationError === "missingFields") {
+      toast({
+        variant: "destructive",
+        title: t("changePassword.validation.missingFields.title"),
+        description: t("changePassword.validation.missingFields.description"),
+      })
+      return
+    }
     if (validationError) {
       toast({
         variant: "destructive",
-        title: t(`changePassword.validation.${validationError}.title`),
-        description: t(`changePassword.validation.${validationError}.description`, { min: MIN_PASSWORD_LENGTH }),
+        title: t("changePassword.validation.invalidTitle"),
+        description: tValidation(validationError, VALIDATION_LIMITS),
       })
       return
     }
@@ -52,7 +61,7 @@ export function useChangePassword(email: string | undefined) {
     } finally {
       setIsSubmitting(false)
     }
-  }, [email, t, values])
+  }, [email, t, tValidation, values])
 
   return {
     values,

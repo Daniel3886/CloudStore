@@ -16,7 +16,7 @@ import { StatusIcon } from "@/features/auth/components/status-icon"
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
 import { useDelayedRedirect } from "@/features/auth/hooks/use-delayed-redirect"
 import { authFlowStorage } from "@/features/auth/lib/flow-storage"
-import { VALIDATION_LIMITS, validateEmail } from "@/features/auth/lib/validation"
+import { VALIDATION_LIMITS, validateEmail } from "@/lib/validation"
 
 const VERIFY_PATH = "/verify-password"
 const REDIRECT_DELAY_MS = 2000

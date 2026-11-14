@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast"
 import { authApi } from "@/features/auth/api"
 import { VerificationCodeForm } from "@/features/auth/components/verification-code-form"
 import { authFlowStorage } from "@/features/auth/lib/flow-storage"
-import { VALIDATION_LIMITS } from "@/features/auth/lib/validation"
+import { VALIDATION_LIMITS } from "@/lib/validation"
 
 export function VerifyPasswordForm() {
   const t = useTranslations("auth")

@@ -1,4 +1,4 @@
-export const MIN_PASSWORD_LENGTH = 8
+import { validateNewPassword, validatePasswordConfirmation, type ValidationErrorKey } from "@/lib/validation"
 
 export interface PasswordChangeValues {
   currentPassword: string
@@ -6,7 +6,7 @@ export interface PasswordChangeValues {
   confirmPassword: string
 }
 
-export type PasswordChangeError = "missingFields" | "mismatch" | "tooShort"
+export type PasswordChangeError = "missingFields" | ValidationErrorKey
 
 export const EMPTY_PASSWORD_CHANGE: PasswordChangeValues = {
   currentPassword: "",
@@ -20,7 +20,9 @@ export function isPasswordChangeComplete(values: PasswordChangeValues): boolean 
 
 export function validatePasswordChange(values: PasswordChangeValues): PasswordChangeError | null {
   if (!isPasswordChangeComplete(values)) return "missingFields"
-  if (values.newPassword !== values.confirmPassword) return "mismatch"
-  if (values.newPassword.length < MIN_PASSWORD_LENGTH) return "tooShort"
-  return null
+  return (
+    validateNewPassword(values.newPassword) ??
+    validatePasswordConfirmation(values.newPassword, values.confirmPassword) ??
+    null
+  )
 }

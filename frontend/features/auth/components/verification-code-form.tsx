@@ -13,7 +13,7 @@ import { LoadingButton, SubmitButton } from "@/features/auth/components/loading-
 import { StatusIcon } from "@/features/auth/components/status-icon"
 import { useAuthForm } from "@/features/auth/hooks/use-auth-form"
 import { useResendCode } from "@/features/auth/hooks/use-resend-code"
-import { VALIDATION_LIMITS, validateEmail, validateVerificationCode } from "@/features/auth/lib/validation"
+import { VALIDATION_LIMITS, validateEmail, validateVerificationCode } from "@/lib/validation"
 
 interface VerificationCodeFormProps {
   readStoredEmail: () => string | null

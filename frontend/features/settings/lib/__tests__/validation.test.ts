@@ -15,12 +15,14 @@ describe("validatePasswordChange", () => {
   })
 
   it("requires the confirmation to match", () => {
-    expect(validatePasswordChange(values("old", "newpassword", "different"))).toBe("mismatch")
+    expect(validatePasswordChange(values("old", "newpassword1", "different1"))).toBe("passwordsDoNotMatch")
   })
 
-  it("requires at least 8 characters", () => {
-    expect(validatePasswordChange(values("old", "short", "short"))).toBe("tooShort")
-    expect(validatePasswordChange(values("old", "12345678", "12345678"))).toBeNull()
+  it("applies the same password rules as registration", () => {
+    expect(validatePasswordChange(values("old", "short1", "short1"))).toBe("passwordTooShort")
+    expect(validatePasswordChange(values("old", "12345678", "12345678"))).toBe("passwordMissingLetter")
+    expect(validatePasswordChange(values("old", "abcdefgh", "abcdefgh"))).toBe("passwordMissingNumber")
+    expect(validatePasswordChange(values("old", "abcd1234", "abcd1234"))).toBeNull()
   })
 })
 

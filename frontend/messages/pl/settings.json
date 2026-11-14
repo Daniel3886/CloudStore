@@ -22,14 +22,7 @@
         "title": "Brakujące pola",
         "description": "Wypełnij wszystkie pola hasła"
       },
-      "mismatch": {
-        "title": "Hasła nie są zgodne",
-        "description": "Nowe hasło i jego potwierdzenie muszą być takie same"
-      },
-      "tooShort": {
-        "title": "Hasło jest za krótkie",
-        "description": "Hasło musi mieć co najmniej {min, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}"
-      }
+      "invalidTitle": "Sprawdź nowe hasło"
     },
     "success": {
       "title": "Hasło zmienione",

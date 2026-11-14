@@ -7,7 +7,7 @@ import {
   validateRequiredPassword,
   validateUsername,
   validateVerificationCode,
-} from "@/features/auth/lib/validation"
+} from "@/lib/validation"
 
 describe("validateEmail", () => {
   it("requires a well-formed address", () => {

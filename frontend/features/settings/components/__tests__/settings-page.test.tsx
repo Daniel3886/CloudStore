@@ -61,7 +61,7 @@ describe("SettingsPage", () => {
     expect(submit).toBeDisabled()
 
     await user.type(screen.getByLabelText("Current Password"), "old")
-    await user.type(screen.getByLabelText("New Password"), "newpassword")
+    await user.type(screen.getByLabelText("New Password"), "newpassword1")
     expect(submit).toBeDisabled()
   })
 
@@ -79,36 +79,35 @@ describe("SettingsPage", () => {
 
   it("rejects mismatched passwords", async () => {
     const user = await renderPage()
-    await fillPasswords(user, "oldpassword", "newpassword", "otherpassword")
+    await fillPasswords(user, "oldpassword", "newpassword1", "otherpassword1")
     await user.click(screen.getByRole("button", { name: "Change Password" }))
 
     expect(toast).toHaveBeenCalledWith({
       variant: "destructive",
-      title: "Passwords don't match",
-      description: "New password and confirmation must match",
+      title: "Check your new password",
+      description: "Passwords do not match",
     })
     expect(authApi.changePassword).not.toHaveBeenCalled()
   })
 
-  it("rejects passwords shorter than 8 characters", async () => {
+  it.each([
+    ["short1", "Password must be at least 8 characters long"],
+    ["longpassword", "Password must contain at least one number"],
+  ])("applies the registration password rules to %s", async (password, description) => {
     const user = await renderPage()
-    await fillPasswords(user, "oldpassword", "short", "short")
+    await fillPasswords(user, "oldpassword", password, password)
     await user.click(screen.getByRole("button", { name: "Change Password" }))
 
-    expect(toast).toHaveBeenCalledWith({
-      variant: "destructive",
-      title: "Password too short",
-      description: "Password must be at least 8 characters long",
-    })
+    expect(toast).toHaveBeenCalledWith({ variant: "destructive", title: "Check your new password", description })
     expect(authApi.changePassword).not.toHaveBeenCalled()
   })
 
   it("changes the password and clears the form", async () => {
     const user = await renderPage()
-    await fillPasswords(user, "oldpassword", "newpassword", "newpassword")
+    await fillPasswords(user, "oldpassword", "newpassword1", "newpassword1")
     await user.click(screen.getByRole("button", { name: "Change Password" }))
 
-    expect(authApi.changePassword).toHaveBeenCalledWith("jane@example.com", "oldpassword", "newpassword")
+    expect(authApi.changePassword).toHaveBeenCalledWith("jane@example.com", "oldpassword", "newpassword1")
     await waitFor(() =>
       expect(toast).toHaveBeenCalledWith({
         title: "Password changed",
@@ -122,7 +121,7 @@ describe("SettingsPage", () => {
   it("shows the backend error when changing the password fails", async () => {
     vi.mocked(authApi.changePassword).mockRejectedValue(new ApiError(400, "Current password is incorrect"))
     const user = await renderPage()
-    await fillPasswords(user, "wrongpassword", "newpassword", "newpassword")
+    await fillPasswords(user, "wrongpassword", "newpassword1", "newpassword1")
     await user.click(screen.getByRole("button", { name: "Change Password" }))
 
     await waitFor(() =>
@@ -138,7 +137,7 @@ describe("SettingsPage", () => {
   it("uses the translated fallback when the error has no message", async () => {
     vi.mocked(authApi.changePassword).mockRejectedValue("boom")
     const user = await renderPage()
-    await fillPasswords(user, "oldpassword", "newpassword", "newpassword")
+    await fillPasswords(user, "oldpassword", "newpassword1", "newpassword1")
     await user.click(screen.getByRole("button", { name: "Change Password" }))
 
     await waitFor(() =>

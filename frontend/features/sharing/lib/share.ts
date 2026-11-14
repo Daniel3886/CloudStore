@@ -1,9 +1,8 @@
 import type { SharedFileDto, ShareStatus } from "@/features/sharing/api"
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import { validateEmail } from "@/lib/validation"
 
 export function isValidEmail(email: string): boolean {
-  return EMAIL_PATTERN.test(email.trim())
+  return !validateEmail(email.trim())
 }
 
 export function toFileId(id: string | number | undefined | null): number | null {

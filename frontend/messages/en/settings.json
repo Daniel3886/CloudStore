@@ -22,14 +22,7 @@
         "title": "Missing fields",
         "description": "Fill in all password fields"
       },
-      "mismatch": {
-        "title": "Passwords don't match",
-        "description": "New password and confirmation must match"
-      },
-      "tooShort": {
-        "title": "Password too short",
-        "description": "Password must be at least {min, plural, one {# character} other {# characters}} long"
-      }
+      "invalidTitle": "Check your new password"
     },
     "success": {
       "title": "Password changed",

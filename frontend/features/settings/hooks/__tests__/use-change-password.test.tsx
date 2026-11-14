@@ -38,8 +38,8 @@ describe("useChangePassword", () => {
     const { result } = renderHook(() => useChangePassword(undefined), { wrapper })
     act(() => {
       result.current.setField("currentPassword", "oldpassword")
-      result.current.setField("newPassword", "newpassword")
-      result.current.setField("confirmPassword", "newpassword")
+      result.current.setField("newPassword", "newpassword1")
+      result.current.setField("confirmPassword", "newpassword1")
     })
 
     await act(() => result.current.submit())

@@ -1,0 +1,202 @@
+{
+  "unknownFile": "Nieznany plik",
+  "pages": {
+    "files": "Moje pliki",
+    "recent": "Ostatnie pliki",
+    "trash": "Kosz"
+  },
+  "header": {
+    "newFolder": "Nowy folder",
+    "upload": "Prześlij",
+    "searchPlaceholder": "Szukaj plików i folderów...",
+    "searchLabel": "Szukaj plików i folderów"
+  },
+  "browser": {
+    "loading": "Ładowanie plików...",
+    "back": "Wstecz",
+    "root": "Moje pliki",
+    "breadcrumbLabel": "Bieżący folder",
+    "folder": "Folder",
+    "inTrash": "W koszu",
+    "empty": {
+      "trashTitle": "Kosz jest pusty",
+      "trashDescription": "Usunięte pliki będą tu przechowywane przez 30 dni, zanim zostaną trwale usunięte.",
+      "title": "Nie znaleziono plików",
+      "allDescription": "Prześlij pliki lub utwórz folder, aby zacząć",
+      "recentDescription": "Brak ostatnich plików"
+    }
+  },
+  "card": {
+    "actionsLabel": "Akcje dla {name}",
+    "actions": "Akcje",
+    "restore": "Przywróć",
+    "deletePermanently": "Usuń trwale",
+    "download": "Pobierz",
+    "downloadZip": "Pobierz jako ZIP",
+    "share": "Udostępnij",
+    "rename": "Zmień nazwę",
+    "details": "Szczegóły",
+    "moveToTrash": "Przenieś do kosza"
+  },
+  "deleteDialog": {
+    "trashTitle": "Przenieś plik do kosza",
+    "trashDescription": "Czy na pewno chcesz przenieść „{name}” do kosza? Możesz go później przywrócić z kosza.",
+    "folderTitle": "Trwale usuń folder",
+    "folderDescription": "⚠️ Jeśli folder „{name}” zawiera pliki, <b>zostaną one trwale usunięte</b>. Tej operacji nie można cofnąć.",
+    "permanentTitle": "Trwale usuń {kind, select, folder {folder} other {plik}}",
+    "permanentDescription": "Czy na pewno chcesz trwale usunąć „{name}”? Tej operacji nie można cofnąć, a plik zostanie bezpowrotnie utracony.",
+    "cancel": "Anuluj",
+    "moveToTrash": "Przenieś do kosza",
+    "deletePermanently": "Usuń trwale"
+  },
+  "rename": {
+    "title": "Zmień nazwę {kind, select, folder {folderu} other {pliku}}",
+    "description": "Wpisz nową nazwę dla „{name}”.",
+    "fileHint": "Rozszerzenie pliku zostanie zachowane.",
+    "folderHint": "Wszystkie pliki w tym folderze zostaną odpowiednio zaktualizowane.",
+    "label": "Nazwa",
+    "filePlaceholder": "Wpisz nazwę pliku",
+    "folderPlaceholder": "Wpisz nazwę folderu",
+    "cancel": "Anuluj",
+    "submit": "Zmień nazwę",
+    "submitting": "Zmienianie nazwy..."
+  },
+  "newFolder": {
+    "title": "Utwórz nowy folder",
+    "description": "Wpisz nazwę nowego folderu.",
+    "location": "Zostanie utworzony w: {path}",
+    "label": "Nazwa folderu",
+    "placeholder": "Mój nowy folder",
+    "cancel": "Anuluj",
+    "submit": "Utwórz"
+  },
+  "upload": {
+    "title": "Prześlij pliki",
+    "description": "Prześlij pliki do swojego magazynu. Możesz przesłać wiele plików naraz.",
+    "dropzoneLabel": "Wybierz pliki do przesłania",
+    "dropHere": "Upuść pliki tutaj",
+    "dragOrBrowse": "Przeciągnij i upuść pliki tutaj lub kliknij, aby wybrać",
+    "dragMore": "Przeciągnij więcej plików tutaj lub kliknij, aby dodać kolejne",
+    "supported": "Obsługa dokumentów, obrazów, filmów i innych plików",
+    "selected": "Wybrano {count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}",
+    "pending": "({count} oczekuje)",
+    "browse": "Wybierz pliki",
+    "clearAll": "Wyczyść wszystko",
+    "remove": "Usuń {name}",
+    "uploaded": "Przesłano",
+    "failed": "Błąd",
+    "allDone": "Wszystkie pliki zostały przesłane!",
+    "close": "Zamknij",
+    "back": "Wstecz",
+    "cancel": "Anuluj",
+    "submit": "Prześlij {count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}",
+    "uploading": "Przesyłanie {current}/{total}...",
+    "status": {
+      "pending": "Oczekuje na przesłanie",
+      "uploading": "Przesyłanie",
+      "completed": "Przesłano",
+      "error": "Przesyłanie nie powiodło się"
+    }
+  },
+  "details": {
+    "title": "Szczegóły pliku",
+    "description": "Wyświetlaj informacje o pliku i zarządzaj ustawieniami udostępniania.",
+    "uploaded": "Przesłano {date}",
+    "ownedBy": "Właściciel: {owner}",
+    "ownedByYou": "Twój plik",
+    "sharingOptions": "Opcje udostępniania",
+    "share": "Udostępnij",
+    "manage": "Zarządzaj",
+    "publicLink": "Utwórz link publiczny",
+    "fileActions": "Akcje pliku",
+    "download": "Pobierz",
+    "close": "Zamknij"
+  },
+  "validation": {
+    "empty": "Nazwa {kind, select, folder {folderu} other {pliku}} nie może być pusta.",
+    "tooLong": "Nazwa {kind, select, folder {folderu} other {pliku}} może mieć najwyżej {max} znaków.",
+    "invalidChars": "Nazwa {kind, select, folder {folderu} other {pliku}} nie może zawierać żadnego z tych znaków: {chars}",
+    "reserved": "„{name}” to nazwa zastrzeżona i nie można jej użyć.",
+    "folderExists": "Folder o nazwie „{name}” już istnieje w tej lokalizacji."
+  },
+  "toasts": {
+    "loadFailed": {
+      "title": "Nie udało się wczytać plików",
+      "description": "Nie można pobrać plików z serwera"
+    },
+    "missingKey": {
+      "title": "Brak klucza",
+      "download": "Nie można pobrać pliku bez klucza S3.",
+      "delete": "Nie można usunąć pliku bez klucza S3.",
+      "rename": "Nie można zmienić nazwy pliku bez klucza S3.",
+      "restore": "Nie można przywrócić pliku bez klucza S3.",
+      "permanentDelete": "Nie można trwale usunąć pliku bez klucza S3."
+    },
+    "downloadStarted": {
+      "title": "Rozpoczęto pobieranie",
+      "file": "Trwa pobieranie pliku {name}.",
+      "folder": "Folder „{name}” jest pobierany jako plik ZIP."
+    },
+    "downloadFailed": {
+      "title": "Pobieranie nie powiodło się",
+      "file": "Nie udało się pobrać pliku.",
+      "folder": "Nie udało się pobrać folderu."
+    },
+    "emptyFolder": {
+      "title": "Pusty folder",
+      "description": "Ten folder nie zawiera plików do pobrania."
+    },
+    "partialFolderDownload": {
+      "title": "Pominięto niektóre pliki",
+      "description": "{count, plural, one {Nie udało się dodać # pliku} few {Nie udało się dodać # plików} many {Nie udało się dodać # plików} other {Nie udało się dodać # pliku}} do archiwum ZIP."
+    },
+    "deleted": {
+      "title": "{kind, select, folder {Folder został usunięty} other {Plik został usunięty}}",
+      "description": "Usunięto {name}."
+    },
+    "deleteFailed": {
+      "title": "Usuwanie nie powiodło się",
+      "description": "Nie udało się usunąć {kind, select, folder {folderu} other {pliku}}."
+    },
+    "renamed": {
+      "title": "{kind, select, folder {Zmieniono nazwę folderu} other {Zmieniono nazwę pliku}}",
+      "description": "Nowa nazwa {kind, select, folder {folderu} other {pliku}}: „{name}”."
+    },
+    "renameFailed": "Nie udało się zmienić nazwy {kind, select, folder {folderu} other {pliku}}.",
+    "restored": {
+      "title": "Plik przywrócony",
+      "description": "Przywrócono {name} z kosza."
+    },
+    "restoreFailed": {
+      "title": "Przywracanie nie powiodło się",
+      "description": "Nie udało się przywrócić pliku."
+    },
+    "permanentlyDeleted": {
+      "title": "Plik trwale usunięty",
+      "description": "Trwale usunięto {name}."
+    },
+    "permanentDeleteFailed": {
+      "title": "Trwałe usuwanie nie powiodło się",
+      "description": "Nie udało się trwale usunąć pliku."
+    },
+    "uploadComplete": {
+      "title": "Przesyłanie zakończone",
+      "description": "Przesłano {success, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}{failed, plural, =0 {} other {, błędy: #}}"
+    },
+    "uploadFailed": {
+      "title": "Przesyłanie nie powiodło się",
+      "description": "Nie udało się przesłać {count, plural, one {# pliku} few {# plików} many {# plików} other {# pliku}}",
+      "fallback": "Przesyłanie nie powiodło się"
+    },
+    "folderCreated": {
+      "title": "Folder utworzony",
+      "description": "Utworzono folder „{name}”"
+    },
+    "folderCreateFailed": {
+      "title": "Błąd tworzenia folderu",
+      "description": "Nie udało się utworzyć folderu. Spróbuj ponownie."
+    },
+    "invalidFolderName": "Nieprawidłowa nazwa folderu",
+    "folderExists": "Folder już istnieje"
+  }
+}

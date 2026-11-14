@@ -1,0 +1,81 @@
+{
+  "appName": "CloudStore",
+  "appTagline": "Bezpieczne przechowywanie plików",
+  "appDescription": "Bezpieczna i skalowalna usługa przechowywania plików",
+  "loading": "Ładowanie...",
+  "loadingApp": "Ładowanie CloudStore...",
+  "cancel": "Anuluj",
+  "close": "Zamknij",
+  "save": "Zapisz",
+  "delete": "Usuń",
+  "retry": "Spróbuj ponownie",
+  "unexpectedError": "Wystąpił nieoczekiwany błąd",
+  "sessionUnavailable": {
+    "title": "Brak połączenia z CloudStore",
+    "description": "Nie udało się wczytać Twojego konta. Sprawdź połączenie i spróbuj ponownie."
+  },
+  "nav": {
+    "files": "Moje pliki",
+    "recent": "Ostatnie",
+    "shared": "Udostępnione",
+    "activity": "Aktywność",
+    "trash": "Kosz",
+    "openMenu": "Otwórz menu nawigacji",
+    "menuTitle": "Menu nawigacji"
+  },
+  "userMenu": {
+    "openMenu": "Otwórz menu użytkownika",
+    "fallbackName": "Użytkownik",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj się"
+  },
+  "theme": {
+    "toggle": "Zmień motyw",
+    "light": "Jasny",
+    "dark": "Ciemny",
+    "system": "Systemowy"
+  },
+  "fileSize": {
+    "bytes": "{count, plural, one {# bajt} few {# bajty} many {# bajtów} other {# bajta}}"
+  },
+  "validation": {
+    "emailRequired": "Adres e-mail jest wymagany",
+    "emailInvalid": "Wpisz poprawny adres e-mail",
+    "usernameRequired": "Nazwa użytkownika jest wymagana",
+    "usernameTooShort": "Nazwa użytkownika musi mieć co najmniej {usernameMin, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "usernameTooLong": "Nazwa użytkownika może mieć najwyżej {usernameMax, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordRequired": "Hasło jest wymagane",
+    "passwordTooShort": "Hasło musi mieć co najmniej {passwordMin, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordTooLong": "Hasło może mieć najwyżej {passwordMax, plural, one {# znak} few {# znaki} many {# znaków} other {# znaku}}",
+    "passwordMissingNumber": "Hasło musi zawierać co najmniej jedną cyfrę",
+    "passwordMissingLetter": "Hasło musi zawierać co najmniej jedną literę",
+    "confirmPasswordRequired": "Potwierdź hasło",
+    "passwordsDoNotMatch": "Hasła nie są zgodne",
+    "codeRequired": "Kod weryfikacyjny jest wymagany",
+    "codeInvalidLength": "Kod weryfikacyjny musi mieć {codeLength, plural, one {# cyfrę} few {# cyfry} many {# cyfr} other {# cyfry}}"
+  },
+  "apiErrors": {
+    "network": "Nie można połączyć się z serwerem. Sprawdź połączenie i spróbuj ponownie.",
+    "rateLimited": "Zbyt wiele prób. Odczekaj chwilę i spróbuj ponownie.",
+    "fileTooLarge": "Plik jest za duży, aby go przesłać.",
+    "emailInUse": "Konto z tym adresem e-mail już istnieje.",
+    "emailDomainInvalid": "Domena tego adresu e-mail jest nieprawidłowa.",
+    "invalidCredentials": "Nieprawidłowy adres e-mail lub hasło.",
+    "currentPasswordIncorrect": "Obecne hasło jest nieprawidłowe.",
+    "samePassword": "Nowe hasło musi różnić się od obecnego.",
+    "accountNotVerified": "Zweryfikuj adres e-mail przed zalogowaniem.",
+    "pendingVerification": "Ten adres e-mail oczekuje na weryfikację. Poproś o nowy kod.",
+    "alreadyVerified": "To konto jest już zweryfikowane.",
+    "invalidCode": "Kod weryfikacyjny jest nieprawidłowy.",
+    "codeExpired": "Kod weryfikacyjny wygasł. Poproś o nowy.",
+    "emailSendFailed": "Nie udało się wysłać wiadomości. Spróbuj ponownie później.",
+    "userNotFound": "Nie znaleziono konta z tym adresem e-mail.",
+    "recipientNotFound": "Żaden użytkownik CloudStore nie ma tego adresu e-mail.",
+    "shareWithSelf": "Nie możesz udostępnić pliku samemu sobie.",
+    "sharePending": "Ta osoba ma już oczekującą prośbę o udostępnienie tego pliku.",
+    "linkExpired": "Ten link wygasł.",
+    "linkInvalid": "Ten link jest nieprawidłowy lub został unieważniony.",
+    "fileNotFound": "Nie znaleziono pliku. Mógł zostać przeniesiony lub usunięty.",
+    "notAllowed": "Nie masz uprawnień do wykonania tej czynności."
+  }
+}

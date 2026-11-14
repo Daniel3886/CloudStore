@@ -1,0 +1,53 @@
+{
+  "page": {
+    "title": "Activity",
+    "description": "View your recent file activity and system events"
+  },
+  "browser": {
+    "title": "Activity Log",
+    "refresh": "Refresh activity",
+    "loading": "Loading activity..."
+  },
+  "period": {
+    "label": "Time period",
+    "days": "Last {days, plural, one {# day} other {# days}}",
+    "all": "All time"
+  },
+  "empty": {
+    "title": "No activity found",
+    "period": "No activities recorded in the last {days, plural, one {# day} other {# days}}.",
+    "all": "No activities recorded yet."
+  },
+  "error": {
+    "title": "Couldn't load activity",
+    "fallback": "Failed to load activity logs. Please try again.",
+    "retry": "Try again"
+  },
+  "log": {
+    "justNow": "Just now",
+    "file": "File: {name}"
+  },
+  "actions": {
+    "FILE_UPLOAD": "File uploaded",
+    "FILE_DELETE": "File deleted",
+    "FILE_SOFT_DELETE": "File moved to trash",
+    "FILE_PERMANENT_DELETE": "File permanently deleted",
+    "FILE_RESTORE": "File restored",
+    "FILE_RENAME": "File renamed",
+    "FILE_MOVE": "File moved",
+    "SHARE_FILE": "File shared",
+    "RESHARE_FILE": "File reshared",
+    "REVOKE_ACCESS": "Access revoked",
+    "ACCEPT_SHARE": "Share accepted",
+    "DECLINE_SHARE": "Share declined",
+    "SHARE_ACCEPTED": "Share accepted",
+    "SHARE_DECLINED": "Share declined",
+    "UPDATE_MESSAGE": "Share message updated",
+    "REMOVE_MESSAGE": "Share message removed",
+    "PUBLIC_LINK_GENERATION": "Public link created",
+    "PUBLIC_LINK_REVOCATION": "Public link revoked",
+    "PUBLIC_FILE_ACCESS": "Public file accessed",
+    "USER_REGISTER": "Account registered",
+    "PASSWORD_CHANGE": "Password changed"
+  }
+}

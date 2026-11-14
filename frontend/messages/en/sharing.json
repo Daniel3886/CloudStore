@@ -1,0 +1,101 @@
+{
+  "form": {
+    "emailLabel": "Email address",
+    "emailPlaceholder": "Enter email address",
+    "messageLabel": "Message (optional)",
+    "messagePlaceholder": "Add a message for the recipient",
+    "submit": "Share File",
+    "submitting": "Sharing...",
+    "invalidEmail": "Enter a valid email address",
+    "missingFileId": "This file can't be shared right now. Refresh the page and try again."
+  },
+  "shareModal": {
+    "title": "Share \"{name}\"",
+    "specificUsers": "Share with specific users",
+    "publicSharing": "Public Sharing",
+    "managePublicLinks": "Manage Public Links"
+  },
+  "management": {
+    "title": "Manage Sharing - {name}",
+    "shareNew": "Share with someone new",
+    "peopleWithAccess": "People with access",
+    "ownerInitials": "You",
+    "ownerName": "You (Owner)",
+    "ownerDescription": "Full access to this file",
+    "ownerBadge": "Owner",
+    "userDescription": "Has access to this file",
+    "sharedBadge": "Shared",
+    "revokeAccess": "Revoke access for {email}",
+    "loading": "Loading people with access",
+    "empty": "No one else has access to this file"
+  },
+  "browser": {
+    "title": "Shared with me",
+    "count": "{count, plural, one {# file} other {# files}}",
+    "loading": "Loading shared files...",
+    "emptyTitle": "No shared files",
+    "emptyDescription": "Files shared with you will appear here.",
+    "sharedBy": "Shared by {name}",
+    "sharedAt": "Shared {date}",
+    "statusChangedAt": "{status, select, ACCEPTED {Accepted} DECLINED {Declined} other {Updated}} {date}",
+    "message": "Message",
+    "accept": "Accept \"{name}\"",
+    "decline": "Decline \"{name}\"",
+    "download": "Download \"{name}\""
+  },
+  "status": {
+    "PENDING": "Pending",
+    "ACCEPTED": "Accepted",
+    "DECLINED": "Declined"
+  },
+  "toast": {
+    "shared": {
+      "title": "File shared successfully",
+      "description": "\"{name}\" has been shared with {email}"
+    },
+    "shareFailed": {
+      "title": "Failed to share file",
+      "fallback": "Could not share the file"
+    },
+    "revoked": {
+      "title": "Access revoked",
+      "description": "Removed access for {email}"
+    },
+    "revokeFailed": {
+      "title": "Failed to revoke access",
+      "fallback": "Could not revoke access"
+    },
+    "loadUsersFailed": {
+      "title": "Failed to load people with access",
+      "fallback": "Could not load the people this file is shared with"
+    },
+    "loadFailed": {
+      "title": "Failed to load shared files",
+      "fallback": "Could not load files shared with you"
+    },
+    "accepted": {
+      "title": "Share accepted",
+      "description": "You now have access to \"{name}\""
+    },
+    "acceptFailed": {
+      "title": "Failed to accept share",
+      "fallback": "Could not accept the file share"
+    },
+    "declined": {
+      "title": "Share declined",
+      "description": "You have declined access to \"{name}\""
+    },
+    "declineFailed": {
+      "title": "Failed to decline share",
+      "fallback": "Could not decline the file share"
+    },
+    "downloadStarted": {
+      "title": "Download started",
+      "description": "Downloading \"{name}\""
+    },
+    "downloadFailed": {
+      "title": "Download failed",
+      "fallback": "Could not download the file"
+    }
+  }
+}

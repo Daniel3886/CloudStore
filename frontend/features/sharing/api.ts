@@ -1,0 +1,52 @@
+import { ApiError, api } from "@/lib/api/client"
+
+export interface ShareFileRequest {
+  fileId: number
+  targetUserEmail: string
+  message?: string
+}
+
+export type ShareStatus = "PENDING" | "ACCEPTED" | "DECLINED"
+
+export interface SharedFileDto {
+  permissionId: number
+  fileId: number
+  displayName: string
+  sharedBy: string
+  s3Key: string
+  message?: string
+  sharedAt: string
+  shareStatus: ShareStatus
+  shareStatusChangedAt?: string
+}
+
+export const sharingApi = {
+  async shareFile(request: ShareFileRequest): Promise<void> {
+    await api.post("/share", { json: request })
+  },
+
+  getSharedFiles(): Promise<SharedFileDto[]> {
+    return api.get<SharedFileDto[]>("/share/received")
+  },
+
+  async acceptShare(permissionId: number): Promise<void> {
+    await api.post(`/share/accept/${permissionId}`)
+  },
+
+  async declineShare(permissionId: number): Promise<void> {
+    await api.post(`/share/decline/${permissionId}`)
+  },
+
+  async getFileSharedUsers(fileId: number): Promise<string[]> {
+    try {
+      return await api.get<string[]>(`/share/${fileId}/users`)
+    } catch (error) {
+      if (error instanceof ApiError && (error.status === 403 || error.status === 404)) return []
+      throw error
+    }
+  },
+
+  async revokeAccess(fileId: number, email: string): Promise<void> {
+    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}`)
+  },
+}

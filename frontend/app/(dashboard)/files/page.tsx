@@ -1,34 +1,31 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { FileBrowser } from "@/components/file-browser";
-import { FileHeader } from "@/components/file-header";
+import { useState } from "react"
+import { useTranslations } from "next-intl"
+import { FileBrowser } from "@/features/files/components/file-browser"
+import { FileHeader } from "@/features/files/components/file-header"
 
 export default function FilesPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPath, setCurrentPath] = useState("");
-
-  const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
-  };
+  const t = useTranslations("files.pages")
+  const [refreshSignal, setRefreshSignal] = useState(0)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [currentPath, setCurrentPath] = useState("")
 
   return (
     <div className="flex flex-col gap-6">
       <FileHeader
-        title="My Files"
+        title={t("files")}
         type="all"
-        onRefresh={handleRefresh}
+        onRefresh={() => setRefreshSignal((prev) => prev + 1)}
         onSearch={setSearchQuery}
         currentPath={currentPath}
       />
       <FileBrowser
-        key={refreshKey}
-        onRefresh={handleRefresh}
+        refreshSignal={refreshSignal}
         searchQuery={searchQuery}
         currentPath={currentPath}
         onCurrentPathChange={setCurrentPath}
       />
     </div>
-  );
+  )
 }

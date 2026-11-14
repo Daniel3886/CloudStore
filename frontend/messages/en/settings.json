@@ -1,0 +1,75 @@
+{
+  "title": "Settings",
+  "loading": "Loading settings...",
+  "passwordField": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
+  "profile": {
+    "title": "Profile Information",
+    "email": "Email Address",
+    "username": "Username"
+  },
+  "changePassword": {
+    "title": "Security Settings",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "submit": "Change Password",
+    "submitting": "Changing Password...",
+    "validation": {
+      "missingFields": {
+        "title": "Missing fields",
+        "description": "Fill in all password fields"
+      },
+      "invalidTitle": "Check your new password"
+    },
+    "success": {
+      "title": "Password changed",
+      "description": "Your password has been updated successfully"
+    },
+    "error": {
+      "title": "Failed to change password",
+      "fallback": "Could not change your password"
+    }
+  },
+  "deleteAccount": {
+    "title": "Danger Zone",
+    "description": "Permanently delete your account and all associated data. This action cannot be undone.",
+    "open": "Delete My Account",
+    "dialog": {
+      "title": "Delete Account",
+      "warning": "This action cannot be undone.",
+      "description": "Enter your password to confirm deletion:",
+      "password": "Password",
+      "cancel": "Cancel",
+      "confirm": "Delete Account",
+      "deleting": "Deleting..."
+    },
+    "passwordRequired": {
+      "title": "Error",
+      "description": "Enter your password to delete account"
+    },
+    "success": {
+      "title": "Account deleted",
+      "description": "Your account has been permanently deleted"
+    },
+    "error": {
+      "title": "Failed to delete account",
+      "fallback": "Could not delete your account"
+    }
+  },
+  "missingEmail": {
+    "title": "Error",
+    "description": "User email not found"
+  },
+  "language": {
+    "title": "Language",
+    "description": "Choose the language used across CloudStore.",
+    "label": "Display language",
+    "error": {
+      "title": "Couldn't change the language",
+      "fallback": "Please try again."
+    }
+  }
+}

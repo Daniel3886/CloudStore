@@ -1,0 +1,81 @@
+{
+  "appName": "CloudStore",
+  "appTagline": "Secure File Storage",
+  "appDescription": "A secure, scalable file storage service",
+  "loading": "Loading...",
+  "loadingApp": "Loading CloudStore...",
+  "cancel": "Cancel",
+  "close": "Close",
+  "save": "Save",
+  "delete": "Delete",
+  "retry": "Try again",
+  "unexpectedError": "An unexpected error occurred",
+  "sessionUnavailable": {
+    "title": "Can't reach CloudStore",
+    "description": "We couldn't load your account. Check your connection and try again."
+  },
+  "nav": {
+    "files": "My Files",
+    "recent": "Recent",
+    "shared": "Shared",
+    "activity": "Activity",
+    "trash": "Trash",
+    "openMenu": "Open navigation menu",
+    "menuTitle": "Navigation Menu"
+  },
+  "userMenu": {
+    "openMenu": "Open user menu",
+    "fallbackName": "User",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "fileSize": {
+    "bytes": "{count, plural, one {# byte} other {# bytes}}"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "usernameRequired": "Username is required",
+    "usernameTooShort": "Username must be at least {usernameMin} characters long",
+    "usernameTooLong": "Username must be no more than {usernameMax} characters long",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least {passwordMin} characters long",
+    "passwordTooLong": "Password must be no more than {passwordMax} characters long",
+    "passwordMissingNumber": "Password must contain at least one number",
+    "passwordMissingLetter": "Password must contain at least one letter",
+    "confirmPasswordRequired": "Please confirm your password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "codeRequired": "Verification code is required",
+    "codeInvalidLength": "Verification code must be {codeLength} digits"
+  },
+  "apiErrors": {
+    "network": "Could not reach the server. Check your connection and try again.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "fileTooLarge": "The file is too large to upload.",
+    "emailInUse": "An account with this email already exists.",
+    "emailDomainInvalid": "This email domain is not valid.",
+    "invalidCredentials": "The email or password is incorrect.",
+    "currentPasswordIncorrect": "Your current password is incorrect.",
+    "samePassword": "The new password must be different from your current password.",
+    "accountNotVerified": "Please verify your email before signing in.",
+    "pendingVerification": "This email is waiting for verification. Request a new code.",
+    "alreadyVerified": "This account is already verified.",
+    "invalidCode": "The verification code is incorrect.",
+    "codeExpired": "The verification code has expired. Request a new one.",
+    "emailSendFailed": "We couldn't send the email. Please try again later.",
+    "userNotFound": "No account was found for this email.",
+    "recipientNotFound": "No CloudStore user has this email address.",
+    "shareWithSelf": "You can't share a file with yourself.",
+    "sharePending": "This person already has a pending share request for this file.",
+    "linkExpired": "This link has expired.",
+    "linkInvalid": "This link is invalid or has been revoked.",
+    "fileNotFound": "The file could not be found. It may have been moved or deleted.",
+    "notAllowed": "You don't have permission to do that."
+  }
+}

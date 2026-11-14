@@ -1,0 +1,72 @@
+{
+  "manager": {
+    "title": "Manage Public Links",
+    "activeCount": "{count, plural, one {# active link} other {# active links}}",
+    "refresh": "Refresh",
+    "loading": "Loading public links",
+    "emptyTitle": "No active public links",
+    "emptyDescription": "You haven't created any public links yet. Generate one from the file details menu."
+  },
+  "actions": {
+    "copyPreview": "Copy preview link",
+    "openPreview": "Open preview",
+    "preview": "Preview",
+    "copyDownload": "Copy download link",
+    "openDownload": "Open download",
+    "download": "Download",
+    "revoke": "Revoke link"
+  },
+  "expiry": {
+    "expired": "Expired",
+    "hoursRemaining": "{hours}h {minutes}m remaining",
+    "minutesRemaining": "{minutes}m remaining"
+  },
+  "revokeDialog": {
+    "title": "Revoke Public Link",
+    "description": "Are you sure you want to revoke the public link for \"{name}\"? This will make the file inaccessible via the public link immediately.",
+    "cancel": "Cancel",
+    "confirm": "Revoke Link"
+  },
+  "generator": {
+    "title": "Generate Public Link",
+    "size": "Size: {size}",
+    "unknownSize": "Unknown size",
+    "expiryBadge": "24h expiry",
+    "createTitle": "Create Public Link",
+    "createDescription": "Generate a public link that allows anyone to access this file for 24 hours.",
+    "generate": "Generate Public Link",
+    "generating": "Generating...",
+    "successTitle": "Public Link Generated!",
+    "successDescription": "Your file is now publicly accessible. Links expire in 24 hours.",
+    "downloadLink": "Download Link",
+    "previewLink": "Preview Link",
+    "generateAnother": "Generate Another Link"
+  },
+  "toast": {
+    "copied": {
+      "title": "Link copied",
+      "preview": "Preview link copied to clipboard",
+      "download": "Download link copied to clipboard"
+    },
+    "copyFailed": {
+      "title": "Failed to copy link",
+      "description": "Your browser blocked clipboard access. Copy the link manually."
+    },
+    "loadFailed": {
+      "title": "Failed to load links",
+      "fallback": "Could not load active public links"
+    },
+    "revoked": {
+      "title": "Link revoked",
+      "description": "Public access to \"{name}\" has been revoked"
+    },
+    "revokeFailed": {
+      "title": "Failed to revoke link",
+      "fallback": "Could not revoke public link"
+    },
+    "generateFailed": {
+      "title": "Failed to generate link",
+      "fallback": "Could not generate public link"
+    }
+  }
+}

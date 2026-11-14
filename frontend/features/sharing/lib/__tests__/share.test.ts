@@ -46,7 +46,7 @@ describe("parseDate", () => {
 
 describe("withShareStatus", () => {
   it("updates only the matching share", () => {
-    const base = { fileId: 1, displayName: "a", sharedBy: "x", s3Key: "k", sharedAt: "", sharedWithEmail: "me" }
+    const base = { fileId: 1, displayName: "a", sharedBy: "x", s3Key: "k", sharedAt: "" }
     const files: SharedFileDto[] = [
       { ...base, permissionId: 1, shareStatus: "PENDING" },
       { ...base, permissionId: 2, shareStatus: "PENDING" },

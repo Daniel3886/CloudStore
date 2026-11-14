@@ -23,7 +23,6 @@ function share(overrides: Partial<SharedFileDto>): SharedFileDto {
     sharedBy: "bob@example.com",
     s3Key: "key-1",
     sharedAt: "2026-03-01T10:00:00Z",
-    sharedWithEmail: "me@example.com",
     shareStatus: "PENDING",
     ...overrides,
   }

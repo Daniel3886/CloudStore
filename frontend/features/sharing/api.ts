@@ -16,13 +16,8 @@ export interface SharedFileDto {
   s3Key: string
   message?: string
   sharedAt: string
-  sharedWithEmail: string
   shareStatus: ShareStatus
   shareStatusChangedAt?: string
-}
-
-export interface MessageUpdateRequest {
-  message: string
 }
 
 export const sharingApi = {
@@ -53,15 +48,5 @@ export const sharingApi = {
 
   async revokeAccess(fileId: number, email: string): Promise<void> {
     await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}`)
-  },
-
-  async updateMessage(fileId: number, targetUserId: number, message: string): Promise<void> {
-    await api.put(`/share/${fileId}/shared/${targetUserId}/message`, {
-      json: { message } satisfies MessageUpdateRequest,
-    })
-  },
-
-  async removeMessage(fileId: number, email: string): Promise<void> {
-    await api.delete(`/share/${fileId}/user/${encodeURIComponent(email)}/message`)
   },
 }

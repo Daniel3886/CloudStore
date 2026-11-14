@@ -39,7 +39,3 @@ export const ACTIONS_WITH_FILE_IN_DESCRIPTION = [
 export function shouldShowFileName(action: string): boolean {
   return ACTIONS_WITH_FILE_DISPLAY.includes(action)
 }
-
-export function isFileRelatedAction(action: string): boolean {
-  return ACTIONS_WITH_FILE_DISPLAY.includes(action) || ACTIONS_WITH_FILE_IN_DESCRIPTION.includes(action)
-}

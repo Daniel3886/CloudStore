@@ -26,10 +26,14 @@ export interface RequestOptions {
   signal?: AbortSignal
 }
 
+const NETWORK_ERROR_MESSAGE = "Could not reach the server. Check your connection and try again."
+
 type SessionExpiredListener = () => void
 
+export type RefreshResult = "refreshed" | "rejected" | "unavailable"
+
 const sessionExpiredListeners = new Set<SessionExpiredListener>()
-let refreshInFlight: Promise<boolean> | null = null
+let refreshInFlight: Promise<RefreshResult> | null = null
 
 export function onSessionExpired(listener: SessionExpiredListener): () => void {
   sessionExpiredListeners.add(listener)
@@ -51,7 +55,7 @@ export function buildUrl(path: string, query?: QueryParams): string {
   return url.toString()
 }
 
-export function refreshSession(): Promise<boolean> {
+export function refreshSession(): Promise<RefreshResult> {
   if (!refreshInFlight) {
     refreshInFlight = performRefresh().finally(() => {
       refreshInFlight = null
@@ -60,25 +64,35 @@ export function refreshSession(): Promise<boolean> {
   return refreshInFlight
 }
 
-async function performRefresh(): Promise<boolean> {
-  const refreshToken = getRefreshToken()
-  if (!refreshToken) return false
+function isRejectedRefreshStatus(status: number): boolean {
+  return status === 400 || status === 401 || status === 403
+}
 
+async function performRefresh(): Promise<RefreshResult> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return "rejected"
+
+  let response: Response
   try {
-    const response = await fetch(buildUrl("/auth/refresh-token"), {
+    response = await fetch(buildUrl("/auth/refresh-token"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     })
-    if (!response.ok) return false
-
-    const data = (await response.json()) as { accessToken?: string; refreshToken?: string }
-    if (!data.accessToken) return false
-
-    setTokens(data.accessToken, data.refreshToken ?? refreshToken)
-    return true
   } catch {
-    return false
+    return "unavailable"
+  }
+
+  if (isRejectedRefreshStatus(response.status)) return "rejected"
+  if (!response.ok) return "unavailable"
+
+  try {
+    const data = (await response.json()) as { accessToken?: string; refreshToken?: string }
+    if (!data.accessToken) return "rejected"
+    setTokens(data.accessToken, data.refreshToken ?? refreshToken)
+    return "refreshed"
+  } catch {
+    return "unavailable"
   }
 }
 
@@ -108,7 +122,7 @@ async function send(path: string, options: RequestOptions, accessToken: string |
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error
-    throw new ApiError(0, "Could not reach the server. Check your connection and try again.")
+    throw new ApiError(0, NETWORK_ERROR_MESSAGE)
   }
 }
 
@@ -129,12 +143,13 @@ export async function apiRequest(path: string, options: RequestOptions = {}): Pr
   let response = await send(path, options, authenticated ? getAccessToken() : null)
 
   if (authenticated && response.status === 401) {
-    const refreshed = await refreshSession()
-    if (refreshed) {
+    const result = await refreshSession()
+    if (result === "refreshed") {
       response = await send(path, options, getAccessToken())
-    }
-    if (!refreshed || response.status === 401) {
+    } else if (result === "rejected") {
       expireSession()
+    } else {
+      throw new ApiError(0, NETWORK_ERROR_MESSAGE)
     }
   }
 

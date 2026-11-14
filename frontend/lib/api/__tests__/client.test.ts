@@ -76,9 +76,7 @@ describe("api client", () => {
   })
 
   it("clears the session and notifies listeners when refresh fails", async () => {
-    mockFetch((url) =>
-      url.pathname === "/auth/refresh-token" ? new Response("", { status: 401 }) : new Response("", { status: 401 }),
-    )
+    mockFetch(() => new Response("", { status: 401 }))
     const listener = vi.fn()
     const unsubscribe = onSessionExpired(listener)
 
@@ -86,6 +84,48 @@ describe("api client", () => {
     expect(listener).toHaveBeenCalledTimes(1)
     expect(getAccessToken()).toBeNull()
     expect(getRefreshToken()).toBeNull()
+    unsubscribe()
+  })
+
+  it("keeps the session when the retried request is still rejected", async () => {
+    const calls = mockFetch((url) => {
+      if (url.pathname === "/auth/refresh-token") return json({ accessToken: "access-2", refreshToken: "refresh-2" })
+      return new Response("Invalid password.", { status: 401 })
+    })
+    const listener = vi.fn()
+    const unsubscribe = onSessionExpired(listener)
+
+    await expect(api.delete("/auth/delete-account")).rejects.toMatchObject({
+      status: 401,
+      message: "Invalid password.",
+    })
+    expect(calls.map((c) => c.url.pathname)).toEqual([
+      "/auth/delete-account",
+      "/auth/refresh-token",
+      "/auth/delete-account",
+    ])
+    expect(listener).not.toHaveBeenCalled()
+    expect(getAccessToken()).toBe("access-2")
+    unsubscribe()
+  })
+
+  it.each([
+    ["the server errors", () => new Response("", { status: 503 })],
+    [
+      "the network fails",
+      () => {
+        throw new TypeError("fetch failed")
+      },
+    ],
+  ])("keeps the session when refresh is unavailable because %s", async (_label, refreshResponse) => {
+    mockFetch((url) => (url.pathname === "/auth/refresh-token" ? refreshResponse() : new Response("", { status: 401 })))
+    const listener = vi.fn()
+    const unsubscribe = onSessionExpired(listener)
+
+    await expect(api.get("/file/list")).rejects.toMatchObject({ status: 0 })
+    expect(listener).not.toHaveBeenCalled()
+    expect(getAccessToken()).toBe("access-1")
+    expect(getRefreshToken()).toBe("refresh-1")
     unsubscribe()
   })
 

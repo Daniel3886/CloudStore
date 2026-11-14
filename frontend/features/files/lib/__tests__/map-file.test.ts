@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { buildFolderItems, getActualFileName, mapFileResponse, mapFileResponses } from "@/features/files/lib/map-file"
+import {
+  buildFolderItems,
+  collectFolderPaths,
+  getActualFileName,
+  mapFileResponse,
+  mapFileResponses,
+} from "@/features/files/lib/map-file"
 import type { FileResponse } from "@/features/files/api"
 
 const options = { unknownName: "Unknown File", fallbackId: 999 }
@@ -86,5 +92,20 @@ describe("buildFolderItems", () => {
       { id: -2, name: "invoices", displayName: "docs/invoices", type: "folder", path: "docs", isFolder: true },
     ])
     expect(buildFolderItems(["docs", "docs/invoices"])).toEqual(folders)
+  })
+})
+
+describe("collectFolderPaths", () => {
+  it("derives every folder and parent folder from file paths and merges saved folders", () => {
+    const files = mapFileResponses(
+      [
+        { id: 1, key: "k1", displayName: "reports/2024/summary.pdf" },
+        { id: 2, key: "k2", displayName: "photos/cat.png" },
+        { id: 3, key: "k3", displayName: "notes.txt" },
+      ],
+      "Unknown File",
+    )
+
+    expect(collectFolderPaths(files, ["empty", "photos"])).toEqual(["empty", "photos", "reports", "reports/2024"])
   })
 })

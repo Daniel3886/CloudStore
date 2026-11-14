@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/hooks/use-toast"
 import { ApiError, getErrorMessage } from "@/lib/api/client"
 import { filesApi, type FileResponse } from "@/features/files/api"
-import { buildFolderItems, mapFileResponses } from "@/features/files/lib/map-file"
+import { buildFolderItems, collectFolderPaths, mapFileResponses } from "@/features/files/lib/map-file"
 import { getVirtualFolders, setVirtualFolders } from "@/features/files/lib/virtual-folders"
 import type { FileItem, FileView } from "@/features/files/types"
 
@@ -68,7 +68,10 @@ export function useFileData(view: FileView = "all") {
   const refreshFiles = useCallback(() => loadFiles(), [loadFiles])
 
   const files = useMemo(
-    () => (view === "trash" ? remoteFiles : [...buildFolderItems(virtualFolders), ...remoteFiles]),
+    () =>
+      view === "trash"
+        ? remoteFiles
+        : [...buildFolderItems(collectFolderPaths(remoteFiles, virtualFolders)), ...remoteFiles],
     [view, remoteFiles, virtualFolders],
   )
 

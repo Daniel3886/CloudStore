@@ -62,3 +62,16 @@ export function buildFolderItems(folderPaths: string[]): FileItem[] {
     }
   })
 }
+
+export function collectFolderPaths(files: FileItem[], extraFolders: string[] = []): string[] {
+  const folders = new Set<string>()
+  const addWithParents = (folderPath: string) => {
+    const segments = folderPath.split("/").filter(Boolean)
+    for (let depth = 1; depth <= segments.length; depth++) {
+      folders.add(segments.slice(0, depth).join("/"))
+    }
+  }
+  files.forEach((file) => addWithParents(file.path))
+  extraFolders.forEach(addWithParents)
+  return [...folders].sort((a, b) => a.localeCompare(b))
+}

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { FileIconComponent } from "@/features/files/components/file-icons"
 import { useFileFormatters } from "@/features/files/hooks/use-file-formatters"
+import { cn } from "@/lib/utils"
 import type { FileAction, FileItem } from "@/features/files/types"
 
 interface FileCardProps {
@@ -33,11 +34,14 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
     e.stopPropagation()
     onFileAction(action, file)
   }
+  const canOpen = file.isFolder && !isTrashView
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer hover:shadow-md hover:bg-muted/30 transition-all duration-200"
-      onClick={() => !isTrashView && onFileClick(file)}
+      className={cn(
+        "relative overflow-hidden hover:shadow-md hover:bg-muted/30 transition-all duration-200 focus-within:ring-2 focus-within:ring-ring",
+        canOpen && "cursor-pointer",
+      )}
     >
       <CardContent className="p-0">
         <div className="p-6">
@@ -50,7 +54,7 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="-mr-2 -mt-2 hover:bg-muted/60"
+                  className="relative z-10 -mr-2 -mt-2 hover:bg-muted/60"
                   disabled={isLoading}
                   aria-label={t("card.actionsLabel", { name: file.name })}
                   aria-busy={isLoading}
@@ -107,18 +111,28 @@ export function FileCard({ file, isLoading, isTrashView = false, onFileClick, on
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={actionHandler("delete")} className="text-red-500">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      {t("card.moveToTrash")}
+                      {file.isFolder ? t("card.deletePermanently") : t("card.moveToTrash")}
                     </DropdownMenuItem>
                   </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <div className="mt-4 pointer-events-none">
+          <div className="mt-4">
             <h3 className="font-medium truncate" title={file.name}>
-              {file.name}
+              {canOpen ? (
+                <button
+                  type="button"
+                  className="max-w-full truncate text-left outline-none after:absolute after:inset-0"
+                  onClick={() => onFileClick(file)}
+                >
+                  {file.name}
+                </button>
+              ) : (
+                file.name
+              )}
             </h3>
-            <div className="mt-1 text-xs text-muted-foreground">
+            <div className="mt-1 text-xs text-muted-foreground pointer-events-none">
               {file.isFolder ? <p>{t("browser.folder")}</p> : <p>{formatSize(file.size ?? 0)}</p>}
               {isTrashView && <p className="text-red-500">{t("browser.inTrash")}</p>}
             </div>

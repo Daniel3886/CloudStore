@@ -48,6 +48,32 @@ describe("FileBrowser", () => {
     expect(onCurrentPathChange).toHaveBeenCalledWith("docs")
   })
 
+  it("opens folders from the keyboard", async () => {
+    api.list.mockResolvedValue(backendFiles)
+    setVirtualFolders(["docs"])
+    const onCurrentPathChange = vi.fn()
+    const user = userEvent.setup()
+
+    renderWithIntl(<FileBrowser onCurrentPathChange={onCurrentPathChange} />)
+    const folder = await screen.findByRole("button", { name: "docs" })
+    folder.focus()
+    await user.keyboard("{Enter}")
+
+    expect(onCurrentPathChange).toHaveBeenCalledWith("docs")
+  })
+
+  it("labels folder deletion as permanent", async () => {
+    api.list.mockResolvedValue(backendFiles)
+    setVirtualFolders(["docs"])
+    const user = userEvent.setup()
+
+    renderWithIntl(<FileBrowser />)
+    await user.click(await screen.findByRole("button", { name: "Actions for docs" }))
+
+    expect(await screen.findByRole("menuitem", { name: "Delete Permanently" })).toBeInTheDocument()
+    expect(screen.queryByRole("menuitem", { name: "Move to Trash" })).not.toBeInTheDocument()
+  })
+
   it("shows the folder contents with breadcrumbs and a back button", async () => {
     api.list.mockResolvedValue(backendFiles)
     const onCurrentPathChange = vi.fn()

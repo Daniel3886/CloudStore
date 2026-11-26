@@ -1,0 +1,121 @@
+{
+  "nav": {
+    "label": "Główna",
+    "features": "Funkcje",
+    "built": "Jak to działa",
+    "selfHost": "Własny serwer",
+    "github": "CloudStore na GitHubie",
+    "signIn": "Zaloguj się",
+    "signUp": "Utwórz konto"
+  },
+  "hero": {
+    "title": "Twoje pliki na Twoim serwerze.",
+    "lede": "CloudStore to aplikacja do przechowywania i udostępniania plików, którą uruchamiasz u siebie. Wgrywaj i porządkuj pliki, udostępniaj je innym kontom lub linkiem ważnym 24 godziny. Wszystko trafia do bucketu S3, nad którym masz kontrolę.",
+    "primary": "Utwórz konto",
+    "secondary": "Uruchom u siebie",
+    "licence": "Otwarte źródło na licencji MIT.",
+    "sample": "Przykładowe pliki. Ekrany pokazują aplikację CloudStore.",
+    "previewLabel": "Lista plików CloudStore z folderem reports zawierającym pięć elementów, ich rozmiary, daty i linki publiczne."
+  },
+  "copy": {
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "failed": "Naciśnij Ctrl+C, aby skopiować",
+    "label": "Skopiuj polecenie"
+  },
+  "preview": {
+    "myFiles": "Moje pliki",
+    "folder": "reports",
+    "search": "Szukaj",
+    "upload": "Prześlij",
+    "name": "Nazwa",
+    "size": "Rozmiar",
+    "modified": "Zmodyfikowano",
+    "publicLink": "Link publiczny",
+    "items": "6 elementów",
+    "today": "Dziś 09:14",
+    "yesterday": "Wczoraj",
+    "linkTitle": "Link publiczny",
+    "anyone": "Każdy, kto ma link",
+    "expires": "Wygasa automatycznie",
+    "left": "jeszcze {hours} godz. {minutes} min {seconds} s",
+    "hoursLeft": "jeszcze {hours} godz."
+  },
+  "features": {
+    "title": "Wszystko, czego potrzebuje serwer plików, bez powierzania danych komuś innemu.",
+    "lede": "Pliki trafiają do Twojego bucketu. Konta, udostępnienia i dziennik aktywności są w Twojej bazie Postgres.",
+    "upload": {
+      "title": "Wgrywaj i porządkuj w folderach",
+      "body": "Przeciągaj pliki, twórz foldery, zmieniaj nazwy i pobieraj. Foldery to prefiksy kluczy w S3, więc bucket da się czytać także poza aplikacją.",
+      "limit": "Do 5 MB na plik",
+      "languages": "Angielski i polski"
+    },
+    "share": {
+      "title": "Udostępniaj tym, którzy tego potrzebują",
+      "body": "Daj dostęp innemu kontu CloudStore przez adres e-mail. Plik pojawi się w sekcji Udostępnione mi, a Ty widzisz, kto ma dostęp, i możesz go w każdej chwili odebrać."
+    },
+    "links": {
+      "title": "Linki publiczne, które same się wyłączają",
+      "body": "Chcesz wysłać plik komuś bez konta? Utwórz link publiczny. Przestaje działać po 24 godzinach, więc stare linki nie zostawiają plików otwartych.",
+      "fact": "Wygasa po 24 godzinach"
+    },
+    "trash": {
+      "title": "Usunięte przez pomyłkę? Jest w koszu.",
+      "body": "Usunięte pliki czekają w koszu 30 dni. Możesz je przywrócić w dowolnym momencie przed upływem tego czasu. Nocne czyszczenie usuwa starsze.",
+      "fact": "Przechowywane 30 dni"
+    },
+    "activity": {
+      "title": "Zobacz, co się stało i kiedy",
+      "body": "Każde przesłanie, zmiana nazwy, udostępnienie, link i usunięcie trafia do dziennika aktywności, więc możesz sprawdzić, co zmieniło się w Twoich plikach."
+    }
+  },
+  "built": {
+    "title": "Jak to działa",
+    "lede": "API w Spring Boot i aplikacja w Next.js w jednym repozytorium, które przeczytasz od początku do końca.",
+    "api": {
+      "term": "API w Spring Boot",
+      "detail": "Pliki, udostępnianie, linki publiczne i dziennik aktywności, pogrupowane według funkcji."
+    },
+    "auth": {
+      "term": "Logowanie JWT",
+      "detail": "Krótkotrwałe tokeny dostępu z tokenami odświeżania; konta weryfikowane kodem z e-maila."
+    },
+    "links": {
+      "term": "Linki na 24 godziny",
+      "detail": "Każdy link zapisuje własny czas wygaśnięcia i przestaje działać po 24 godzinach."
+    },
+    "cleanup": {
+      "term": "Czyszczenie kosza",
+      "detail": "Zadanie o 02:00 usuwa elementy usunięte ponad 30 dni temu."
+    },
+    "storage": {
+      "term": "Przechowywanie",
+      "detail": "Zawartość plików w Amazon S3; konta, udostępnienia, linki i aktywność w PostgreSQL."
+    },
+    "frontend": {
+      "term": "Frontend w Next.js",
+      "detail": "React i TypeScript z jednym klientem API, który odświeża tokeny po odpowiedzi 401."
+    },
+    "ci": {
+      "term": "Testy i CI",
+      "detail": "Testy frontendu uruchamiają się przy każdej zmianie, a build nie przechodzi, gdy spada pokrycie."
+    }
+  },
+  "selfHost": {
+    "title": "Uruchom na własnym serwerze",
+    "lede": "Potrzebujesz Dockera, bazy PostgreSQL, bucketu S3 i konta SMTP do e-maili weryfikacyjnych.",
+    "step1": "Pobierz kod",
+    "step2": "Dodaj ustawienia",
+    "step2Body": "Wpisz ustawienia bazy, S3 i poczty w backend/.env, a adres API w frontend/.env.local.",
+    "step3": "Uruchom"
+  },
+  "close": {
+    "title": "Trzymaj pliki tam, gdzie je widzisz.",
+    "body": "Utwórz konto na tym serwerze albo postaw własny.",
+    "github": "Zobacz na GitHubie"
+  },
+  "footer": {
+    "licence": "Licencja MIT",
+    "label": "Stopka"
+  }
+}

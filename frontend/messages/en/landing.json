@@ -1,0 +1,121 @@
+{
+  "nav": {
+    "label": "Main",
+    "features": "Features",
+    "built": "How it's built",
+    "selfHost": "Self-hosting",
+    "github": "CloudStore on GitHub",
+    "signIn": "Sign in",
+    "signUp": "Create an account"
+  },
+  "hero": {
+    "title": "Your files, on your own server.",
+    "lede": "CloudStore is a self-hosted file storage and sharing app. Upload and organise files, share them with other accounts or with a link that lasts 24 hours, all stored in an S3 bucket you control.",
+    "primary": "Create an account",
+    "secondary": "Host it yourself",
+    "licence": "Open source under the MIT licence.",
+    "sample": "Sample files. Screens show the CloudStore web app.",
+    "previewLabel": "The CloudStore file list showing a reports folder with five items, their sizes, dates and public links."
+  },
+  "copy": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "failed": "Press Ctrl+C to copy",
+    "label": "Copy the command"
+  },
+  "preview": {
+    "myFiles": "My files",
+    "folder": "reports",
+    "search": "Search",
+    "upload": "Upload",
+    "name": "Name",
+    "size": "Size",
+    "modified": "Modified",
+    "publicLink": "Public link",
+    "items": "6 items",
+    "today": "Today 09:14",
+    "yesterday": "Yesterday",
+    "linkTitle": "Public link",
+    "anyone": "Anyone with the link",
+    "expires": "Expires automatically",
+    "left": "{hours} h {minutes} m {seconds} s left",
+    "hoursLeft": "{hours} h left"
+  },
+  "features": {
+    "title": "Everything a file server needs, and nothing you have to trust someone else with.",
+    "lede": "Files go to your bucket. Accounts, shares and the activity log live in your Postgres database.",
+    "upload": {
+      "title": "Upload and sort into folders",
+      "body": "Drag files in, make folders, rename and download. Folders are stored as key prefixes in S3, so the bucket stays readable outside the app too.",
+      "limit": "Up to 5 MB per file",
+      "languages": "English and Polish"
+    },
+    "share": {
+      "title": "Share with the people who need it",
+      "body": "Give another CloudStore account access by email. It shows up under Shared with me, and you can see who has access and remove it at any time."
+    },
+    "links": {
+      "title": "Public links that switch themselves off",
+      "body": "Need to send a file to someone without an account? Create a public link. It stops working 24 hours later, so old links don't leave files open.",
+      "fact": "Expires after 24 hours"
+    },
+    "trash": {
+      "title": "Deleted by mistake? It's in Trash.",
+      "body": "Deleted files wait in Trash for 30 days. Restore them any time before that. A nightly cleanup removes anything older.",
+      "fact": "Kept for 30 days"
+    },
+    "activity": {
+      "title": "See what happened, and when",
+      "body": "Every upload, rename, share, link and delete is written to your activity log, so you can check what changed in your files."
+    }
+  },
+  "built": {
+    "title": "How it's built",
+    "lede": "A Spring Boot API and a Next.js app, in one repository you can read end to end.",
+    "api": {
+      "term": "Spring Boot API",
+      "detail": "Files, sharing, public links and the activity log, grouped by feature."
+    },
+    "auth": {
+      "term": "JWT sign-in",
+      "detail": "Short-lived access tokens with refresh tokens; accounts verified by an emailed code."
+    },
+    "links": {
+      "term": "24-hour public links",
+      "detail": "Each link stores its own expiry and stops resolving after 24 hours."
+    },
+    "cleanup": {
+      "term": "Trash cleanup",
+      "detail": "A scheduled job at 02:00 removes items deleted more than 30 days ago."
+    },
+    "storage": {
+      "term": "Storage",
+      "detail": "File contents in Amazon S3; accounts, shares, links and activity in PostgreSQL."
+    },
+    "frontend": {
+      "term": "Next.js frontend",
+      "detail": "React and TypeScript with one API client that refreshes tokens on a 401."
+    },
+    "ci": {
+      "term": "Tests and CI",
+      "detail": "Frontend tests run on every change, and the build fails if coverage drops."
+    }
+  },
+  "selfHost": {
+    "title": "Run it on your own server",
+    "lede": "You need Docker, a PostgreSQL database, an S3 bucket and an SMTP account for verification emails.",
+    "step1": "Get the code",
+    "step2": "Add your settings",
+    "step2Body": "Put your database, S3 and mail settings in backend/.env, and the API address in frontend/.env.local.",
+    "step3": "Start it"
+  },
+  "close": {
+    "title": "Keep your files where you can see them.",
+    "body": "Create an account on this server, or set up your own.",
+    "github": "View on GitHub"
+  },
+  "footer": {
+    "licence": "MIT licence",
+    "label": "Footer"
+  }
+}

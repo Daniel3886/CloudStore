@@ -12,7 +12,7 @@ export function useFormatFileSize() {
     (bytes: number) => {
       const { value, unit } = toSizeUnit(bytes)
       if (unit === "byte") return t("bytes", { count: value })
-      return format.number(value, { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: 2 })
+      return format.number(value, { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: 1 })
     },
     [format, t],
   )

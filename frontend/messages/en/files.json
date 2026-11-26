@@ -9,7 +9,8 @@
     "newFolder": "New Folder",
     "upload": "Upload",
     "searchPlaceholder": "Search files and folders...",
-    "searchLabel": "Search files and folders"
+    "searchLabel": "Search files and folders",
+    "trashNote": "Files stay in Trash for {days} days, then they're deleted for good. Restore a file to keep it."
   },
   "browser": {
     "loading": "Loading files...",
@@ -17,7 +18,7 @@
     "root": "My Files",
     "breadcrumbLabel": "Current folder",
     "folder": "Folder",
-    "inTrash": "In Trash",
+    "itemCount": "{count, plural, =0 {Empty} one {# item} other {# items}}",
     "empty": {
       "trashTitle": "Trash is empty",
       "trashDescription": "Files you delete will appear here for 30 days before being permanently removed.",
@@ -25,6 +26,26 @@
       "allDescription": "Upload some files or create a folder to get started",
       "recentDescription": "No recent files found"
     }
+  },
+  "list": {
+    "caption": "Files and folders",
+    "name": "Name",
+    "size": "Size",
+    "modified": "Modified",
+    "publicLink": "Public link",
+    "deletedForGood": "Deleted for good in",
+    "actions": "Actions",
+    "viewLabel": "View",
+    "listView": "List",
+    "gridView": "Grid"
+  },
+  "status": {
+    "noPublicLink": "No public link",
+    "publicLinkTitle": "Anyone with the link can open this file",
+    "publicLinkLabel": "Public link, ",
+    "hoursLeft": "{hours} h left",
+    "minutesLeft": "{minutes} min left",
+    "purgeIn": "{days, plural, =0 {Deleted tonight} one {# day left} other {# days left}}"
   },
   "card": {
     "actionsLabel": "Actions for {name}",
@@ -40,7 +61,7 @@
   },
   "deleteDialog": {
     "trashTitle": "Move file to trash",
-    "trashDescription": "Are you sure you want to move \"{name}\" to trash? You can restore it later from the trash.",
+    "trashDescription": "Move \"{name}\" to Trash? You can restore it from Trash for 30 days. After that it's deleted for good.",
     "folderTitle": "Permanently delete folder",
     "folderDescription": "⚠️ If folder \"{name}\" contains files, they <b>will be permanently deleted</b>. This action cannot be undone.",
     "permanentTitle": "Permanently delete {kind, select, folder {folder} other {file}}",
@@ -107,7 +128,7 @@
     "sharingOptions": "Sharing Options",
     "share": "Share",
     "manage": "Manage",
-    "publicLink": "Generate Public Link",
+    "publicLink": "Public link",
     "fileActions": "File Actions",
     "download": "Download",
     "close": "Close"

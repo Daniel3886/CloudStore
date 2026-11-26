@@ -1,15 +1,17 @@
-import { screen, waitFor } from "@testing-library/react"
+import { screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { renderWithIntl } from "@/test/render"
 import { filesApi, type FileResponse } from "@/features/files/api"
 import { FileBrowser } from "@/features/files/components/file-browser"
 import { setVirtualFolders } from "@/features/files/lib/virtual-folders"
+import { publicLinksApi } from "@/features/public-links/api"
 
 vi.mock("@/features/files/api", () => ({
   filesApi: { list: vi.fn(), listTrash: vi.fn(), moveToTrash: vi.fn(), deleteFolder: vi.fn() },
 }))
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
+vi.mock("@/features/public-links/api", () => ({ publicLinksApi: { getActiveLinks: vi.fn() } }))
 
 const api = vi.mocked(filesApi)
 
@@ -21,6 +23,7 @@ const backendFiles: FileResponse[] = [
 describe("FileBrowser", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(publicLinksApi.getActiveLinks).mockResolvedValue([])
   })
 
   it("renders root files and virtual folders", async () => {
@@ -31,9 +34,9 @@ describe("FileBrowser", () => {
 
     expect(screen.getByText("Loading files...")).toBeInTheDocument()
     expect(await screen.findByText("report.pdf")).toBeInTheDocument()
-    expect(screen.getByText("1.5 kB")).toBeInTheDocument()
+    expect(screen.getAllByText("1.5 kB").length).toBeGreaterThan(0)
     expect(screen.getByText("docs")).toBeInTheDocument()
-    expect(screen.getByText("Folder")).toBeInTheDocument()
+    expect(screen.getAllByText("1 item").length).toBeGreaterThan(0)
     expect(screen.queryByText("notes.txt")).not.toBeInTheDocument()
   })
 
@@ -135,7 +138,7 @@ describe("FileBrowser", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Move to Trash" }))
     expect(
       await screen.findByText(
-        'Are you sure you want to move "report.pdf" to trash? You can restore it later from the trash.',
+        'Move "report.pdf" to Trash? You can restore it from Trash for 30 days. After that it\'s deleted for good.',
       ),
     ).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Move to Trash" }))
@@ -143,5 +146,83 @@ describe("FileBrowser", () => {
     expect(api.moveToTrash).toHaveBeenCalledWith("k1")
     await waitFor(() => expect(screen.queryByText("report.pdf")).not.toBeInTheDocument())
     expect(api.list).toHaveBeenCalledTimes(2)
+  })
+
+  it("shows files as a sortable list with dates and public links", async () => {
+    api.list.mockResolvedValue([
+      { id: 1, key: "k1", size: 4_300_000, lastModified: "2024-03-01T00:00:00Z", displayName: "big.pdf" },
+      { id: 2, key: "k2", size: 10, lastModified: "2024-01-01T00:00:00Z", displayName: "small.txt" },
+    ])
+    vi.mocked(publicLinksApi.getActiveLinks).mockResolvedValue([
+      {
+        id: 9,
+        token: "t",
+        file: { id: 1, displayName: "big.pdf", s3Key: "k1", size: 4_300_000 },
+        expiresAt: new Date(Date.now() + 5 * 3_600_000 + 60_000).toISOString(),
+        active: true,
+      },
+    ])
+    const user = userEvent.setup()
+    renderWithIntl(<FileBrowser />)
+
+    const table = await screen.findByRole("table", { name: "Files and folders" })
+    const names = () =>
+      within(table)
+        .getAllByRole("row")
+        .slice(1)
+        .map((row) => row.querySelector("[title]")?.getAttribute("title"))
+    expect(names()).toEqual(["big.pdf", "small.txt"])
+    expect((await within(table).findAllByText("5 h left")).length).toBeGreaterThan(0)
+    expect(within(table).getAllByText("4.1 MB").length).toBeGreaterThan(0)
+
+    await user.click(within(table).getByRole("button", { name: "Size" }))
+    expect(names()).toEqual(["big.pdf", "small.txt"])
+    await user.click(within(table).getByRole("button", { name: "Size" }))
+    expect(names()).toEqual(["small.txt", "big.pdf"])
+    expect(within(table).getByRole("columnheader", { name: "Size" })).toHaveAttribute("aria-sort", "ascending")
+  })
+
+  it("switches to the grid and remembers the choice", async () => {
+    api.list.mockResolvedValue(backendFiles)
+    const user = userEvent.setup()
+    const { unmount } = renderWithIntl(<FileBrowser />)
+
+    await screen.findByRole("table")
+    await user.click(screen.getByRole("button", { name: "Grid" }))
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Grid" })).toHaveAttribute("aria-pressed", "true")
+    unmount()
+
+    renderWithIntl(<FileBrowser />)
+    expect(await screen.findByText("report.pdf")).toBeInTheDocument()
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
+  })
+
+  it("shows how long each trashed file has left", async () => {
+    const day = 24 * 3_600_000
+    api.listTrash.mockResolvedValue([
+      {
+        id: 1,
+        key: "k1",
+        size: 10,
+        displayName: "old.txt",
+        purgeAt: new Date(Date.now() + 2 * day - 60_000).toISOString(),
+      },
+      { id: 2, key: "k2", size: 10, displayName: "new.txt", purgeAt: new Date(Date.now() + 29 * day).toISOString() },
+      { id: 3, key: "k3", size: 10, displayName: "legacy.txt" },
+    ])
+    renderWithIntl(<FileBrowser type="trash" />)
+
+    const table = await screen.findByRole("table")
+    const rows = within(table).getAllByRole("row").slice(1)
+    expect(rows.map((row) => row.querySelector("[title]")?.getAttribute("title"))).toEqual([
+      "old.txt",
+      "new.txt",
+      "legacy.txt",
+    ])
+    expect(within(rows[0]).getByText("2 days left")).toHaveClass("text-warning")
+    expect(within(rows[1]).getByText("29 days left")).not.toHaveClass("text-warning")
+    expect(screen.queryByText("In Trash")).not.toBeInTheDocument()
+    expect(publicLinksApi.getActiveLinks).not.toHaveBeenCalled()
   })
 })

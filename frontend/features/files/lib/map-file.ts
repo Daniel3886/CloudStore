@@ -39,6 +39,8 @@ export function mapFileResponse(file: FileResponse, { unknownName, fallbackId }:
     type: getFileType(name),
     size: toNumber(file.size),
     modified: toTimestamp(file.lastModified),
+    deletedAt: toTimestamp(file.deletedAt),
+    purgeAt: toTimestamp(file.purgeAt),
     s3Key: file.key || undefined,
     path: displayName.split("/").slice(0, -1).join("/"),
     isFolder: false,

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-25T12:00:00Z",
+  "title": "Design System: CloudStore",
+  "extensions": {
+    "colorMeta": {
+      "background": { "role": "neutral", "displayName": "Night Navy", "canonical": "hsl(222.2 84% 4.9%)", "light": "#ffffff", "source": "frontend/app/globals.css .dark --background", "tonalRamp": ["#020817", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"] },
+      "background-raised": { "role": "neutral", "displayName": "Raised Navy", "light": "#f6f8fc", "tonalRamp": ["#020817", "#060e1f", "#0b1426", "#152036", "#1e293b", "#334155", "#94a3b8", "#e2e8f0"] },
+      "surface": { "role": "neutral", "displayName": "Panel Navy", "light": "#ffffff", "tonalRamp": ["#020817", "#060e1f", "#0b1426", "#152036", "#1e293b", "#334155", "#94a3b8", "#e2e8f0"] },
+      "raised": { "role": "neutral", "displayName": "Slate Line (fill)", "light": "#f1f5fb", "tonalRamp": ["#020817", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"] },
+      "border": { "role": "neutral", "displayName": "Slate Line", "canonical": "hsl(217.2 32.6% 17.5%)", "light": "#dfe6f0", "source": "frontend/app/globals.css .dark --border", "tonalRamp": ["#020817", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"] },
+      "border-soft": { "role": "neutral", "displayName": "Soft Line", "light": "#eaeff6", "tonalRamp": ["#020817", "#0b1426", "#152036", "#1e293b", "#334155", "#475569", "#94a3b8", "#e2e8f0"] },
+      "foreground": { "role": "neutral", "displayName": "Snow", "canonical": "hsl(210 40% 98%)", "light": "#0f172a", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0", "#f8fafc"] },
+      "muted-foreground": { "role": "neutral", "displayName": "Slate Mist", "canonical": "hsl(215 20.2% 65.1%)", "light": "#4a5870", "source": "frontend/app/globals.css .dark --muted-foreground", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#f1f5f9"] },
+      "faint": { "role": "neutral", "displayName": "Faint Slate", "light": "#6b7890", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#4a5870", "#6b7890", "#8492a8", "#cbd5e1", "#f1f5f9"] },
+      "primary": { "role": "primary", "displayName": "Signal Blue", "canonical": "hsl(217.2 91.2% 59.8%)", "light": "#2563eb", "source": "frontend/app/globals.css .dark --primary (light: :root --primary)", "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#bfdbfe"] },
+      "primary-hover": { "role": "primary", "displayName": "Sky Blue", "light": "#1d4ed8", "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#bfdbfe"] },
+      "primary-foreground": { "role": "primary", "displayName": "Deep Slate", "canonical": "hsl(222.2 47.4% 11.2%)", "light": "#ffffff", "source": "frontend/app/globals.css .dark --primary-foreground", "tonalRamp": ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#e2e8f0"] },
+      "link": { "role": "primary", "displayName": "Sky Blue (link and focus)", "light": "#1d4ed8", "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#1d4ed8", "#2563eb", "#3b82f6", "#60a5fa", "#bfdbfe"] },
+      "expiry-amber": { "role": "tertiary", "displayName": "Expiry Amber", "light": "#a35f00", "softFill": "rgb(251 191 36 / .13)", "tonalRamp": ["#451a03", "#78350f", "#92400e", "#b45309", "#d97706", "#f59e0b", "#fbbf24", "#fde68a"] },
+      "success-green": { "role": "tertiary", "displayName": "Done Green", "light": "#15803d", "tonalRamp": ["#052e16", "#14532d", "#166534", "#15803d", "#16a34a", "#22c55e", "#4ade80", "#bbf7d0"] },
+      "code-background": { "role": "neutral", "displayName": "Terminal Night", "light": "#0f172a", "tonalRamp": ["#020617", "#060b17", "#0f172a", "#1e293b", "#334155", "#475569", "#94a3b8", "#e2e8f0"] },
+      "terminal-ink": { "role": "neutral", "displayName": "Terminal Ink", "light": "#d7e2f5", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#6f809e", "#a9b8d1", "#d7e2f5", "#f1f5fb"] },
+      "terminal-prompt": { "role": "primary", "displayName": "Terminal Prompt", "light": "#7cb0ff", "tonalRamp": ["#172554", "#1e3a8a", "#1e40af", "#2563eb", "#3b82f6", "#60a5fa", "#7cb0ff", "#bfdbfe"] },
+      "terminal-comment": { "role": "neutral", "displayName": "Terminal Comment", "light": "#6f809e", "tonalRamp": ["#0f172a", "#1e293b", "#334155", "#475569", "#6f809e", "#94a3b8", "#cbd5e1", "#f1f5f9"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Hero headline only; max 14ch, centred, text-wrap balance." },
+      "headline": { "displayName": "Headline", "purpose": "Section openers and the closing call." },
+      "title": { "displayName": "Title", "purpose": "Feature headings; smaller Figtree 700 titles name cards, breadcrumbs and the link card." },
+      "body": { "displayName": "Body", "purpose": "Copy at 46-60ch; product UI inside frames uses 14px." },
+      "label": { "displayName": "Label", "purpose": "Table headers, pills, statuses. Buttons use Inter 600 15px (14px small)." },
+      "mono": { "displayName": "Mono", "purpose": "Only for code, sizes, URLs and times, with tabular numerals." }
+    },
+    "themes": {
+      "default": "dark",
+      "lightTrigger": "Visitor toggle; stored as localStorage cs-theme=light and applied as :root[data-theme=\"light\"].",
+      "note": "The app defaults to dark (next-themes defaultTheme=\"dark\"); :root holds the light values and .dark the dark ones in frontend/app/globals.css. The landing page uses the app's dark primary #3b82f6."
+    },
+    "shadows": [
+      { "name": "frame-lift", "value": "0 2px 6px rgb(0 0 0 / .3), 0 30px 60px -20px rgb(0 0 0 / .65)", "light": "0 1px 3px rgb(15 23 42 / .08), 0 30px 60px -24px rgb(15 23 42 / .28)", "purpose": "Hero product frame." },
+      { "name": "card-float", "value": "0 2px 6px rgb(0 0 0 / .3), 0 18px 36px -12px rgb(0 0 0 / .55)", "purpose": "Public-link card overlapping the product frame." },
+      { "name": "button-bevel", "value": "0 1px 0 rgb(255 255 255 / .14) inset, 0 1px 2px rgb(0 0 0 / .35)", "purpose": "Primary buttons only." }
+    ],
+    "motion": [
+      { "name": "ease-out-expo", "value": "cubic-bezier(.16,1,.3,1)", "purpose": "All state transitions and the entrance." },
+      { "name": "button-state", "value": "background-color .18s, transform .18s", "purpose": "Button hover and 1px press; off under reduced motion." },
+      { "name": "rise", "value": "1s translateY(18px) + blur(3px) to none", "purpose": "One entrance moment: frame, then link card at .35s delay. Starts from a visible default." },
+      { "name": "pulse", "value": "2s ease-in-out infinite, opacity to .45", "purpose": "Current hour cell on the public-link strip." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "980px" },
+      { "name": "mobile", "value": "760px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one solid action per area: Create an account, Upload, Share.",
+      "html": "<button class=\"ds-btn-primary\">Create an account</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; font: 600 15px/1 Inter, system-ui, sans-serif; padding: 12px 18px; border-radius: 9px; border: 1px solid transparent; background: #3b82f6; color: #0f172a; box-shadow: 0 1px 0 rgb(255 255 255 / .14) inset, 0 1px 2px rgb(0 0 0 / .35); cursor: pointer; transition: background-color .18s cubic-bezier(.16,1,.3,1), transform .18s cubic-bezier(.16,1,.3,1); } .ds-btn-primary:hover { background: #60a5fa; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary action beside a primary: Sign in, Host it yourself, View on GitHub.",
+      "html": "<button class=\"ds-btn-quiet\">Host it yourself</button>",
+      "css": ".ds-btn-quiet { display: inline-flex; align-items: center; gap: 8px; font: 600 15px/1 Inter, system-ui, sans-serif; padding: 12px 18px; border-radius: 9px; border: 1px solid #1e293b; background: transparent; color: #f8fafc; cursor: pointer; transition: background-color .18s cubic-bezier(.16,1,.3,1); } .ds-btn-quiet:hover { background: #1e293b; } .ds-btn-quiet:active { transform: translateY(1px); } .ds-btn-quiet:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Email and text entry, as in the share dialog.",
+      "html": "<input class=\"ds-input\" placeholder=\"Email address\">",
+      "css": ".ds-input { height: 40px; padding: 0 12px; border: 1px solid #1e293b; border-radius: 8px; background: #060e1f; color: #f8fafc; font: 400 14px Inter, system-ui, sans-serif; } .ds-input::placeholder { color: #8492a8; } .ds-input:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }"
+    },
+    {
+      "name": "Top Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Sticky blurred bar with the CS mark, Slate Mist links and actions.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-logo\" href=\"#\"><span class=\"ds-tile\">CS</span>CloudStore</a><a class=\"ds-nav-link\" href=\"#\">Features</a><a class=\"ds-nav-link\" href=\"#\">Self-hosting</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 22px; height: 64px; padding: 0 20px; background: rgb(2 8 23 / .82); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid #152036; font: 400 15px Inter, system-ui, sans-serif; } .ds-logo { display: inline-flex; align-items: center; gap: 10px; font: 700 18px Figtree, Inter, sans-serif; color: #f8fafc; text-decoration: none; margin-right: 6px; } .ds-tile { width: 30px; height: 30px; border-radius: 8px; background: #3b82f6; color: #0f172a; display: grid; place-items: center; font: 800 13px Figtree, Inter, sans-serif; } .ds-nav-link { color: #94a3b8; text-decoration: none; } .ds-nav-link:hover { color: #f8fafc; } .ds-nav-link:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; border-radius: 6px; }"
+    },
+    {
+      "name": "Sidebar Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "App sidebar entry; the active one takes the 14% blue tint.",
+      "html": "<div class=\"ds-side\"><span class=\"ds-nv ds-on\">My files</span><span class=\"ds-nv\">Shared with me<span class=\"ds-n\">4</span></span></div>",
+      "css": ".ds-side { display: grid; gap: 2px; width: 200px; padding: 10px; background: #0b1426; } .ds-nv { display: flex; align-items: center; padding: 8px 10px; border-radius: 8px; color: #94a3b8; font: 400 14px Inter, system-ui, sans-serif; cursor: pointer; } .ds-nv:hover { color: #f8fafc; } .ds-on { background: rgb(59 130 246 / .14); color: #f8fafc; font-weight: 600; } .ds-n { margin-left: auto; font: 11px 'JetBrains Mono', monospace; color: #8492a8; }"
+    },
+    {
+      "name": "Pills",
+      "kind": "chip",
+      "refersTo": "pill-expiry",
+      "description": "Neutral access pill and the amber expiry pill, used only for live public links.",
+      "html": "<span class=\"ds-pill ds-amber\">17 h left</span> <span class=\"ds-pill\">2 people</span> <span class=\"ds-pill\">Expired</span>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 5px; font: 500 12px Inter, system-ui, sans-serif; padding: 3px 9px; border-radius: 99px; background: #1e293b; color: #94a3b8; } .ds-amber { background: rgb(251 191 36 / .13); color: #fbbf24; }"
+    },
+    {
+      "name": "Fact Chip",
+      "kind": "chip",
+      "refersTo": "fact-chip",
+      "description": "Outlined chip stating a checkable fact with the number emphasised.",
+      "html": "<span class=\"ds-fact\">Up to <b>5 MB</b> per file</span>",
+      "css": ".ds-fact { font: 400 13px Inter, system-ui, sans-serif; padding: 5px 11px; border: 1px solid #1e293b; border-radius: 99px; color: #94a3b8; } .ds-fact b { color: #f8fafc; font-weight: 600; }"
+    },
+    {
+      "name": "Feature Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Flat UI vignette beside feature copy: title row, then rows split by Soft Line.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">Trash <small>3 items</small></div><div class=\"ds-row\"><span>old-contract.pdf</span><span class=\"ds-meta\">27 days left</span></div><div class=\"ds-row\"><span>notes-2024.md</span><span class=\"ds-meta ds-expiring\">2 days left</span></div></div>",
+      "css": ".ds-card { border-radius: 16px; border: 1px solid #1e293b; background: #0b1426; padding: 22px; display: grid; gap: 14px; color: #f8fafc; font: 400 14px Inter, system-ui, sans-serif; } .ds-card-title { display: flex; justify-content: space-between; font: 700 16px Figtree, Inter, sans-serif; } .ds-card-title small { font: 400 13px Inter, sans-serif; color: #8492a8; } .ds-row { display: flex; justify-content: space-between; padding: 10px 0; border-top: 1px solid #152036; } .ds-meta { font-size: 12px; color: #8492a8; } .ds-expiring { color: #fbbf24; }"
+    },
+    {
+      "name": "Public Link Card",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Signature overlay: mono URL with Copy, 24-cell hour strip in amber, live countdown.",
+      "html": "<div class=\"ds-lc\"><div class=\"ds-lc-head\"><b>Public link</b><span class=\"ds-lc-pill\">Anyone with the link</span></div><code class=\"ds-lc-url\">files.your-server.home/s/7f3a9c2e</code><div class=\"ds-hours\"><i class=\"g\"></i><i class=\"g\"></i><i class=\"g\"></i><i class=\"g\"></i><i class=\"g\"></i><i class=\"g\"></i><i class=\"now\"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class=\"ds-lc-time\"><span>Expires automatically</span><strong>17 h 42 m left</strong></div></div>",
+      "css": ".ds-lc { width: 320px; border-radius: 14px; border: 1px solid #1e293b; background: #1e293b; box-shadow: 0 2px 6px rgb(0 0 0 / .3), 0 18px 36px -12px rgb(0 0 0 / .55); padding: 16px; display: grid; gap: 12px; color: #f8fafc; font: 400 13px Inter, system-ui, sans-serif; } .ds-lc-head { display: flex; justify-content: space-between; align-items: center; } .ds-lc-head b { font: 700 15px Figtree, Inter, sans-serif; } .ds-lc-pill { font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 99px; background: rgb(251 191 36 / .13); color: #fbbf24; } .ds-lc-url { font: 12px 'JetBrains Mono', monospace; color: #94a3b8; background: #060e1f; border: 1px solid #152036; border-radius: 8px; padding: 7px 10px; } .ds-hours { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; } .ds-hours i { height: 14px; border-radius: 3px; background: #fbbf24; } .ds-hours i.g { background: #152036; } .ds-hours i.now { outline: 1.5px solid #fbbf24; outline-offset: 2px; } .ds-lc-time { display: flex; justify-content: space-between; color: #94a3b8; } .ds-lc-time strong { color: #fbbf24; font-weight: 600; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Command Bar",
+      "kind": "custom",
+      "refersTo": "command-bar",
+      "description": "Copyable install command; terminals stay dark in both themes.",
+      "html": "<div class=\"ds-cmd\"><code><b>$</b> docker compose up -d</code><button class=\"ds-copy\">Copy</button></div>",
+      "css": ".ds-cmd { display: inline-flex; align-items: center; gap: 12px; padding: 6px 6px 6px 16px; border: 1px solid #1e293b; background: #060b17; border-radius: 10px; } .ds-cmd code { font: 14px 'JetBrains Mono', monospace; color: #d7e2f5; } .ds-cmd code b { color: #7cb0ff; font-weight: 500; } .ds-copy { font: 500 13px Inter, system-ui, sans-serif; color: #c3cee2; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .1); padding: 6px 10px; border-radius: 7px; cursor: pointer; } .ds-copy:hover { background: rgb(255 255 255 / .12); } .ds-copy:active { color: #4ade80; } .ds-copy:focus-visible { outline: 2px solid #60a5fa; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Product Is the Pitch",
+    "overview": "CloudStore's visual system is the app's own shadcn token set (`frontend/app/globals.css`), carried unchanged in spirit onto the public landing page. The landing page doesn't sell with illustration or adjectives. It shows the file browser, a public link counting down, sharing, Trash and Activity as faithful UI with sample data, and lets the working product make the case. It sits in the category standard for self-hosted open-source products, built to the craft bar of Immich: a graphite-navy ground, one blue accent, rounded product frames with real interface inside, and plain factual copy.\n\nDark is the default on every page. Light appears only when the visitor switches to it. In the app this is `next-themes` with `defaultTheme=\"dark\"`, which remembers the choice; the standalone mockup in `design/landing.html` uses `cs-theme` in local storage. Both use the app's dark primary (#3b82f6). Density follows the app: compact 14px tables, 8 to 10px corners, hairline borders. The landing page adds generous section rhythm around those dense product frames.\n\nConfirmed rejections: the gradient-blob SaaS hero with a stock illustration, and any invented users, stats, testimonials or claims.",
+    "keyCharacteristics": [
+      "The app's shadcn tokens are the system; the landing page shares them.",
+      "Dark by default, light only on request.",
+      "One accent, the app's blue primary; amber is kept for expiry.",
+      "Proof is real UI in rounded frames, labelled as sample data.",
+      "Figtree headings, Inter body, JetBrains Mono only for code, sizes and times."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Blue is the only accent. It marks the primary action, the mark, the current place and selection. Nothing else on the page is blue.", "section": "colors" },
+      { "name": "The Amber Means Expiring Rule", "body": "Amber appears only on things that expire: public links (24 hours) and Trash (30 days). Never use it for warnings, highlights or decoration. If it doesn't run out, it isn't amber.", "section": "colors" },
+      { "name": "The Dark First Rule", "body": "Every page renders dark until the visitor chooses light. Author the dark values first; light is an override (`:root[data-theme=\"light\"]`), not the base.", "section": "colors" },
+      { "name": "The Mono Is Data Rule", "body": "JetBrains Mono is used only for code, sizes and times: commands, paths, URLs, byte sizes, timestamps, counters. Never for headings, labels or decoration.", "section": "typography" },
+      { "name": "The Figtree Heads Rule", "body": "Every heading and the wordmark is Figtree with tightened tracking (-0.01 to -0.035em). Body, buttons and UI text are always Inter.", "section": "typography" },
+      { "name": "The Only the Product Floats Rule", "body": "Feature cards, tables and inputs sit flat on tone and hairline. Only a product frame and the overlay that sits on it get a drop shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do take colors from the app's shadcn tokens (`frontend/app/globals.css`) and keep the landing page and app on one palette.",
+      "Do render dark by default on every page and switch to light only when the visitor asks.",
+      "Do keep Signal Blue (#3b82f6 in dark) the only accent, with Deep Slate (#0f172a) text on it.",
+      "Do use Expiry Amber only for public links (24 h) and Trash (30 days).",
+      "Do show the product as faithful UI with sample data, and label it as sample data.",
+      "Do set code, sizes, URLs and times in JetBrains Mono with tabular numerals, and nothing else.",
+      "Do use the CS tile as the mark wherever the brand appears."
+    ],
+    "donts": [
+      "Don't use a gradient-blob hero or stock illustration.",
+      "Don't add a second accent hue, or use amber or green as decoration.",
+      "Don't put drop shadows on flat cards, tables or inputs; only product frames and their overlays float.",
+      "Don't invent users, testimonials, stats or uptime figures for any surface.",
+      "Don't use Figtree for body text or JetBrains Mono for headings and labels."
+    ]
+  }
+}

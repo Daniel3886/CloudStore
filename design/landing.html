@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CloudStore</title>
+<meta name="description" content="CloudStore is a self-hosted file storage and sharing app. Your files, on your own server, in your own S3 bucket.">
+<script>try{if(localStorage.getItem("cs-theme")==="light")document.documentElement.setAttribute("data-theme","light")}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #020817;
+  --bg-2: #060e1f;
+  --surface: #0b1426;
+  --raised: #1e293b;
+  --line: #1e293b;
+  --line-soft: #152036;
+  --ink: #f8fafc;
+  --muted: #94a3b8;
+  --faint: #8492a8;
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --on-primary: #0f172a;
+  --link: #60a5fa;
+  --primary-soft: rgb(59 130 246 / .14);
+  --amber: #fbbf24;
+  --amber-soft: rgb(251 191 36 / .13);
+  --green: #4ade80;
+  --code-bg: #060b17;
+  --shadow: 0 2px 6px rgb(0 0 0 / .3), 0 30px 60px -20px rgb(0 0 0 / .65);
+  --display: "Figtree", "Inter", system-ui, sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 10px;
+  --r-lg: 16px;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff; --bg-2: #f6f8fc; --surface: #ffffff; --raised: #f1f5fb; --line: #dfe6f0; --line-soft: #eaeff6;
+  --ink: #0f172a; --muted: #4a5870; --faint: #6b7890; --primary: #2563eb; --primary-hover: #1d4ed8; --on-primary: #ffffff;
+  --link: #1d4ed8; --primary-soft: rgb(37 99 235 / .09); --amber: #a35f00; --amber-soft: rgb(217 119 6 / .12); --green: #15803d;
+  --code-bg: #0f172a; --shadow: 0 1px 3px rgb(15 23 42 / .08), 0 30px 60px -24px rgb(15 23 42 / .28);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--body); font-size: 16px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; caret-color: var(--primary);
+}
+::selection { background: rgb(59 130 246 / .45); color: #fff; }
+html { scrollbar-color: var(--line) var(--bg); }
+a { color: var(--link); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; border-radius: 6px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: -.02em; }
+p { margin: 0; }
+code, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.wrap { width: 100%; max-width: 1180px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.ico { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: 600 15px/1 var(--body); padding: 12px 18px; border-radius: 9px; border: 1px solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: 0 1px 0 rgb(255 255 255 / .14) inset, 0 1px 2px rgb(0 0 0 / .35); }
+.btn-primary:hover { background: var(--primary-hover); }
+.btn-quiet { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-quiet:hover { background: var(--raised); }
+.btn-sm { padding: 8px 12px; font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { .btn { transition: background-color .18s cubic-bezier(.16,1,.3,1), transform .18s cubic-bezier(.16,1,.3,1); } .btn:active { transform: translateY(1px); } }
+
+/* nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: rgb(2 8 23 / .82); backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line-soft); }
+:root[data-theme="light"] .nav { background: rgb(255 255 255 / .85); }
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 64px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; font: 700 18px var(--display); color: var(--ink); text-decoration: none; letter-spacing: -.01em; }
+.tile { width: 30px; height: 30px; border-radius: 8px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font: 800 13px var(--display); letter-spacing: .02em; }
+.nav-links { display: flex; gap: 22px; font-size: 15px; }
+.nav-links a { color: var(--muted); text-decoration: none; }
+.nav-links a:hover { color: var(--ink); }
+.nav-end { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.icon-btn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 9px; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.icon-btn:hover { color: var(--ink); background: var(--raised); }
+.theme-dark-ico { display: none; }
+:root[data-theme="light"] .theme-dark-ico { display: block; }
+:root[data-theme="light"] .theme-light-ico { display: none; }
+
+/* hero */
+.hero { position: relative; padding-top: 88px; text-align: center; overflow: hidden; }
+.hero .wrap { position: relative; }
+.hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); line-height: 1.02; font-weight: 800; max-width: 14ch; margin: 0 auto; letter-spacing: -.035em; }
+.hero .lede { margin: 22px auto 0; max-width: 58ch; font-size: clamp(1.05rem, 1.8vw, 1.2rem); color: var(--muted); }
+.hero-actions { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+.cmd { display: inline-flex; align-items: center; gap: 12px; margin-top: 22px; padding: 6px 6px 6px 16px; border: 1px solid var(--line); background: var(--code-bg); border-radius: 10px; max-width: 100%; }
+.cmd code { color: #d7e2f5; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd code b { color: #7cb0ff; font-weight: 500; }
+.copy { display: inline-flex; align-items: center; gap: 6px; font: 500 13px var(--body); color: #c3cee2; background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .1); padding: 6px 10px; border-radius: 7px; cursor: pointer; }
+.copy:hover { background: rgb(255 255 255 / .12); }
+.copy[data-done] { color: #4ade80; }
+.hero-note { margin-top: 12px; font-size: 13px; color: var(--faint); }
+
+/* product frame */
+.stage { position: relative; margin: 64px auto 0; max-width: 1120px; }
+.frame { border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--bg-2); box-shadow: var(--shadow); overflow: hidden; text-align: left; }
+.bar { display: flex; align-items: center; gap: 12px; height: 40px; padding: 0 14px; border-bottom: 1px solid var(--line-soft); background: var(--surface); }
+.dots { display: flex; gap: 6px; } .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--line); }
+.addr { flex: 1; max-width: 380px; margin: 0 auto; text-align: center; font: 12px var(--mono); color: var(--faint); background: var(--bg-2); border-radius: 6px; padding: 4px 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app { display: grid; grid-template-columns: 200px minmax(0, 1fr); min-height: 470px; }
+.side { border-right: 1px solid var(--line-soft); padding: 14px 10px; display: grid; align-content: start; gap: 2px; background: var(--surface); }
+.side .logo { font-size: 15px; padding: 4px 8px 14px; } .side .tile { width: 24px; height: 24px; font-size: 10px; border-radius: 6px; }
+.nv { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--muted); font-size: 14px; }
+.nv.on { background: var(--primary-soft); color: var(--ink); font-weight: 600; }
+.nv.on .ico { color: var(--link); }
+.nv .n { margin-left: auto; font: 11px var(--mono); color: var(--faint); }
+.main { padding: 18px 20px; display: grid; align-content: start; gap: 14px; min-width: 0; }
+.tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.crumbs { font: 700 19px var(--display); letter-spacing: -.01em; } .crumbs span { color: var(--faint); font-weight: 600; }
+.tools .grow { flex: 1; }
+.search { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--faint); font-size: 14px; background: var(--surface); }
+.tbl { border: 1px solid var(--line-soft); border-radius: 10px; overflow-x: auto; background: var(--surface); padding: 4px 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 540px; }
+th { text-align: left; font: 500 12px var(--body); color: var(--faint); padding: 10px 14px; border-bottom: 1px solid var(--line-soft); }
+td { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.sel td { background: var(--primary-soft); }
+td.num { font: 13px var(--mono); color: var(--muted); }
+.fn { display: flex; align-items: center; gap: 10px; }
+.fi { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; background: var(--raised); color: var(--muted); }
+.fi.folder { background: var(--primary-soft); color: var(--link); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; padding: 3px 9px; border-radius: 99px; background: var(--raised); color: var(--muted); }
+.pill.amber { background: var(--amber-soft); color: var(--amber); }
+.none { color: var(--faint); }
+.sample { font-size: 12px; color: var(--faint); margin-top: 10px; text-align: center; }
+
+.linkcard { position: absolute; right: -28px; bottom: 54px; width: 320px; border-radius: 14px; border: 1px solid var(--line); background: var(--raised); box-shadow: 0 2px 6px rgb(0 0 0 / .3), 0 18px 36px -12px rgb(0 0 0 / .55); padding: 16px; display: grid; gap: 12px; text-align: left; }
+.lc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.lc-head b { font: 700 15px var(--display); }
+.lc-url { display: flex; align-items: center; gap: 8px; background: var(--bg-2); border: 1px solid var(--line-soft); border-radius: 8px; padding: 7px 7px 7px 10px; }
+.lc-url code { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lc-url .copy { color: var(--ink); background: var(--raised); border-color: var(--line); }
+.hours { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; }
+.hours i { height: 14px; border-radius: 3px; background: var(--amber); }
+.hours i.gone { background: var(--line-soft); }
+.hours i.now { background: var(--amber); outline: 1.5px solid var(--amber); outline-offset: 2px; }
+.lc-time { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+.lc-time strong { color: var(--amber); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* sections */
+section { padding-block: 120px 0; }
+.sec-head { max-width: 640px; display: grid; gap: 14px; }
+.sec-head h2 { font-size: clamp(2rem, 4vw, 2.8rem); line-height: 1.08; font-weight: 800; }
+.sec-head p { color: var(--muted); font-size: 1.08rem; }
+.feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: clamp(32px, 6vw, 80px); align-items: center; padding-block: 64px; border-top: 1px solid var(--line-soft); }
+.feature:first-of-type { border-top: 0; }
+.feature.flip > :first-child { order: 2; }
+.feature h3 { font-size: clamp(1.5rem, 2.6vw, 1.9rem); line-height: 1.15; font-weight: 700; }
+.feature .copytext { display: grid; gap: 14px; max-width: 46ch; }
+.feature .copytext p { color: var(--muted); }
+.facts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+.fact { font-size: 13px; padding: 5px 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); }
+.fact b { color: var(--ink); font-weight: 600; }
+.vignette { border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--surface); padding: 22px; display: grid; gap: 14px; min-width: 0; }
+.vg-title { display: flex; justify-content: space-between; align-items: center; gap: 12px; font: 700 16px var(--display); }
+.vg-title small { font: 400 13px var(--body); color: var(--faint); }
+.field { display: flex; gap: 8px; }
+.input { flex: 1; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg-2); display: flex; align-items: center; padding: 0 12px; font-size: 14px; color: var(--ink); }
+.person { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.av { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font: 600 12px var(--body); background: var(--raised); color: var(--ink); }
+.person .who { flex: 1; min-width: 0; display: grid; } .person .who span { color: var(--faint); font-size: 13px; }
+.person button { font: 500 13px var(--body); color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
+.trow { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.trow .left { display: grid; gap: 6px; text-align: right; font-size: 12px; color: var(--faint); }
+.meter { width: 120px; height: 6px; border-radius: 3px; background: var(--line-soft); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--muted); border-radius: 3px; }
+.meter.low i { background: var(--amber); }
+.status { font: 500 12px var(--body); }
+.restore { font: 500 13px var(--body); color: var(--link); background: none; border: 0; cursor: pointer; padding: 0; }
+.log { display: grid; }
+.log div { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 12px; padding: 9px 0; border-top: 1px solid var(--line-soft); font-size: 14px; }
+.log time { font: 12px var(--mono); color: var(--faint); padding-top: 2px; }
+.log b { font-weight: 500; } .log span { color: var(--muted); }
+
+/* stack */
+.stack { margin: 48px 0 0; border-top: 1px solid var(--line); }
+.stack > div { display: grid; grid-template-columns: minmax(160px, 240px) minmax(0, 1fr); gap: 24px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.stack dt { font: 700 1.05rem var(--display); letter-spacing: -.01em; }
+.stack dd { margin: 0; color: var(--muted); display: grid; gap: 6px; min-width: 0; }
+.stack dd code { font-size: 12.5px; color: var(--faint); overflow-wrap: anywhere; }
+
+/* self-host */
+.steps { margin-top: 48px; display: grid; gap: 0; border-left: 1px solid var(--line); margin-left: 15px; }
+.step { position: relative; padding: 0 0 40px 40px; display: grid; gap: 12px; min-width: 0; }
+.step:last-child { padding-bottom: 0; }
+.step .n { position: absolute; left: -16px; top: -2px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); display: grid; place-items: center; font: 600 14px var(--display); color: var(--link); }
+.step h3 { font-size: 1.15rem; font-weight: 700; padding-top: 2px; }
+.step p { color: var(--muted); max-width: 60ch; }
+pre.term { margin: 0; background: var(--code-bg); color: #d7e2f5; border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; font: 13.5px/1.75 var(--mono); overflow-x: auto; max-width: 760px; }
+pre.term .c { color: #6f809e; } pre.term .p { color: #7cb0ff; } pre.term .ok { color: #4ade80; }
+
+/* close */
+.close { margin-top: 120px; padding-block: 88px; text-align: center; border-top: 1px solid var(--line-soft); background: var(--bg-2); }
+.close h2 { font-size: clamp(2rem, 4.4vw, 3rem); font-weight: 800; line-height: 1.05; }
+.close p { color: var(--muted); margin-top: 14px; }
+footer { border-top: 1px solid var(--line-soft); padding-block: 28px; color: var(--faint); font-size: 14px; }
+footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+footer nav { display: flex; gap: 20px; } footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--ink); }
+
+/* entrance: one moment, from a visible default */
+@media (prefers-reduced-motion: no-preference) {
+  .frame { animation: rise 1s cubic-bezier(.16,1,.3,1) both; }
+  .linkcard { animation: rise 1s .35s cubic-bezier(.16,1,.3,1) both; }
+  @keyframes rise { from { transform: translateY(18px); filter: blur(3px); } to { transform: none; filter: none; } }
+  .hours i.now { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+}
+
+@media (max-width: 980px) {
+  .linkcard { right: 16px; bottom: -40px; }
+  .stage { margin-bottom: 40px; }
+}
+@media (max-width: 760px) {
+  .nav-links { display: none; }
+  .nav .btn-quiet, .nav-end a.icon-btn { display: none; }
+  .nav .wrap { gap: 12px; }
+  table { min-width: 0; }
+  th:nth-child(n+3), td:nth-child(n+3) { display: none; }
+  .hero { padding-top: 56px; }
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+  .linkcard { position: relative; right: auto; bottom: auto; width: auto; margin: -28px 12px 0; }
+  .stage { margin-bottom: 0; }
+  .feature, .feature.flip { grid-template-columns: 1fr; padding-block: 48px; }
+  .feature.flip > :first-child { order: 0; }
+  section { padding-block: 88px 0; }
+  .stack > div { grid-template-columns: 1fr; gap: 6px; }
+  .cmd { width: 100%; justify-content: space-between; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5H9l2 2h7.5A2.5 2.5 0 0 1 21 9.5v7a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 16.5z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 9v12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6 6 0 0 1 3.5 6"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-gh" viewBox="0 0 24 24"><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="CloudStore home"><span class="tile" aria-hidden="true">CS</span>CloudStore</a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#features">Features</a>
+      <a href="#built">How it's built</a>
+      <a href="#self-host">Self-hosting</a>
+    </nav>
+    <div class="nav-end">
+      <button class="icon-btn" type="button" id="theme" aria-label="Switch to light mode"><svg class="ico theme-light-ico"><use href="#i-sun"/></svg><svg class="ico theme-dark-ico"><use href="#i-moon"/></svg></button>
+      <a class="icon-btn" href="https://github.com/Daniel3886/CloudStore" aria-label="CloudStore on GitHub"><svg class="ico"><use href="#i-gh"/></svg></a>
+      <a class="btn btn-quiet btn-sm" href="/login">Sign in</a>
+      <a class="btn btn-primary btn-sm" href="/register">Create an account</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="wrap">
+      <h1>Your files, on your own server.</h1>
+      <p class="lede">CloudStore is a self-hosted file storage and sharing app. Upload and organise files, share them with other accounts or with a link that lasts 24 hours, all stored in an S3 bucket you control.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/register">Create an account</a>
+        <a class="btn btn-quiet" href="#self-host">Host it yourself</a>
+      </div>
+      <div class="cmd"><code><b>$</b> docker compose up -d</code><button class="copy" type="button" data-copy="docker compose up -d"><svg class="ico" style="width:14px;height:14px"><use href="#i-copy"/></svg><span>Copy</span></button></div>
+      <p class="hero-note">Open source under the MIT licence.</p>
+
+      <div class="stage">
+        <div class="frame" role="img" aria-label="The CloudStore file browser showing a reports folder with five items, sizes, dates and who can access each file.">
+          <div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="addr">files.your-server.home/files</span></div>
+          <div class="app" aria-hidden="true">
+            <div class="side">
+              <span class="logo"><span class="tile">CS</span>CloudStore</span>
+              <span class="nv on"><svg class="ico"><use href="#i-folder"/></svg>My files</span>
+              <span class="nv"><svg class="ico"><use href="#i-clock"/></svg>Recent</span>
+              <span class="nv"><svg class="ico"><use href="#i-users"/></svg>Shared with me<span class="n">4</span></span>
+              <span class="nv"><svg class="ico"><use href="#i-activity"/></svg>Activity</span>
+              <span class="nv"><svg class="ico"><use href="#i-trash"/></svg>Trash<span class="n">3</span></span>
+            </div>
+            <div class="main">
+              <div class="tools">
+                <span class="crumbs"><span>My files /</span> reports</span>
+                <span class="grow"></span>
+                <span class="search"><svg class="ico" style="width:16px;height:16px"><use href="#i-search"/></svg>Search</span>
+                <span class="btn btn-primary btn-sm"><svg class="ico" style="width:16px;height:16px"><use href="#i-up"/></svg>Upload</span>
+              </div>
+              <div class="tbl">
+                <table>
+                  <thead><tr><th>Name</th><th>Size</th><th>Modified</th><th>Access</th></tr></thead>
+                  <tbody>
+                    <tr><td><span class="fn"><span class="fi folder"><svg class="ico" style="width:16px;height:16px"><use href="#i-folder"/></svg></span>2025</span></td><td class="num">6 items</td><td class="num">12 Nov</td><td><span class="none">—</span></td></tr>
+                    <tr class="sel"><td><span class="fn"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span>q3-summary.pdf</span></td><td class="num">4.1 MB</td><td class="num">Today 09:14</td><td><span class="pill amber"><svg class="ico" style="width:12px;height:12px"><use href="#i-link"/></svg><span data-left-short>17 h left</span></span> <span class="pill">2 people</span></td></tr>
+                    <tr><td><span class="fn"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-img"/></svg></span>org-chart.png</span></td><td class="num">812 KB</td><td class="num">Yesterday</td><td><span class="pill">1 person</span></td></tr>
+                    <tr><td><span class="fn"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-sheet"/></svg></span>budget-2026.xlsx</span></td><td class="num">1.3 MB</td><td class="num">18 Nov</td><td><span class="none">—</span></td></tr>
+                    <tr><td><span class="fn"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span>meeting-notes.md</span></td><td class="num">9 KB</td><td class="num">3 Nov</td><td><span class="none">—</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="linkcard">
+          <div class="lc-head"><b>Public link</b><span class="pill amber">Anyone with the link</span></div>
+          <div class="lc-url"><code>files.your-server.home/s/7f3a9c2e</code><button class="copy" type="button" data-copy="https://files.your-server.home/s/7f3a9c2e"><span>Copy</span></button></div>
+          <div class="hours" aria-hidden="true" id="hours"></div>
+          <div class="lc-time"><span>Expires automatically</span><strong id="left">17 h 42 m left</strong></div>
+        </div>
+      </div>
+      <p class="sample">Sample files. Screens show the CloudStore web app.</p>
+    </div>
+  </div>
+
+  <section id="features">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Everything a file server needs, and nothing you have to trust someone else with.</h2>
+        <p>Files go to your bucket. Accounts, shares and the activity log live in your Postgres database.</p>
+      </div>
+
+      <div class="feature">
+        <div class="copytext">
+          <h3>Upload and sort into folders</h3>
+          <p>Drag files in, make folders, rename and download. Folders are stored as key prefixes in S3, so the bucket stays readable outside the app too.</p>
+          <div class="facts"><span class="fact">Up to <b>5 MB</b> per file</span><span class="fact">English and Polish</span></div>
+        </div>
+        <div class="vignette">
+          <div class="vg-title">Uploading to reports <small>2 of 3 done</small></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span><span>invoice-1042.pdf</span><span class="status" style="color:var(--green)">Uploaded</span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-img"/></svg></span><span>site-photo.jpg</span><span class="status" style="color:var(--green)">Uploaded</span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span><span>scan-archive.zip<br><span style="font-size:12px;color:var(--faint)">7.8 MB is over the 5 MB limit</span></span><span class="status" style="color:var(--amber)">Not uploaded</span></div>
+        </div>
+      </div>
+
+      <div class="feature flip">
+        <div class="copytext">
+          <h3>Share with the people who need it</h3>
+          <p>Give another CloudStore account access by email. Their copy shows up under Shared with me, and you can see who has access and remove it at any time.</p>
+        </div>
+        <div class="vignette">
+          <div class="vg-title">Share q3-summary.pdf</div>
+          <div class="field"><span class="input" style="color:var(--faint)">Email address</span><span class="btn btn-primary btn-sm">Share</span></div>
+          <div class="person"><span class="av">AN</span><span class="who">Ana Kowal<span>ana@example.com</span></span><button type="button">Remove</button></div>
+          <div class="person"><span class="av">MW</span><span class="who">Marek Wiśniewski<span>marek@example.com</span></span><button type="button">Remove</button></div>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="copytext">
+          <h3>Public links that switch themselves off</h3>
+          <p>Need to send a file to someone without an account? Create a public link. It stops working 24 hours later, so old links don't leave files open.</p>
+          <div class="facts"><span class="fact">Expires after <b>24 hours</b></span></div>
+        </div>
+        <div class="vignette">
+          <div class="vg-title">Your public links <small>2 active</small></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span><span>q3-summary.pdf</span><span class="pill amber" data-left-short>17 h left</span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-img"/></svg></span><span>org-chart.png</span><span class="pill amber">2 h left</span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-sheet"/></svg></span><span style="color:var(--faint)">budget-2026.xlsx</span><span class="pill">Expired</span></div>
+        </div>
+      </div>
+
+      <div class="feature flip">
+        <div class="copytext">
+          <h3>Deleted by mistake? It's in Trash.</h3>
+          <p>Deleted files wait in Trash for 30 days. Restore them any time before that. A nightly cleanup removes anything older.</p>
+          <div class="facts"><span class="fact">Kept for <b>30 days</b></span></div>
+        </div>
+        <div class="vignette">
+          <div class="vg-title">Trash <small>3 items</small></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span><span>old-contract.pdf<br><button class="restore" type="button">Restore</button></span><span class="left">27 days left<span class="meter"><i style="width:90%"></i></span></span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-img"/></svg></span><span>draft-logo.png<br><button class="restore" type="button">Restore</button></span><span class="left">12 days left<span class="meter"><i style="width:40%"></i></span></span></div>
+          <div class="trow"><span class="fi"><svg class="ico" style="width:16px;height:16px"><use href="#i-file"/></svg></span><span>notes-2024.md<br><button class="restore" type="button">Restore</button></span><span class="left" style="color:var(--amber)">2 days left<span class="meter low"><i style="width:7%"></i></span></span></div>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="copytext">
+          <h3>See what happened, and when</h3>
+          <p>Every upload, rename, share, link and delete is written to your activity log, so you can check what changed in your files.</p>
+        </div>
+        <div class="vignette">
+          <div class="vg-title">Activity <small>Today</small></div>
+          <div class="log">
+            <div><time>09:20</time><span><b>Created a public link</b> for q3-summary.pdf</span></div>
+            <div><time>09:16</time><span><b>Shared</b> q3-summary.pdf with marek@example.com</span></div>
+            <div><time>09:14</time><span><b>Uploaded</b> q3-summary.pdf to reports</span></div>
+            <div><time>08:52</time><span><b>Restored</b> invoice-0998.pdf from Trash</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="built">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>How it's built</h2>
+        <p>A Spring Boot API and a Next.js app, in one repository you can read end to end.</p>
+      </div>
+      <dl class="stack">
+        <div><dt>Spring Boot API</dt><dd>Files, sharing, public links and the activity log, grouped by feature.<code>backend/…/file/service/</code></dd></div>
+        <div><dt>JWT sign-in</dt><dd>Short-lived access tokens with refresh tokens; accounts verified by an emailed code.<code>backend/…/auth/filter/JwtFilter.java</code></dd></div>
+        <div><dt>24-hour public links</dt><dd>Each link stores its own expiry and stops resolving after 24 hours.<code>backend/…/publicsharing/service/PublicFileSharingService.java</code></dd></div>
+        <div><dt>Trash cleanup</dt><dd>A scheduled job at 02:00 removes items deleted more than 30 days ago.<code>backend/…/file/service/AutoCleanupService.java</code></dd></div>
+        <div><dt>Storage</dt><dd>File contents in Amazon S3; accounts, shares, links and activity in PostgreSQL.<code>backend/src/main/resources/application.properties</code></dd></div>
+        <div><dt>Next.js frontend</dt><dd>React and TypeScript with one API client that refreshes tokens on a 401.<code>frontend/lib/api/client.ts</code></dd></div>
+        <div><dt>Tests and CI</dt><dd>Frontend tests run on every change, and the build fails if coverage drops.<code>.github/workflows/frontend.yml</code></dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section id="self-host">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Run it on your own server</h2>
+        <p>You need Docker, a PostgreSQL database, an S3 bucket and an SMTP account for verification emails.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="n">1</span><h3>Get the code</h3>
+<pre class="term"><span class="p">$</span> git clone https://github.com/Daniel3886/CloudStore.git
+<span class="p">$</span> cd CloudStore</pre></div>
+        <div class="step"><span class="n">2</span><h3>Add your settings</h3><p>Put your database, S3 and mail settings in <code>backend/.env</code>, and the API address in <code>frontend/.env.local</code>.</p></div>
+        <div class="step"><span class="n">3</span><h3>Start it</h3>
+<pre class="term"><span class="p">$</span> docker compose up -d
+<span class="ok">✓</span> backend   <span class="c">listening on :8080</span>
+<span class="ok">✓</span> frontend  <span class="c">listening on :3000</span></pre></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="close">
+    <div class="wrap">
+      <h2>Keep your files where you can see them.</h2>
+      <p>Create an account on this server, or set up your own.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/register">Create an account</a>
+        <a class="btn btn-quiet" href="https://github.com/Daniel3886/CloudStore"><svg class="ico"><use href="#i-gh"/></svg>View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><span class="logo" style="font-size:15px"><span class="tile" style="width:24px;height:24px;font-size:10px;border-radius:6px">CS</span>CloudStore</span> · MIT licence</span>
+    <nav aria-label="Footer"><a href="#features">Features</a><a href="#self-host">Self-hosting</a><a href="https://github.com/Daniel3886/CloudStore">GitHub</a></nav>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var btn = document.getElementById("theme");
+  function apply(t) {
+    if (t === "light") root.setAttribute("data-theme", "light"); else root.removeAttribute("data-theme");
+    btn.setAttribute("aria-label", t === "light" ? "Switch to dark mode" : "Switch to light mode");
+  }
+  var saved = null; try { saved = localStorage.getItem("cs-theme"); } catch (e) {}
+  apply(saved === "light" ? "light" : "dark");
+  btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "light" ? "dark" : "light";
+    apply(next); try { localStorage.setItem("cs-theme", next); } catch (e) {}
+  });
+
+  document.querySelectorAll("[data-copy]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var label = b.querySelector("span");
+      function done(ok) { label.textContent = ok ? "Copied" : "Press ⌘C"; if (ok) b.setAttribute("data-done", ""); setTimeout(function () { label.textContent = "Copy"; b.removeAttribute("data-done"); }, 1800); }
+      try { navigator.clipboard.writeText(b.dataset.copy).then(function () { done(true); }, function () { done(false); }); } catch (e) { done(false); }
+    });
+  });
+
+  // Sample link created 6 h 18 m ago; it counts down live.
+  var end = Date.now() + (17 * 60 + 42) * 60000;
+  var hours = document.getElementById("hours"), left = document.getElementById("left");
+  for (var i = 0; i < 24; i++) hours.appendChild(document.createElement("i"));
+  function tick() {
+    var ms = Math.max(0, end - Date.now()), h = Math.floor(ms / 3600000), m = Math.floor(ms / 60000) % 60, s = Math.floor(ms / 1000) % 60;
+    left.textContent = h + " h " + String(m).padStart(2, "0") + " m " + String(s).padStart(2, "0") + " s left";
+    document.querySelectorAll("[data-left-short]").forEach(function (el) { el.textContent = h + " h left"; });
+    var used = 24 - Math.ceil(ms / 3600000);
+    Array.prototype.forEach.call(hours.children, function (c, idx) { c.className = idx < used ? "gone" : (idx === used ? "now" : ""); });
+  }
+  tick(); setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

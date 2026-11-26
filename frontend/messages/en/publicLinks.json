@@ -1,11 +1,11 @@
 {
   "manager": {
-    "title": "Manage Public Links",
     "activeCount": "{count, plural, one {# active link} other {# active links}}",
     "refresh": "Refresh",
     "loading": "Loading public links",
     "emptyTitle": "No active public links",
-    "emptyDescription": "You haven't created any public links yet. Generate one from the file details menu."
+    "emptyDescription": "You haven't created any public links. Open a file's Share menu to create one.",
+    "description": "Links you've created. Each one stops working 24 hours after it was made."
   },
   "actions": {
     "copyPreview": "Copy preview link",
@@ -27,20 +27,15 @@
     "cancel": "Cancel",
     "confirm": "Revoke Link"
   },
-  "generator": {
-    "title": "Generate Public Link",
-    "size": "Size: {size}",
-    "unknownSize": "Unknown size",
-    "expiryBadge": "24h expiry",
-    "createTitle": "Create Public Link",
-    "createDescription": "Generate a public link that allows anyone to access this file for 24 hours.",
-    "generate": "Generate Public Link",
-    "generating": "Generating...",
-    "successTitle": "Public Link Generated!",
-    "successDescription": "Your file is now publicly accessible. Links expire in 24 hours.",
-    "downloadLink": "Download Link",
-    "previewLink": "Preview Link",
-    "generateAnother": "Generate Another Link"
+  "fileLink": {
+    "loading": "Checking for a public link…",
+    "unavailable": "This file can't have a public link right now. Refresh the page and try again.",
+    "description": "Anyone with the link can download this file for {hours} hours. Then the link stops working.",
+    "create": "Create {hours}-hour link",
+    "creating": "Creating link…",
+    "active": "Public link is on",
+    "timeUsed": "Time used of the link's 24 hours",
+    "revoke": "Turn off"
   },
   "toast": {
     "copied": {

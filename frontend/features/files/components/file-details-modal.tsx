@@ -15,11 +15,10 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { ShareModal } from "@/features/sharing/components/share-modal"
 import { FileSharingManagement } from "@/features/sharing/components/file-sharing-management"
-import { PublicLinkGenerator } from "@/features/public-links/components/public-link-generator"
 import { FileDetailsInfo } from "@/features/files/components/file-details-info"
 import type { FileItem } from "@/features/files/types"
 
-type SubModal = "share" | "manage" | "publicLink" | null
+type SubModal = "share" | "manage" | null
 
 interface FileDetailsModalProps {
   open: boolean
@@ -68,7 +67,7 @@ export function FileDetailsModal({ open, onOpenChange, file, onDownload }: FileD
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSubModal("publicLink")}
+                  onClick={() => setSubModal("share")}
                   className="col-span-2 bg-transparent"
                 >
                   <Globe className="h-4 w-4 mr-2" />
@@ -100,7 +99,6 @@ export function FileDetailsModal({ open, onOpenChange, file, onDownload }: FileD
 
       <ShareModal {...subModalProps("share")} file={file} />
       <FileSharingManagement {...subModalProps("manage")} file={file} />
-      <PublicLinkGenerator {...subModalProps("publicLink")} file={file} />
     </>
   )
 }

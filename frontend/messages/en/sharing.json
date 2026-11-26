@@ -13,7 +13,7 @@
     "title": "Share \"{name}\"",
     "specificUsers": "Share with specific users",
     "publicSharing": "Public Sharing",
-    "managePublicLinks": "Manage Public Links"
+    "allPublicLinks": "See all your public links"
   },
   "management": {
     "title": "Manage Sharing - {name}",
@@ -30,7 +30,6 @@
     "empty": "No one else has access to this file"
   },
   "browser": {
-    "title": "Shared with me",
     "count": "{count, plural, one {# file} other {# files}}",
     "loading": "Loading shared files...",
     "emptyTitle": "No shared files",
@@ -97,5 +96,10 @@
       "title": "Download failed",
       "fallback": "Could not download the file"
     }
+  },
+  "tabs": {
+    "title": "Shared",
+    "received": "Shared with me",
+    "publicLinks": "Public links"
   }
 }

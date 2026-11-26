@@ -55,8 +55,7 @@ describe("SharedFilesBrowser", () => {
   it("shows pending shares with accept/decline and accepted shares with download", async () => {
     renderWithIntl(<SharedFilesBrowser />)
 
-    expect(await screen.findByText("Shared with me")).toBeInTheDocument()
-    expect(screen.getByText("2 files")).toBeInTheDocument()
+    expect(await screen.findByText("2 files")).toBeInTheDocument()
 
     const pendingCard = card("report.pdf")
     expect(pendingCard.getByText("Pending")).toBeInTheDocument()

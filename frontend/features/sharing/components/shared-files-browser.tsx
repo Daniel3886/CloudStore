@@ -33,8 +33,7 @@ export function SharedFilesBrowser() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t("title")}</h2>
+      <div className="flex items-center justify-end">
         <Badge variant="secondary">{t("count", { count: files.length })}</Badge>
       </div>
 

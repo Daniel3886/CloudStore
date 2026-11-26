@@ -13,7 +13,7 @@
     "title": "Udostępnij „{name}”",
     "specificUsers": "Udostępnij wybranym osobom",
     "publicSharing": "Udostępnianie publiczne",
-    "managePublicLinks": "Zarządzaj linkami publicznymi"
+    "allPublicLinks": "Zobacz wszystkie swoje linki publiczne"
   },
   "management": {
     "title": "Zarządzaj udostępnianiem – {name}",
@@ -30,7 +30,6 @@
     "empty": "Nikt inny nie ma dostępu do tego pliku"
   },
   "browser": {
-    "title": "Udostępnione dla mnie",
     "count": "{count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}",
     "loading": "Ładowanie udostępnionych plików...",
     "emptyTitle": "Brak udostępnionych plików",
@@ -97,5 +96,10 @@
       "title": "Pobieranie nie powiodło się",
       "fallback": "Nie można pobrać pliku"
     }
+  },
+  "tabs": {
+    "title": "Udostępnione",
+    "received": "Udostępnione mi",
+    "publicLinks": "Linki publiczne"
   }
 }

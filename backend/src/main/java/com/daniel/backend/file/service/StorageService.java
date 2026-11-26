@@ -20,7 +20,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -257,18 +260,25 @@ public class StorageService {
         for (Files dbFile : dbFiles) {
             S3Object s3Object = s3ObjectMap.get(dbFile.getS3Key());
             if (s3Object != null) {
+                Instant deletedAt = toInstant(dbFile.getDeletedAt());
                 S3ObjectDto dto = new S3ObjectDto(
                         dbFile.getId(),
                         dbFile.getS3Key(),
                         s3Object.size(),
                         s3Object.lastModified(),
-                        dbFile.getDisplayName()
+                        dbFile.getDisplayName(),
+                        deletedAt,
+                        deletedAt == null ? null : deletedAt.plus(AutoCleanupService.TRASH_RETENTION_DAYS, ChronoUnit.DAYS)
                 );
                 dtos.add(dto);
             }
         }
 
         return dtos;
+    }
+
+    private static Instant toInstant(LocalDateTime dateTime) {
+        return dateTime == null ? null : dateTime.atZone(ZoneId.systemDefault()).toInstant();
     }
 
     public void renameFile(String s3Key, String newDisplayName) {

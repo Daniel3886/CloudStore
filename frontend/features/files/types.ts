@@ -9,6 +9,8 @@ export interface FileItem {
   type: FileType
   size?: number
   modified?: number
+  deletedAt?: number
+  purgeAt?: number
   owner?: string
   s3Key?: string
   path: string

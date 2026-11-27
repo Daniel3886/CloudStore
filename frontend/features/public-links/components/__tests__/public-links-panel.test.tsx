@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { renderWithIntl } from "@/test/render"
 import { toast } from "@/hooks/use-toast"
 import { publicLinksApi, type PublicFileAccessToken } from "@/features/public-links/api"
-import { PublicLinksManager } from "@/features/public-links/components/public-links-manager"
+import { PublicLinksPanel } from "@/features/public-links/components/public-links-panel"
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
 vi.mock("@/features/public-links/api", () => ({
@@ -32,7 +32,7 @@ function row(name: string) {
   return within(element)
 }
 
-describe("PublicLinksManager", () => {
+describe("PublicLinksPanel", () => {
   beforeEach(() => {
     vi.useFakeTimers({ now, toFake: ["Date"] })
     vi.mocked(publicLinksApi.getActiveLinks).mockResolvedValue([small, large, expired])
@@ -42,7 +42,7 @@ describe("PublicLinksManager", () => {
   afterEach(() => vi.useRealTimers())
 
   it("lists links with size, expiry and the available actions", async () => {
-    renderWithIntl(<PublicLinksManager open onOpenChange={vi.fn()} />)
+    renderWithIntl(<PublicLinksPanel />)
 
     expect(await screen.findByText("notes.txt")).toBeInTheDocument()
     expect(screen.getByText("3 active links")).toBeInTheDocument()
@@ -68,7 +68,7 @@ describe("PublicLinksManager", () => {
   it("copies a link to the clipboard", async () => {
     const user = userEvent.setup()
     const writeText = vi.spyOn(navigator.clipboard, "writeText")
-    renderWithIntl(<PublicLinksManager open onOpenChange={vi.fn()} />)
+    renderWithIntl(<PublicLinksPanel />)
 
     await screen.findByText("notes.txt")
     await user.click(row("notes.txt").getByRole("button", { name: "Copy download link" }))
@@ -79,7 +79,7 @@ describe("PublicLinksManager", () => {
 
   it("revokes a link after confirmation", async () => {
     const user = userEvent.setup()
-    renderWithIntl(<PublicLinksManager open onOpenChange={vi.fn()} />)
+    renderWithIntl(<PublicLinksPanel />)
 
     await screen.findByText("notes.txt")
     await user.click(row("notes.txt").getByRole("button", { name: "Revoke link" }))
@@ -98,7 +98,7 @@ describe("PublicLinksManager", () => {
 
   it("does not revoke when the confirmation is cancelled", async () => {
     const user = userEvent.setup()
-    renderWithIntl(<PublicLinksManager open onOpenChange={vi.fn()} />)
+    renderWithIntl(<PublicLinksPanel />)
 
     await screen.findByText("notes.txt")
     await user.click(row("notes.txt").getByRole("button", { name: "Revoke link" }))
@@ -110,15 +110,9 @@ describe("PublicLinksManager", () => {
 
   it("shows the empty state", async () => {
     vi.mocked(publicLinksApi.getActiveLinks).mockResolvedValue([])
-    renderWithIntl(<PublicLinksManager open onOpenChange={vi.fn()} />)
+    renderWithIntl(<PublicLinksPanel />)
 
     expect(await screen.findByText("No active public links")).toBeInTheDocument()
     expect(screen.getByText("0 active links")).toBeInTheDocument()
-  })
-
-  it("does not fetch while closed", () => {
-    renderWithIntl(<PublicLinksManager open={false} onOpenChange={vi.fn()} />)
-
-    expect(publicLinksApi.getActiveLinks).not.toHaveBeenCalled()
   })
 })

@@ -6,6 +6,10 @@ export interface FileResponse {
   size?: number
   lastModified?: string | number
   displayName: string
+  /** Set only for files in Trash. */
+  deletedAt?: string | number
+  /** When the nightly cleanup permanently deletes a trashed file. */
+  purgeAt?: string | number
 }
 
 export const filesApi = {

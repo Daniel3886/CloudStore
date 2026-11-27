@@ -14,7 +14,7 @@ export function FolderNavigation({ currentPath, onBack }: FolderNavigationProps)
   const crumbs = [t("root"), ...currentPath.split("/")]
 
   return (
-    <div className="flex items-center gap-2 mb-4">
+    <div className="flex items-center gap-2">
       <Button variant="ghost" size="sm" onClick={onBack}>
         <ArrowLeft className="h-4 w-4 mr-1" />
         {t("back")}

@@ -1,6 +1,7 @@
 import type React from "react"
 import { getTranslations } from "next-intl/server"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { InstanceHost } from "@/features/auth/components/instance-host"
+import { ServerInfo } from "@/features/auth/components/server-info"
 
 interface AuthPageShellProps {
   title: string
@@ -8,29 +9,26 @@ interface AuthPageShellProps {
 }
 
 export async function AuthPageShell({ title, children }: AuthPageShellProps) {
-  const t = await getTranslations("common")
+  const t = await getTranslations("auth.shell")
+  const tCommon = await getTranslations("common")
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center">
-            <div className="size-16 rounded-xl bg-primary text-primary-foreground grid place-items-center text-2xl font-bold">
+    <div className="flex min-h-screen items-center justify-center bg-background px-5 py-12">
+      <div className="w-full max-w-sm space-y-8">
+        <div className="space-y-6">
+          <div className="flex items-center gap-2.5 font-display text-lg font-bold">
+            <div className="grid size-8 place-items-center rounded-lg bg-primary text-xs font-extrabold text-primary-foreground">
               CS
             </div>
+            {tCommon("appName")}
           </div>
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold">{t("appName")}</h1>
-            <p className="text-muted-foreground">{t("appTagline")}</p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-extrabold">{title}</h1>
+            <InstanceHost label={t("hostLabel")} />
           </div>
         </div>
-
-        <Card className="border-muted-foreground/20 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-4">
-            <h2 className="text-xl font-semibold text-center">{title}</h2>
-          </CardHeader>
-          <CardContent>{children}</CardContent>
-        </Card>
+        {children}
+        <ServerInfo />
       </div>
     </div>
   )

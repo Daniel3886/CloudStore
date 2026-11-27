@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react"
+import { act, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { authApi } from "@/features/auth/api"
@@ -55,7 +55,8 @@ describe("AuthProvider and ProtectedRoute", () => {
     renderApp()
 
     expect(await screen.findByText("signed out")).toBeInTheDocument()
-    expect(mocks.router.push).toHaveBeenCalledWith("/login")
+    // "signed out" also shows while the session is still loading, so wait for the redirect itself.
+    await waitFor(() => expect(mocks.router.push).toHaveBeenCalledWith("/login"))
     expect(authApi.getProfile).not.toHaveBeenCalled()
     expect(screen.queryByText("private content")).not.toBeInTheDocument()
   })
@@ -76,7 +77,7 @@ describe("AuthProvider and ProtectedRoute", () => {
     renderApp()
 
     expect(await screen.findByText("signed out")).toBeInTheDocument()
-    expect(mocks.router.push).toHaveBeenCalledWith("/login")
+    await waitFor(() => expect(mocks.router.push).toHaveBeenCalledWith("/login"))
   })
 
   it("keeps the session and offers a retry when the profile cannot be loaded", async () => {

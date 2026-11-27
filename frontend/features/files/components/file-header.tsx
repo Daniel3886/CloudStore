@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { useTranslations } from "next-intl"
-import { Plus, Search, Upload } from "lucide-react"
+import { Clock, Plus, Search, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NewFolderModal } from "@/features/files/components/new-folder-modal"
 import { UploadModal } from "@/features/files/components/upload-modal"
+import { TRASH_RETENTION_DAYS } from "@/features/files/lib/trash"
 import type { FileView } from "@/features/files/types"
 
 interface FileHeaderProps {
@@ -26,7 +27,7 @@ export function FileHeader({ title, type = "all", onRefresh, currentPath = "", o
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{title}</h1>
         {showActionButtons && (
           <div className="flex items-center gap-2">
@@ -41,6 +42,12 @@ export function FileHeader({ title, type = "all", onRefresh, currentPath = "", o
           </div>
         )}
       </div>
+      {type === "trash" && (
+        <p className="-mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+          <Clock className="h-4 w-4 shrink-0" aria-hidden />
+          {t("trashNote", { days: TRASH_RETENTION_DAYS })}
+        </p>
+      )}
       {onSearch && (
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />

@@ -9,7 +9,8 @@
     "newFolder": "Nowy folder",
     "upload": "Prześlij",
     "searchPlaceholder": "Szukaj plików i folderów...",
-    "searchLabel": "Szukaj plików i folderów"
+    "searchLabel": "Szukaj plików i folderów",
+    "trashNote": "Pliki zostają w koszu przez {days} dni, a potem są trwale usuwane. Przywróć plik, aby go zachować."
   },
   "browser": {
     "loading": "Ładowanie plików...",
@@ -17,7 +18,7 @@
     "root": "Moje pliki",
     "breadcrumbLabel": "Bieżący folder",
     "folder": "Folder",
-    "inTrash": "W koszu",
+    "itemCount": "{count, plural, =0 {Pusty} one {# element} few {# elementy} many {# elementów} other {# elementu}}",
     "empty": {
       "trashTitle": "Kosz jest pusty",
       "trashDescription": "Usunięte pliki będą tu przechowywane przez 30 dni, zanim zostaną trwale usunięte.",
@@ -25,6 +26,26 @@
       "allDescription": "Prześlij pliki lub utwórz folder, aby zacząć",
       "recentDescription": "Brak ostatnich plików"
     }
+  },
+  "list": {
+    "caption": "Pliki i foldery",
+    "name": "Nazwa",
+    "size": "Rozmiar",
+    "modified": "Zmodyfikowano",
+    "publicLink": "Link publiczny",
+    "deletedForGood": "Trwałe usunięcie za",
+    "actions": "Akcje",
+    "viewLabel": "Widok",
+    "listView": "Lista",
+    "gridView": "Siatka"
+  },
+  "status": {
+    "noPublicLink": "Brak linku publicznego",
+    "publicLinkTitle": "Każdy, kto ma link, może otworzyć ten plik",
+    "publicLinkLabel": "Link publiczny, ",
+    "hoursLeft": "jeszcze {hours} godz.",
+    "minutesLeft": "jeszcze {minutes} min",
+    "purgeIn": "{days, plural, =0 {Usunięcie dziś w nocy} one {Został # dzień} few {Zostały # dni} many {Zostało # dni} other {Zostało # dnia}}"
   },
   "card": {
     "actionsLabel": "Akcje dla {name}",
@@ -40,7 +61,7 @@
   },
   "deleteDialog": {
     "trashTitle": "Przenieś plik do kosza",
-    "trashDescription": "Czy na pewno chcesz przenieść „{name}” do kosza? Możesz go później przywrócić z kosza.",
+    "trashDescription": "Przenieść „{name}” do kosza? Możesz go przywrócić z kosza przez 30 dni. Potem zostanie trwale usunięty.",
     "folderTitle": "Trwale usuń folder",
     "folderDescription": "⚠️ Jeśli folder „{name}” zawiera pliki, <b>zostaną one trwale usunięte</b>. Tej operacji nie można cofnąć.",
     "permanentTitle": "Trwale usuń {kind, select, folder {folder} other {plik}}",
@@ -107,7 +128,7 @@
     "sharingOptions": "Opcje udostępniania",
     "share": "Udostępnij",
     "manage": "Zarządzaj",
-    "publicLink": "Utwórz link publiczny",
+    "publicLink": "Link publiczny",
     "fileActions": "Akcje pliku",
     "download": "Pobierz",
     "close": "Zamknij"

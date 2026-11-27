@@ -1,9 +1,5 @@
-import { SharedFilesBrowser } from "@/features/sharing/components/shared-files-browser"
+import { SharedTabs } from "@/features/sharing/components/shared-tabs"
 
 export default function SharedPage() {
-  return (
-    <div className="container mx-auto py-6">
-      <SharedFilesBrowser />
-    </div>
-  )
+  return <SharedTabs />
 }

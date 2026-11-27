@@ -1,11 +1,11 @@
 {
   "manager": {
-    "title": "Zarządzaj linkami publicznymi",
     "activeCount": "{count, plural, one {# aktywny link} few {# aktywne linki} many {# aktywnych linków} other {# aktywnego linku}}",
     "refresh": "Odśwież",
     "loading": "Ładowanie linków publicznych",
     "emptyTitle": "Brak aktywnych linków publicznych",
-    "emptyDescription": "Nie utworzono jeszcze żadnych linków publicznych. Utwórz link w szczegółach pliku."
+    "emptyDescription": "Nie masz jeszcze linków publicznych. Otwórz menu Udostępnij przy pliku, aby utworzyć link.",
+    "description": "Utworzone przez Ciebie linki. Każdy przestaje działać 24 godziny po utworzeniu."
   },
   "actions": {
     "copyPreview": "Kopiuj link do podglądu",
@@ -27,20 +27,15 @@
     "cancel": "Anuluj",
     "confirm": "Unieważnij link"
   },
-  "generator": {
-    "title": "Utwórz link publiczny",
-    "size": "Rozmiar: {size}",
-    "unknownSize": "Nieznany rozmiar",
-    "expiryBadge": "Ważny 24 godz.",
-    "createTitle": "Utwórz link publiczny",
-    "createDescription": "Utwórz link publiczny, dzięki któremu każdy będzie mieć dostęp do tego pliku przez 24 godziny.",
-    "generate": "Utwórz link publiczny",
-    "generating": "Tworzenie...",
-    "successTitle": "Link publiczny utworzony!",
-    "successDescription": "Twój plik jest teraz dostępny publicznie. Linki wygasają po 24 godzinach.",
-    "downloadLink": "Link do pobrania",
-    "previewLink": "Link do podglądu",
-    "generateAnother": "Utwórz kolejny link"
+  "fileLink": {
+    "loading": "Sprawdzanie linku publicznego…",
+    "unavailable": "Tego pliku nie można teraz udostępnić linkiem. Odśwież stronę i spróbuj ponownie.",
+    "description": "Każdy, kto ma link, może pobrać ten plik przez {hours} godz. Potem link przestaje działać.",
+    "create": "Utwórz link na {hours} godz.",
+    "creating": "Tworzenie linku…",
+    "active": "Link publiczny jest aktywny",
+    "timeUsed": "Wykorzystany czas z 24 godzin linku",
+    "revoke": "Wyłącz"
   },
   "toast": {
     "copied": {

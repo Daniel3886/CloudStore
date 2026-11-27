@@ -46,7 +46,7 @@ export function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground text-center">{t("login.description")}</p>
+      <p className="text-sm text-muted-foreground">{t("login.description")}</p>
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <FormError message={form.formError} />

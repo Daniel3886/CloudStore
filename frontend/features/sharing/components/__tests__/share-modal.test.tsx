@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/api/client"
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }))
 vi.mock("@/features/sharing/api", () => ({ sharingApi: { shareFile: vi.fn() } }))
-vi.mock("@/features/public-links/components/public-links-manager", () => ({ PublicLinksManager: () => null }))
+vi.mock("@/features/public-links/components/file-public-link", () => ({ FilePublicLink: () => null }))
 
 const file = { id: 7, name: "report.pdf", displayName: "docs/report.pdf" }
 

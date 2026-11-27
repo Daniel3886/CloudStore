@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 @Service
 public class AutoCleanupService {
 
+    public static final int TRASH_RETENTION_DAYS = 30;
+
     @Autowired
     private FileRepo fileRepo;
 
@@ -18,7 +20,7 @@ public class AutoCleanupService {
 
     @Scheduled(cron = "0 0 2 * * ?")
     public void cleanTrashedFiles() {
-        LocalDateTime cutoff = LocalDateTime.now().minusDays(30);
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(TRASH_RETENTION_DAYS);
         var filesToDelete = fileRepo.findAll().stream()
                 .filter(file -> file.getDeletedAt() != null && file.getDeletedAt().isBefore(cutoff))
                 .toList();
